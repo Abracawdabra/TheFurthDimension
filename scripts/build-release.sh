@@ -10,8 +10,8 @@ npm run tsc
 echo
 echo "Running browserify and minify..."
 mkdir -p ./build/release
-npm run browserify ./build/Main.js -o ./build/release/TheFurthDimension.js
-npm run minify ./build/release/TheFurthDimension
+npm run browserify
+npm run minify
 
 echo
 echo "Copying other files and assets"
