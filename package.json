@@ -1,0 +1,17 @@
+{
+  "name": "thefurthdimension",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Cawdabra",
+  "license": "MIT",
+  "dependencies": {
+    "browserify": "^14.4.0",
+    "minify": "^3.0.1",
+    "typescript": "^2.4.2"
+  }
+}

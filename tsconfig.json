@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "sourceMap": false,
+    "listFiles": true,
+    "rootDir": "./src",
+    "outDir": "./build"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

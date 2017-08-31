@@ -1,0 +1,10 @@
+{
+  "dependencies": {},
+  "globalDependencies": {
+    "createjs-lib": "registry:dt/createjs-lib#0.0.0+20160510002910",
+    "easeljs": "registry:dt/easeljs#0.8.0+20170215062159",
+    "preloadjs": "registry:dt/preloadjs#0.6.2+20161130143025",
+    "soundjs": "registry:dt/soundjs#0.6.0+20160510010627",
+    "tweenjs": "registry:dt/tweenjs#0.6.0+20160510010627"
+  }
+}
