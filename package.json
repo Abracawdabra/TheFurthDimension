@@ -7,7 +7,8 @@
     "browserify": "browserify ./build/game/Main.js > ./build/release/TheFurthDimension.js",
     "minify": "minify ./build/release/TheFurthDimension.js > ./build/release/TheFurthDimension.min.js",
     "tsc": "tsc",
-    "build": "bash ./scripts/build-release.sh"
+    "build": "bash ./scripts/build-release.sh",
+    "clean": "rm -rf ./build"
   },
   "keywords": [],
   "author": "Cawdabra",
