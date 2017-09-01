@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The Furth Dimension</title>
+        <meta charset="UTF-8">
+
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+        <script type="text/javascript" src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+        <!-- Testing -->
+        <script type="text/javascript" src="TheFurthDimension.js"></script>
+        <!-- Production -->
+        <!-- <script type="text/javascript" src="TheFurthDimension.min.js"></script> -->
+
+        <script type="text/javascript">
+            (function() {
+                // Adds the instance to the global scope
+                const TESTING = true;
+
+                // Game instance
+                let instance;
+
+                // Page loading handler
+                function onPageLoad(e) {
+                    instance = new window.TheFurthDimension("game_canvas");
+
+                    if (TESTING) {
+                        window.gGameInstance = instance;
+                    }
+                }
+
+                window.addEventListener("load", onPageLoad);
+            }());
+        </script>
+
+        <style type="text/css">
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            body {
+                background-color: black;
+                color: white;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="game_container">
+            <canvas id="game_canvas">
+                <h2>Your browser doesn't support HTML5. Time to upgrade dude!</h2>
+            </canvas>
+        </div>
+    </body>
+</html>
