@@ -4,8 +4,7 @@
  * @license MIT
  */
 
-import { IEventDispatcher } from "./IEventDispatcher";
-import { ASSET_MANIFESTS } from "./AssetManifests";
+import { ASSET_MANIFESTS, IEventDispatcher } from "./";
 import * as colors from "./Colors";
 
 const PRELOADER_DISPLAY_WIDTH = 100;
@@ -29,6 +28,12 @@ export class Game {
 
     static Assets: { [id: string]: any };
 
+    protected _stage: createjs.Stage;
+    protected _canvasContext: CanvasRenderingContext2D;
+
+    // Settings
+    textScrollSpeed: number;
+    protected _displayScale: number;
     get displayScale(): number {
         return this._displayScale;
     }
@@ -42,11 +47,6 @@ export class Game {
         canvas.width = Game.DISPLAY_WIDTH * scale;
         canvas.height = Game.DISPLAY_HEIGHT * scale;
     }
-
-    protected _stage: createjs.Stage;
-    protected _canvasContext: CanvasRenderingContext2D;
-
-    protected _displayScale: number;
 
     protected _preloaderQueue: createjs.LoadQueue;
     protected _preloaderItemsTotal: number;
