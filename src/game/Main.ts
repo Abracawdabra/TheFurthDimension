@@ -4,11 +4,17 @@
  * @license MIT
  */
 
-import { ASSET_MANIFESTS, IEventDispatcher } from "./";
+import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys } from "./";
+import { BaseScreen } from "./screens";
+import * as buttons from "./Buttons";
+import * as utils from "./Utils";
 import * as colors from "./Colors";
 
 const PRELOADER_DISPLAY_WIDTH = 100;
 const PRELOADER_DISPLAY_HEIGHT = 20;
+
+const MAX_KEY_DOWN_QUEUE_LENGTH = 5;
+const KEY_DOWN_QUEUE_TIMEOUT = 1500;      // Milliseconds
 
 // Set to false for local testing in order to fix
 // preloading issues. Set to true for production.
@@ -27,6 +33,10 @@ export class Game {
     static readonly FPS = 59.7;
 
     static Assets: { [id: string]: any };
+
+    keysDown: number[];
+    // For keeping track of ordered key presses
+    keyDownQueue: number[];
 
     protected _stage: createjs.Stage;
     protected _canvasContext: CanvasRenderingContext2D;
@@ -51,6 +61,13 @@ export class Game {
     protected _preloaderQueue: createjs.LoadQueue;
     protected _preloaderItemsTotal: number;
     protected _preloaderItemsLoaded: number;
+
+    protected _screens: BaseScreen[];
+    protected _currentScreen: BaseScreen;
+
+    protected _keyDownQueueTimeoutHandle: number;
+
+    protected _cheatTextbox: HTMLInputElement;
 
     constructor(canvas_id: string) {
         this._stage = new createjs.Stage(canvas_id);
@@ -79,11 +96,32 @@ export class Game {
         this._onPreloadFontInactive = this._onPreloadFontInactive.bind(this);
         this._onPreloadComplete = this._onPreloadComplete.bind(this);
         this._onTick = this._onTick.bind(this);
+        this._onKeyEvent = this._onKeyEvent.bind(this);
+        this._onKeyDownQueueTimeout = this._onKeyDownQueueTimeout.bind(this);
+        this._onCheatTextboxKeyDown = this._onCheatTextboxKeyDown.bind(this);
+
+        this._screens = [];
+        this._currentScreen = null;
+
+        this._cheatTextbox = null;
 
         createjs.Ticker.setFPS(Game.FPS);
         createjs.Ticker.addEventListener("tick", this._onTick);
 
         this._preload();
+    }
+
+    pushScreen(screen: BaseScreen): void {
+        this._stage.addChild(screen.container);
+        this._screens.push(screen);
+        this._currentScreen = screen;
+    }
+
+    popScreen(): BaseScreen {
+        var screen = this._screens.pop();
+        this._stage.removeChild(screen.container);
+        this._currentScreen = (this._screens.length > 0) ? this._screens[this._screens.length - 1] : null;
+        return screen;
     }
 
     /**
@@ -95,6 +133,20 @@ export class Game {
         style_el.type = "text/css";
         style_el.appendChild(document.createTextNode(font_face));
         document.head.appendChild(style_el);
+    }
+
+    protected _addMainKeyEventListeners(): void {
+        this.keysDown = [];
+        this.keyDownQueue = [];
+        window.addEventListener("keydown", this._onKeyEvent);
+        window.addEventListener("keyup", this._onKeyEvent);
+    }
+
+    protected _removeMainKeyEventListeners(): void {
+        window.removeEventListener("keydown", this._onKeyEvent);
+        window.removeEventListener("keyup", this._onKeyEvent);
+        this.keysDown = [];
+        this.keyDownQueue = [];
     }
 
     protected _preload(): void {
@@ -206,6 +258,8 @@ export class Game {
         if (this._preloaderQueue) {
             this._preloaderQueue.destroy();
             this._preloaderQueue = null;
+
+            this._addMainKeyEventListeners();
             this._showTitleScreen();
         }
     }
@@ -215,17 +269,120 @@ export class Game {
         this._stage.removeAllChildren();
     }
 
+    protected _onKeyEvent(event: KeyboardEvent): void {
+        let key_code = event.keyCode;       // Fall back
+        if (event.key) {
+            // Support for KeyboardEvent.key
+            let sanitized = utils.sanitizeKeyName(event.key);
+            if (sanitized in KeyboardKeys) {
+                // Convert key string to a key code using predefined constants
+                key_code = KeyboardKeys[sanitized];
+            }
+        }
+
+        if (key_code) {
+            if (event.type === "keydown" && this.keysDown.indexOf(key_code) === -1) {
+                // Only handle this key if it wasn't already down
+                clearTimeout(this._keyDownQueueTimeoutHandle);
+                if (this.keyDownQueue.length >= MAX_KEY_DOWN_QUEUE_LENGTH) {
+                    this.keyDownQueue.shift();
+                }
+                this.keyDownQueue.push(key_code);
+                if (utils.arraysAreEqual(this.keyDownQueue, buttons.CheatTextboxCode)) {
+                    this._showCheatTextbox();
+                    this.keyDownQueue = [];
+                    return;
+                }
+
+                this.keysDown.push(key_code);
+
+                if (this._currentScreen) {
+                    this._currentScreen.handleKeyDown(key_code);
+                }
+
+                this._keyDownQueueTimeoutHandle = setTimeout(this._onKeyDownQueueTimeout, KEY_DOWN_QUEUE_TIMEOUT);
+            }
+            else if (event.type === "keyup") {
+                let index = this.keysDown.indexOf(key_code)
+                if (index > -1) {
+                    this.keysDown.splice(index, 1);
+                }
+
+                if (this._currentScreen) {
+                    this._currentScreen.handleKeyUp(key_code);
+                }
+            }
+        }
+    }
+
+    protected _onKeyDownQueueTimeout(event: Event): void {
+        this.keyDownQueue = [];
+    }
+
     protected _onTick(event: createjs.TickerEvent): void {
         if (!event.paused) {
+            if (this._currentScreen) {
+                this._currentScreen.update(event.delta);
+            }
+
             this._stage.update();
         }
+    }
+
+    protected _showCheatTextbox(): void {
+        let cheat_textbox = document.createElement("input");
+        cheat_textbox.type = "text";
+        cheat_textbox.id = "cheat_textbox";
+        cheat_textbox.className = "cheat-textbox";
+        cheat_textbox.placeholder = "Enter cheat";
+        cheat_textbox.style.top = (40 * this._displayScale).toString() + "px";
+        cheat_textbox.style.fontSize = (8 * this._displayScale).toString() + "px";
+        cheat_textbox.style.width = (8 * this._displayScale * 18).toString() + "px";
+        cheat_textbox.addEventListener("keydown", this._onCheatTextboxKeyDown);
+        (<HTMLCanvasElement>this._stage.canvas).parentElement.appendChild(cheat_textbox);
+        cheat_textbox.focus();
+        this._cheatTextbox = cheat_textbox;
+
+        this._removeMainKeyEventListeners();
+    }
+
+    protected _removeCheatTextbox(): void {
+        this._cheatTextbox.removeEventListener("keydown", this._onCheatTextboxKeyDown);
+        this._cheatTextbox.parentElement.removeChild(this._cheatTextbox);
+        this._cheatTextbox = null;
+
+        this._addMainKeyEventListeners();
+    }
+
+    protected _onCheatTextboxKeyDown(event: KeyboardEvent): void {
+        let key_code = event.keyCode;
+        if (event.key) {
+            // Support for KeyboardEvent.key
+            let sanitized = utils.sanitizeKeyName(event.key);
+            if (sanitized in KeyboardKeys) {
+                // Convert KeyboardEvent.key to a key code using predefined constants
+                key_code = KeyboardKeys[sanitized];
+            }
+        }
+
+        if (key_code) {
+            if (key_code === KeyboardKeys.ESCAPE) {
+                this._removeCheatTextbox();
+            }
+            else if (key_code === KeyboardKeys.ENTER && this._cheatTextbox.value.trim() !== "") {
+                this._processCheatCommand(this._cheatTextbox.value.trim());
+                this._cheatTextbox.value = "";
+            }
+        }
+    }
+
+    protected _processCheatCommand(command: string): void {
     }
 }
 
 // Add event dispatcher methods to the class
 createjs.EventDispatcher.initialize(Game.prototype);
-export interface Game extends IEventDispatcher {
-}
+export interface Game extends IEventDispatcher {}
 
 // Add to global scope
 window.TheFurthDimension = Game;
