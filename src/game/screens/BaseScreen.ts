@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { Game, IEventDispatcher, KeyboardKeys } from "../";
+import { Game, IEventDispatcher, Buttons } from "../";
 
 export abstract class BaseScreen {
     container: createjs.Container;
