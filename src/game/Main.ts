@@ -371,12 +371,43 @@ export class Game {
             }
             else if (key_code === KeyboardKeys.ENTER && this._cheatTextbox.value.trim() !== "") {
                 this._processCheatCommand(this._cheatTextbox.value.trim());
-                this._cheatTextbox.value = "";
+                if (this._cheatTextbox) {
+                    this._cheatTextbox.value = "";
+                }
             }
         }
     }
 
     protected _processCheatCommand(command: string): void {
+        let parsed = command.split(" ");
+        let cmd = parsed[0].toLowerCase();
+        let success = false;
+
+        if (cmd === "exposeme") {
+            // Add instance to the global scope
+            window.gGameInstance = this;
+            success = true;
+        }
+
+        else if (cmd === "killme" ) {
+            // Harsh destroy of the instance
+            if (window.gGameInstance) {
+                window.gGameInstance = undefined;
+            }
+
+            this._cheatTextbox.removeEventListener("keydown", this._onCheatTextboxKeyDown);
+            createjs.Ticker.reset();
+
+            for (let prop in this) {
+                delete this[prop];
+            }
+
+            success = true;
+        }
+
+        if (success) {
+            console.log("Cheat '" + command + "' accepted.");
+        }
     }
 }
 

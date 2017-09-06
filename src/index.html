@@ -13,19 +13,12 @@
 
         <script type="text/javascript">
             (function() {
-                // Adds the instance to the global scope
-                const TESTING = true;
-
                 // Game instance
                 let instance;
 
                 // Page loading handler
                 function onPageLoad(e) {
                     instance = new window.TheFurthDimension("game_canvas");
-
-                    if (TESTING) {
-                        window.gGameInstance = instance;
-                    }
                 }
 
                 window.addEventListener("load", onPageLoad);

@@ -6,6 +6,7 @@
 
 declare interface Window {
     TheFurthDimension: any;
+    gGameInstance: any;
 }
 
 declare interface CanvasRenderingContext2D {
