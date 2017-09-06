@@ -390,7 +390,7 @@ export class Game {
         }
 
         else if (cmd === "killme" ) {
-            // Harsh destroy of the instance
+            // Harsh destruction of the instance
             if (window.gGameInstance) {
                 window.gGameInstance = undefined;
             }
