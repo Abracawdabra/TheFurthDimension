@@ -4,8 +4,8 @@
  * @license MIT
  */
 
-import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys } from "./";
-import { BaseScreen } from "./screens";
+import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys } from ".";
+import { BaseScreen, TitleScreen } from "./screens";
 import * as buttons from "./Buttons";
 import * as utils from "./Utils";
 import * as colors from "./Colors";
@@ -265,8 +265,8 @@ export class Game {
     }
 
     protected _showTitleScreen(): void {
-        console.log("showTitleScreen");
         this._stage.removeAllChildren();
+        this.pushScreen(new TitleScreen(this));
     }
 
     protected _onKeyEvent(event: KeyboardEvent): void {

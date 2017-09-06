@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { Game, IEventDispatcher, Buttons } from "../";
+import { Game, IEventDispatcher } from "..";
 
 export abstract class BaseScreen {
     container: createjs.Container;
@@ -12,16 +12,19 @@ export abstract class BaseScreen {
 
     protected _gameInstance: Game;
 
-    constructor(game_instance: Game, parent: BaseScreen) {
+    constructor(game_instance: Game, parent?: BaseScreen) {
         this._gameInstance = game_instance;
         this.parent = parent;
         this.container = new createjs.Container();
+        this._init();
     }
 
-    abstract handleKeyDown(keycode: number): void;
-    abstract handleKeyUp(keycode: number): void;
+    abstract handleKeyDown(key_code: number): void;
+    abstract handleKeyUp(key_code: number): void;
 
     abstract update(delta: number): void;
+
+    protected abstract _init(): void;
 }
 
 // Add event dispatcher methods to the class

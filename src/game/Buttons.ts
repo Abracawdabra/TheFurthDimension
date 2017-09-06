@@ -6,7 +6,7 @@
 
 // Game Boy button mapping and codes
 
-import { KeyboardKeys } from "./";
+import { KeyboardKeys } from ".";
 
 interface IButtons {
     [button: string]: number;

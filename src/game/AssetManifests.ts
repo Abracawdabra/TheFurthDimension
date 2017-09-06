@@ -12,7 +12,7 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
     ],
 
     images: [
-
+        { id: "img_title_screen", src: BASE_URL + "images/title_screen.png" }
     ],
 
     sounds: [
