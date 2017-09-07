@@ -4,13 +4,13 @@
  * @license MIT
  */
 
-import { BaseScreen } from ".";
+import * as screens from ".";
 import { Buttons } from "..";
 import { Game } from "../Main";     // Needs to be separate for some reason
 import { TextMenu } from "../ui/TextMenu";
 import * as colors from "../Colors";
 
-export class TitleScreen extends BaseScreen {
+export class TitleScreen extends screens.BaseScreen {
     protected _textMenu: TextMenu;
 
     handleKeyDown(key_code: number): void {
@@ -19,6 +19,17 @@ export class TitleScreen extends BaseScreen {
         }
         else if (key_code === Buttons.UP) {
             this._textMenu.selectPrevRow();
+        }
+        else if (key_code === Buttons.A) {
+            let selection = this._textMenu.selectedItem;
+            switch(selection) {
+                case "new_game":
+                break;
+                case "continue_game":
+                break;
+                case "options":
+                    this._gameInstance.pushScreen(new screens.OptionsScreen(this._gameInstance, this));
+            }
         }
     }
 
@@ -33,7 +44,9 @@ export class TitleScreen extends BaseScreen {
 
         let text_menu = new TextMenu(48, 85, colors.GB_COLOR_LIGHT_GREEN, 5);
         text_menu.addItem("new_game", "New Game");
-        text_menu.addItem("continue_game", "Continue");
+        if (localStorage.getItem("gameSave") === "1") {
+            text_menu.addItem("continue_game", "Continue");
+        }
         text_menu.addItem("options", "Options");
         this._textMenu = text_menu;
 

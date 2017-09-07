@@ -20,6 +20,13 @@ const KEY_DOWN_QUEUE_TIMEOUT = 1500;      // Milliseconds
 // preloading issues. Set to true for production.
 const PREFER_XHR = false;
 
+// Characters per second
+export enum TextSpeed {
+    SLOW = 3,
+    MEDIUM = 6,
+    FAST = 10
+}
+
 export class Game {
     static readonly DISPLAY_WIDTH = 160;
     static readonly DISPLAY_HEIGHT = 144;
@@ -42,7 +49,7 @@ export class Game {
     protected _canvasContext: CanvasRenderingContext2D;
 
     // Settings
-    textScrollSpeed: number;
+    textSpeed: number;
     protected _displayScale: number;
     get displayScale(): number {
         return this._displayScale;
@@ -104,6 +111,8 @@ export class Game {
         this._currentScreen = null;
 
         this._cheatTextbox = null;
+
+        this.textSpeed = TextSpeed.MEDIUM;
 
         createjs.Ticker.setFPS(Game.FPS);
         createjs.Ticker.addEventListener("tick", this._onTick);

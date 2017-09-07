@@ -26,6 +26,9 @@ export class TextMenu extends BaseMenu<createjs.Text> {
         this._textColor = color;
     }
 
+    /**
+     * Returns name of selected item
+     */
     get selectedItem(): string {
         let item = this._items[this._markerPos.col][this._markerPos.row];
         if (item) {
@@ -33,6 +36,20 @@ export class TextMenu extends BaseMenu<createjs.Text> {
         }
 
         return "";
+    }
+
+    /**
+     * Sets selected item by name
+     */
+    set selectedItem(name: string) {
+        for (let col=0; col<this._items.length; ++col) {
+            for (let row=0; row<this._items[col].length; ++row) {
+                if (this._items[col][row].name === name) {
+                    this.setMarkerPos(row, col);
+                    return;
+                }
+            }
+        }
     }
 
     constructor(x: number, y: number, text_color: string, vertical_spacing: number, horizontal_margin?: number) {
@@ -107,5 +124,9 @@ export class TextMenu extends BaseMenu<createjs.Text> {
             }
             this._markerPos.row = row;
         }
+    }
+
+    showMarker(visible: boolean): void {
+        this._marker.visible = visible;
     }
 }
