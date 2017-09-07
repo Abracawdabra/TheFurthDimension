@@ -57,12 +57,10 @@ export class Game {
 
     set displayScale(scale: number) {
         this._displayScale = scale;
-        this._stage.scaleX = scale;
-        this._stage.scaleY = scale;
 
         let canvas = <HTMLCanvasElement>this._stage.canvas;
-        canvas.width = Game.DISPLAY_WIDTH * scale;
-        canvas.height = Game.DISPLAY_HEIGHT * scale;
+        canvas.style.width = (Game.DISPLAY_WIDTH * scale).toString() + "px";
+        canvas.style.height = (Game.DISPLAY_HEIGHT * scale).toString() + "px";
     }
 
     protected _preloaderQueue: createjs.LoadQueue;
@@ -86,6 +84,9 @@ export class Game {
 
         let canvas = <HTMLCanvasElement>this._stage.canvas;
         canvas.style.backgroundColor = Game.BACKGROUND_COLOR;
+        canvas.width = Game.DISPLAY_WIDTH;
+        canvas.height = Game.DISPLAY_HEIGHT;
+        canvas.className = "pixelate";
 
         this._canvasContext = canvas.getContext("2d");
         let context = this._canvasContext;
