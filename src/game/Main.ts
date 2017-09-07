@@ -347,6 +347,7 @@ export class Game {
         cheat_textbox.style.top = (40 * this._displayScale).toString() + "px";
         cheat_textbox.style.fontSize = (8 * this._displayScale).toString() + "px";
         cheat_textbox.style.width = (8 * this._displayScale * 18).toString() + "px";
+        cheat_textbox.style.height = "1.5em";
         cheat_textbox.addEventListener("keydown", this._onCheatTextboxKeyDown);
         (<HTMLCanvasElement>this._stage.canvas).parentElement.appendChild(cheat_textbox);
         cheat_textbox.focus();
