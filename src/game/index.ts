@@ -10,4 +10,5 @@ export * from "./IEventDispatcher";
 export * from "./KeyboardKeys";
 export * from "./Buttons";
 export * from "./Utils";
+export * from "./SpatialGrid";
 export * from "./Main";
