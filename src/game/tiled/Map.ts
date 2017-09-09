@@ -7,7 +7,7 @@
 import * as tiled from ".";
 import { SpatialGrid } from "../SpatialGrid";
 
-interface IMap {
+export interface IMap {
     width: number;
     height: number;
     tilewidth: number;
@@ -36,6 +36,8 @@ export class Map {
     protected _tilesets: tiled.Tileset[];
     protected _spatialGrids: { [layer: string]: SpatialGrid };
 
+    protected _spawnPoints: { [name: string]: tiled.IObject };
+
     constructor(map: IMap) {
         this.width = map.width;
         this.height = map.height;
@@ -59,9 +61,20 @@ export class Map {
             if (layer.type === "objectgroup") {
                 this._spatialGrids[layer.name] = new SpatialGrid(map.tilewidth, map.tileheight, map.width, map.height);
                 for (let obj of this._layers[this._layers.length - 1].objects) {
-                    this._spatialGrids[layer.name].addObject(obj);
+                    if (obj.type === "spawn_point") {
+                        // Don't add spawn points to the spatial grid
+                        this._spawnPoints[obj.name] = obj;
+                    }
+                    else {
+                        this._spatialGrids[layer.name].addObject(obj);
+                    }
                 }
             }
+        }
+
+        if (this.properties.defaultSpawnPoint in this._spawnPoints) {
+            // Set the default spawn point
+            this._spawnPoints.default == this._spawnPoints[this.properties.defaultSpawnPoint];
         }
 
         this._tilesets = [];
@@ -85,6 +98,41 @@ export class Map {
      * @param {createjs.Rectangle} area Area in tile coordinates and dimensions
      */
     getArea(area: createjs.Rectangle): tiled.IMapAreaLayer[] {
+        // Bounds checks
+        let end_col = area.x + area.width;
+        if (area.x < 0) {
+            // Clamp to the left edge
+            area.width += area.x;
+            area.x = 0;
+        }
+        else if (area.x >= this.width) {
+            // Nothing to return
+            return [];
+        }
+
+        if (end_col >= this.width) {
+            // Clamp to the right edge
+            area.width -= end_col - this.width;
+            end_col = this.width;
+        }
+
+        let end_row = area.y + area.height;
+        if (area.y < 0) {
+            // Clamp to the top edge
+            area.height += area.y;
+            area.y = 0;
+        }
+        else if (area.y >= this.width) {
+            // Nothing to return
+            return [];
+        }
+
+        if (end_row >= this.height) {
+            // Clamp to the bottom edge
+            area.height -= end_row - this.height;
+            end_row = this.height;
+        }
+
         let result: tiled.IMapAreaLayer[] = [];
         // Convert from tile coordinates for the spatial grids
         let object_area = new createjs.Rectangle(area.x * this.tileWidth, area.y * this.tileHeight, area.width * this.tileWidth, area.height * this.tileHeight);
@@ -92,8 +140,6 @@ export class Map {
             let area_layer: tiled.IMapAreaLayer = { layer: layer };
             if (layer.type === "tilelayer") {
                 area_layer.data = [];
-                let end_row = area.y + area.height;
-                let end_col = area.x + area.width;
                 for (let row=area.y; row<end_row; ++row) {
                     area_layer.data.push([]);
                     for (let col=area.x; col<end_col; ++col) {
