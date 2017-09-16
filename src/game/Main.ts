@@ -16,6 +16,8 @@ const PRELOADER_DISPLAY_HEIGHT = 20;
 const MAX_KEY_DOWN_QUEUE_LENGTH = 5;
 const KEY_DOWN_QUEUE_TIMEOUT = 1500;      // Milliseconds
 
+const DEFAULT_WALK_SPEED = 60;      // Pixels per second
+
 // Set to false for local testing in order to fix
 // preloading issues. Set to true for production.
 const PREFER_XHR = false;
@@ -44,6 +46,9 @@ export class Game {
     keysDown: number[];
     // For keeping track of ordered key presses
     keyDownQueue: number[];
+
+    renderInvisibleLayers: boolean;
+    walkSpeed: number;
 
     protected _stage: createjs.Stage;
     protected _canvasContext: CanvasRenderingContext2D;
@@ -114,6 +119,8 @@ export class Game {
         this._cheatTextbox = null;
 
         this.textSpeed = TextSpeed.MEDIUM;
+        this.renderInvisibleLayers = false;
+        this.walkSpeed = DEFAULT_WALK_SPEED;
 
         createjs.Ticker.setFPS(Game.FPS);
         createjs.Ticker.addEventListener("tick", this._onTick);
@@ -177,7 +184,7 @@ export class Game {
             load_queue.addEventListener("fileload", this._onPreloadFileLoad);
             load_queue.on("error", this._onPreloadError, null, true);
 
-            let manifest = ASSET_MANIFESTS.images.concat(ASSET_MANIFESTS.sounds);
+            let manifest = ASSET_MANIFESTS.images.concat(ASSET_MANIFESTS.sounds).concat(ASSET_MANIFESTS.maps);
             this._preloaderItemsTotal = ASSET_MANIFESTS.fonts.length + manifest.length;
             this._preloaderItemsLoaded = 0;
             load_queue.loadManifest(manifest);
@@ -399,7 +406,6 @@ export class Game {
             window.gGameInstance = this;
             success = true;
         }
-
         else if (cmd === "killme" ) {
             // Harsh destruction of the instance
             if (window.gGameInstance) {
@@ -414,6 +420,23 @@ export class Game {
             }
 
             success = true;
+        }
+        else if (cmd === "showinvis") {
+            // Sets to render invisible layers
+            this.renderInvisibleLayers = true;
+            success = true;
+        }
+        else if (cmd === "hideinvis") {
+            // Sets to not render invisible layers
+            this.renderInvisibleLayers = false;
+            success = true;
+        }
+        else if (cmd === "wspeed" && parsed.length === 2) {
+            let value = parseInt(parsed[1], 10);
+            if (!isNaN(value)) {
+                this.walkSpeed = value;
+                success = true;
+            }
         }
 
         if (success) {

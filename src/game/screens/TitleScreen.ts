@@ -5,7 +5,7 @@
  */
 
 import * as screens from ".";
-import { Buttons } from "..";
+import { Button } from "..";
 import { Game } from "../Main";     // Needs to be separate for some reason
 import { TextMenu } from "../ui/TextMenu";
 import * as colors from "../Colors";
@@ -14,19 +14,23 @@ export class TitleScreen extends screens.BaseScreen {
     protected _textMenu: TextMenu;
 
     handleKeyDown(key_code: number): void {
-        if (key_code === Buttons.DOWN) {
+        if (key_code === Button.DOWN) {
             this._textMenu.selectNextRow();
         }
-        else if (key_code === Buttons.UP) {
+        else if (key_code === Button.UP) {
             this._textMenu.selectPrevRow();
         }
-        else if (key_code === Buttons.A) {
+        else if (key_code === Button.A) {
             let selection = this._textMenu.selectedItem;
             switch(selection) {
                 case "new_game":
-                break;
+                    this._gameInstance.popScreen();
+                    let game_screen = new screens.GameScreen(this._gameInstance);
+                    this._gameInstance.pushScreen(game_screen);
+                    game_screen.loadMap(Game.Assets["map_dongola_temple"]);
+                    break;
                 case "continue_game":
-                break;
+                    break;
                 case "options":
                     this._gameInstance.pushScreen(new screens.OptionsScreen(this._gameInstance, this));
             }

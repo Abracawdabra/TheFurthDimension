@@ -20,7 +20,7 @@ interface IButtons {
     DOWN: number;
 }
 
-export var Buttons: IButtons = {
+export var Button: IButtons = {
     A: KeyboardKeys.Z,
     B: KeyboardKeys.X,
     START: KeyboardKeys.ENTER,
@@ -31,4 +31,4 @@ export var Buttons: IButtons = {
     DOWN: KeyboardKeys.ARROWDOWN
 };
 
-export var CheatTextboxCode: number[] = [Buttons.SELECT, Buttons.SELECT, Buttons.B, Buttons.SELECT];
+export var CheatTextboxCode: number[] = [Button.SELECT, Button.SELECT, Button.B, Button.SELECT];

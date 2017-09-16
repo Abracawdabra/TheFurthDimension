@@ -5,7 +5,7 @@
  */
 
 import * as screens from ".";
-import { Buttons } from "..";
+import { Button } from "..";
 import { Game, TextSpeed } from "../Main";     // Needs to be separate for some reason
 import { TextMenu } from "../ui/TextMenu";
 import * as colors from "../Colors";
@@ -28,11 +28,11 @@ export class OptionsScreen extends screens.BaseScreen {
 
     handleKeyDown(key_code: number): void {
         switch (key_code) {
-            case Buttons.B:
+            case Button.B:
                 this._gameInstance.popScreen();
                 break;
-            case Buttons.A:
-            case Buttons.DOWN:
+            case Button.A:
+            case Button.DOWN:
                 switch (this._currentOption) {
                     case Option.DISPLAY_SCALE:
                         this._currentOption = Option.TEXT_SPEED;
@@ -46,7 +46,7 @@ export class OptionsScreen extends screens.BaseScreen {
                         this._textSpeedBlinkTime = 0;
                 }
                 break;
-            case Buttons.LEFT:
+            case Button.LEFT:
                 switch (this._currentOption) {
                     case Option.DISPLAY_SCALE:
                         this._displayScaleMenu.selectPrevColumn();
@@ -68,7 +68,7 @@ export class OptionsScreen extends screens.BaseScreen {
 
                 }
             break;
-            case Buttons.RIGHT:
+            case Button.RIGHT:
                 switch (this._currentOption) {
                     case Option.DISPLAY_SCALE:
                         this._displayScaleMenu.selectNextColumn();
@@ -89,7 +89,7 @@ export class OptionsScreen extends screens.BaseScreen {
                         }
                 }
             break;
-            case Buttons.UP:
+            case Button.UP:
                 switch (this._currentOption) {
                     case Option.DISPLAY_SCALE:
                         this._currentOption = Option.TEXT_SPEED;

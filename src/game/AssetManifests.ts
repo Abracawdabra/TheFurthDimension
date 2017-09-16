@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-const BASE_URL = "assets/";
+export const BASE_URL = "assets/";
 
 export const ASSET_MANIFESTS: { [type: string]: any } = {
     fonts: [
@@ -12,10 +12,17 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
     ],
 
     images: [
-        { id: "img_title_screen", src: BASE_URL + "images/title_screen.png" }
+        { id: "img_title_screen", src: BASE_URL + "images/title_screen.png" },
+
+        // Tilesets
+        { id: "tileset_dongola_temple", src: BASE_URL + "images/tilesets/dongola_temple.png" }
     ],
 
     sounds: [
 
+    ],
+
+    maps: [
+        { id: "map_dongola_temple", src: BASE_URL + "maps/dongola_temple.json" }
     ]
 };

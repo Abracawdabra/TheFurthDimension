@@ -55,6 +55,8 @@ export class Map {
             }
         }
 
+        this._spawnPoints = {};
+        this._spatialGrids = {};
         this._layers = [];
         for (let layer of map.layers) {
             this._layers.push(new tiled.Layer(layer));
@@ -64,6 +66,7 @@ export class Map {
                     if (obj.type === "spawn_point") {
                         // Don't add spawn points to the spatial grid
                         this._spawnPoints[obj.name] = obj;
+                        console.log("Added spawn point '" + obj.name + "'");
                     }
                     else {
                         this._spatialGrids[layer.name].addObject(obj);
@@ -74,7 +77,7 @@ export class Map {
 
         if (this.properties.defaultSpawnPoint in this._spawnPoints) {
             // Set the default spawn point
-            this._spawnPoints.default == this._spawnPoints[this.properties.defaultSpawnPoint];
+            this._spawnPoints.default = this._spawnPoints[this.properties.defaultSpawnPoint];
         }
 
         this._tilesets = [];
@@ -88,6 +91,14 @@ export class Map {
             if (tileset.hasGID(gid)) {
                 return tileset;
             }
+        }
+
+        return null;
+    }
+
+    getSpawnPoint(name: string): tiled.IObject {
+        if (name in this._spawnPoints) {
+            return this._spawnPoints[name];
         }
 
         return null;
@@ -140,10 +151,12 @@ export class Map {
             let area_layer: tiled.IMapAreaLayer = { layer: layer };
             if (layer.type === "tilelayer") {
                 area_layer.data = [];
-                for (let row=area.y; row<end_row; ++row) {
+                let num_of_rows = end_row - area.y;
+                let num_of_cols = end_col - area.x;
+                for (let row=0; row<num_of_rows; ++row) {
                     area_layer.data.push([]);
-                    for (let col=area.x; col<end_col; ++col) {
-                        area_layer.data[row].push(layer.data[row][col]);
+                    for (let col=0; col<num_of_cols; ++col) {
+                        area_layer.data[row].push(layer.data[row + area.y][col + area.x]);
                     }
                 }
             }

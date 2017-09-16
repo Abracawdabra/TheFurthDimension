@@ -4,6 +4,8 @@
  * @license MIT
  */
 
+import { BASE_URL } from "../AssetManifests";
+
 interface ITerrains {
     name: string;
     tile: number;
@@ -56,14 +58,14 @@ export class Tileset {
         this._firstGID = tileset.firstgid;
         this._lastGID = tileset.firstgid + tileset.tilecount - 1;
         this._tileCount = tileset.tilecount;
-        this._image = tileset.image;
+        this._image = Tileset.correctImagePath(tileset.image);
         this._imageWidth = tileset.imagewidth;
         this._imageHeight = tileset.imageheight;
         this._tileWidth = tileset.tilewidth;
         this._tileHeight = tileset.tileheight;
 
         this._spriteSheet = new createjs.SpriteSheet({
-            images: [tileset.image],
+            images: [this._image],
             frames: {
                 width: tileset.tilewidth,
                 height: tileset.tileheight,
@@ -109,5 +111,12 @@ export class Tileset {
         }
 
         return null;
+    }
+
+    /**
+     * Corrects image paths to point to the right directory
+     */
+    static correctImagePath(path: string): string {
+        return path.replace(/^..\//, BASE_URL);
     }
 }
