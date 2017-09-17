@@ -5,7 +5,6 @@
  */
 
 import * as tiled from ".";
-import { SpatialGrid } from "../SpatialGrid";
 
 export interface IMap {
     width: number;
@@ -34,7 +33,6 @@ export class Map {
 
     protected _layers: tiled.Layer[];
     protected _tilesets: tiled.Tileset[];
-    protected _spatialGrids: { [layer: string]: SpatialGrid };
 
     protected _spawnPoints: { [name: string]: tiled.IObject };
 
@@ -56,20 +54,14 @@ export class Map {
         }
 
         this._spawnPoints = {};
-        this._spatialGrids = {};
         this._layers = [];
         for (let layer of map.layers) {
             this._layers.push(new tiled.Layer(layer));
             if (layer.type === "objectgroup") {
-                this._spatialGrids[layer.name] = new SpatialGrid(map.tilewidth, map.tileheight, map.width, map.height);
                 for (let obj of this._layers[this._layers.length - 1].objects) {
                     if (obj.type === "spawn_point") {
-                        // Don't add spawn points to the spatial grid
                         this._spawnPoints[obj.name] = obj;
                         console.log("Added spawn point '" + obj.name + "'");
-                    }
-                    else {
-                        this._spatialGrids[layer.name].addObject(obj);
                     }
                 }
             }
@@ -108,60 +100,55 @@ export class Map {
      * Returns an area of tiles and objects from all layers
      * @param {createjs.Rectangle} area Area in tile coordinates and dimensions
      */
-    getArea(area: createjs.Rectangle): tiled.IMapAreaLayer[] {
+    getArea(x: number, y: number, width: number, height: number): tiled.IMapAreaLayer[] {
         // Bounds checks
-        let end_col = area.x + area.width;
-        if (area.x < 0) {
+        let end_col = x + width;
+        if (x < 0) {
             // Clamp to the left edge
-            area.width += area.x;
-            area.x = 0;
+            width += x;
+            x = 0;
         }
-        else if (area.x >= this.width) {
+        else if (x >= this.width) {
             // Nothing to return
             return [];
         }
 
         if (end_col >= this.width) {
             // Clamp to the right edge
-            area.width -= end_col - this.width;
+            width -= end_col - this.width;
             end_col = this.width;
         }
 
-        let end_row = area.y + area.height;
-        if (area.y < 0) {
+        let end_row = y + height;
+        if (y < 0) {
             // Clamp to the top edge
-            area.height += area.y;
-            area.y = 0;
+            height += y;
+            y = 0;
         }
-        else if (area.y >= this.width) {
+        else if (y >= this.width) {
             // Nothing to return
             return [];
         }
 
         if (end_row >= this.height) {
             // Clamp to the bottom edge
-            area.height -= end_row - this.height;
+            height -= end_row - this.height;
             end_row = this.height;
         }
 
         let result: tiled.IMapAreaLayer[] = [];
-        // Convert from tile coordinates for the spatial grids
-        let object_area = new createjs.Rectangle(area.x * this.tileWidth, area.y * this.tileHeight, area.width * this.tileWidth, area.height * this.tileHeight);
         for (let layer of this._layers) {
             let area_layer: tiled.IMapAreaLayer = { layer: layer };
             if (layer.type === "tilelayer") {
                 area_layer.data = [];
-                let num_of_rows = end_row - area.y;
-                let num_of_cols = end_col - area.x;
+                let num_of_rows = end_row - y;
+                let num_of_cols = end_col - x;
                 for (let row=0; row<num_of_rows; ++row) {
                     area_layer.data.push([]);
                     for (let col=0; col<num_of_cols; ++col) {
-                        area_layer.data[row].push(layer.data[row + area.y][col + area.x]);
+                        area_layer.data[row].push(layer.data[row + y][col + x]);
                     }
                 }
-            }
-            else if (layer.type === "objectgroup") {
-                area_layer.objects = <tiled.IObject[]>this._spatialGrids[layer.name].getObjects(object_area);
             }
 
             result.push(area_layer);

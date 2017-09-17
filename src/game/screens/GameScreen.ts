@@ -7,7 +7,7 @@
 import { BaseScreen } from "./BaseScreen";
 import * as tiled from "../tiled";
 import { Game } from "../Main";
-import { Direction, Button } from "..";
+import { Direction, Button, SpatialGrid, BaseMapObject } from "..";
 
 export class GameScreen extends BaseScreen {
     protected _map: tiled.Map;
@@ -26,8 +26,20 @@ export class GameScreen extends BaseScreen {
     // Stored map area for rendering, checking collisions, etc.
     protected _mapArea: tiled.IMapAreaLayer[];
 
+    // Hash object for layer names to indices (for faster lookup)
+    protected _mapLayerIndices: { [name: string]: number };
+
+    // Array for storing objects that are currently in draw distance
+    protected _activeObjects: { [layer: string]: BaseMapObject[] };
+
+    // Spatial grid layers for the current map
+    protected _spatialGrids: { [layer: string]: SpatialGrid };
+
     // Container for map tiles
     protected _tileContainer: createjs.Container;
+
+    // Container for map objects
+    protected _objectContainer: createjs.Container;
 
     loadMap(map: tiled.IMap): void {
         this._map = new tiled.Map(map);
@@ -36,6 +48,28 @@ export class GameScreen extends BaseScreen {
 
         this._scrollXPos = 0;
         this._scrollYPos = 0;
+
+        this._mapLayerIndices = {};
+        // Create the spatial grid for objects
+        this._spatialGrids = {};
+        for (let layer_index=0; layer_index<map.layers.length; ++layer_index) {
+            let layer = map.layers[layer_index];
+            this._mapLayerIndices[layer.name] = layer_index;
+            if (layer.type === "objectgroup") {
+                let grid = new SpatialGrid(map.tilewidth, map.tileheight, map.width, map.height);
+                for (let obj of layer.objects) {
+                    if (obj.type === "spawn_point") {
+                        // Don't add spawn points to the spatial grids
+                        continue;
+                    }
+
+                    grid.addObject(GameScreen._createMapObject(obj));
+                }
+                this._spatialGrids[layer.name] = grid;
+            }
+        }
+
+        this._activeObjects = {};
 
         let background = new createjs.Shape();
         background.graphics.beginFill(this._map.backgroundColor);
@@ -125,6 +159,27 @@ export class GameScreen extends BaseScreen {
                 }
             }
             else if (area_layer.layer.type === "objectgroup") {
+                let objects_to_remove = this._objectContainer.children.slice();
+                for (let obj of this._activeObjects[area_layer.layer.name]) {
+                    // Render objects that haven't been rendered yet
+                    let sprite = this._objectContainer.getChildByName(obj.name);
+                    if (!sprite) {
+                        sprite = obj.getSprite();
+                        // I'm going to cheat here because otherwise it's a pain in
+                        // in the ass and probably less efficient to make a hash
+                        // object just to call destroySprite()
+                        (<any>sprite).mapObject = obj;
+                        this._objectContainer.addChild(sprite);
+                    }
+
+                    objects_to_remove.splice(objects_to_remove.indexOf(sprite), 1);
+                }
+
+                for (let sprite of objects_to_remove) {
+                    // Remove objects that are no longer in draw distance
+                    this._objectContainer.removeChild(sprite);
+                    (<any>sprite).mapObject.destroySprite();
+                }
             }
         }
     }
@@ -132,6 +187,9 @@ export class GameScreen extends BaseScreen {
     protected _init(): void {
         this._tileContainer = new createjs.Container();
         this.container.addChild(this._tileContainer);
+
+        this._objectContainer = new createjs.Container();
+        this.container.addChild(this._objectContainer);
     }
 
     protected _gotoSpawnPoint(name: string): void {
@@ -151,7 +209,7 @@ export class GameScreen extends BaseScreen {
             this._tileContainer.x = Math.floor((Game.DISPLAY_WIDTH - (this._numOfXTiles * this._map.tileWidth)) / 2);
             this._tileContainer.y = Math.floor((Game.DISPLAY_HEIGHT - (this._numOfYTiles * this._map.tileHeight)) / 2);
 
-            this._mapArea = this._map.getArea(new createjs.Rectangle(this._scrollXPos, this._scrollYPos, this._numOfXTiles, this._numOfYTiles));
+            this._updateMapArea(this._scrollXPos, this._scrollYPos, this._numOfXTiles, this._numOfYTiles);
             this.redrawMapArea();
         }
         else {
@@ -185,13 +243,41 @@ export class GameScreen extends BaseScreen {
         }
 
         if (scrolling_left || scrolling_right || scrolling_up || scrolling_down) {
-            this._mapArea = this._map.getArea(new createjs.Rectangle(this._scrollXPos, this._scrollYPos, this._numOfXTiles, this._numOfYTiles));
+            this._updateMapArea(this._scrollXPos, this._scrollYPos, this._numOfXTiles, this._numOfYTiles);
             this.redrawMapArea();
         }
+    }
+
+    protected _updateMapArea(x: number, y: number, width: number, height: number): void {
+        this._mapArea = this._map.getArea(x, y, width, height);
+
+        // Convert to pixel coordinates for spatial grids
+        let rect = new createjs.Rectangle(x * this._map.tileWidth, y * this._map.tileHeight, width * this._map.tileWidth, height * this._map.tileHeight);
+        this._activeObjects = {};
+        for (let area_layer of this._mapArea) {
+            if (area_layer.layer.type === "objectgroup") {
+                this._activeObjects[area_layer.layer.name] = <BaseMapObject[]>this._spatialGrids[area_layer.layer.name].getObjects(rect);
+            }
+        }
+    }
+
+    protected _getMapAreaLayer(name: string): tiled.IMapAreaLayer {
+        if (name in this._mapLayerIndices) {
+            return this._mapArea[this._mapLayerIndices[name]];
+        }
+
+        return null;
     }
 
     protected static _generateTileName(layer_name: string, row: number, col: number): string
     {
         return layer_name + "_y" + row + "_x" + col;
+    }
+
+    /**
+     * Processes a map object and returns a new one created through type specific constructors
+     * @todo Implement
+     */
+    protected static _createMapObject(obj: tiled.IObject): any {
     }
 }
