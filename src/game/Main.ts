@@ -122,6 +122,7 @@ export class Game {
         this.renderInvisibleLayers = false;
         this.walkSpeed = DEFAULT_WALK_SPEED;
 
+        createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
         createjs.Ticker.setFPS(Game.FPS);
         createjs.Ticker.addEventListener("tick", this._onTick);
 

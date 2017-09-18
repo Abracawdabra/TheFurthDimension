@@ -186,6 +186,7 @@ export class GameScreen extends BaseScreen {
 
     protected _init(): void {
         this._tileContainer = new createjs.Container();
+        this._tileContainer.tickChildren = false;
         this.container.addChild(this._tileContainer);
 
         this._objectContainer = new createjs.Container();
