@@ -50,12 +50,26 @@ export class GameScreen extends BaseScreen {
         this._scrollYPos = 0;
 
         this._mapLayerIndices = {};
-        // Create the spatial grid for objects
         this._spatialGrids = {};
+        this._tileContainer.removeAllChildren();
+
+        let empty_spritesheet = new createjs.SpriteSheet({});
         for (let layer_index=0; layer_index<map.layers.length; ++layer_index) {
             let layer = map.layers[layer_index];
             this._mapLayerIndices[layer.name] = layer_index;
-            if (layer.type === "objectgroup") {
+            if (layer.type === "tilelayer") {
+                // Populate the tile container with reusable sprites to fill the screen
+                let start_index = layer_index * this._numOfXTiles * this._numOfYTiles;
+                for (let row=0; row<this._numOfYTiles; ++row) {
+                    for (let col=0; col<this._numOfXTiles; ++col) {
+                        let sprite = new createjs.Sprite(empty_spritesheet);
+                        sprite.x = col * this._map.tileWidth;
+                        sprite.y = row * this._map.tileHeight;
+                        this._tileContainer.addChildAt(sprite, start_index + (row * this._numOfXTiles) + col);
+                    }
+                }
+            }
+            else if (layer.type === "objectgroup") {
                 let grid = new SpatialGrid(map.tilewidth, map.tileheight, map.width, map.height);
                 for (let obj of layer.objects) {
                     if (obj.type === "spawn_point") {
@@ -136,24 +150,28 @@ export class GameScreen extends BaseScreen {
     }
 
     redrawMapArea(): void {
-        this._tileContainer.removeAllChildren();
-        for (let area_layer of this._mapArea) {
-            if (!this._gameInstance.renderInvisibleLayers && !area_layer.layer.visible) {
-                // Don't render invisible layers without cheat
-                continue;
-            }
-
+        for (let layer_index=0; layer_index<this._mapArea.length; ++layer_index) {
+            let area_layer = this._mapArea[layer_index];
             if (area_layer.layer.type === "tilelayer") {
-                for (let row=0; row<area_layer.data.length; ++row) {
-                    for (let col=0; col<area_layer.data[row].length; ++col) {
-                        let gid = area_layer.data[row][col];
-                        let tileset = this._map.getTileset(gid);
-                        if (tileset) {
-                            let sprite = tileset.getTileSprite(gid);
-                            sprite.name = GameScreen._generateTileName(area_layer.layer.name, this._scrollYPos + row, this._scrollXPos + col);
-                            sprite.x = col * this._map.tileWidth;
-                            sprite.y = row * this._map.tileHeight;
-                            this._tileContainer.addChild(sprite);
+                let layer_start_index = layer_index * this._numOfYTiles * this._numOfXTiles;
+                for (let row=0; row<this._numOfYTiles; ++row) {
+                    for (let col=0; col<this._numOfXTiles; ++col) {
+                        let sprite = <createjs.Sprite>this._tileContainer.getChildAt(layer_start_index + (row * this._numOfXTiles) + col);
+                        if (row >= area_layer.data.length || col >= area_layer.data[row].length || (!this._gameInstance.renderInvisibleLayers && !area_layer.layer.visible)) {
+                            // Past the last row or column in the layer data, or layer is invisible without cheat enabled
+                            sprite.alpha = 0.0;
+                        }
+                        else {
+                            let gid = area_layer.data[row][col];
+                            let tileset = this._map.getTileset(gid);
+                            if (tileset) {
+                                sprite.spriteSheet = tileset.getSpriteSheet();
+                                sprite.gotoAndStop(tileset.getTileFrame(gid));
+                                sprite.alpha = 1.0;
+                            }
+                            else {
+                                sprite.alpha = 0.0;
+                            }
                         }
                     }
                 }
@@ -196,8 +214,6 @@ export class GameScreen extends BaseScreen {
     protected _gotoSpawnPoint(name: string): void {
         let spawn_point = this._map.getSpawnPoint(name);
         if (spawn_point) {
-            this._tileContainer.removeAllChildren();
-
             // Convert spawn point coordinates to tile coordinates
             let sp_tile_x = Math.floor(spawn_point.x / this._map.tileWidth);
             let sp_tile_y = Math.floor(spawn_point.y / this._map.tileHeight);
@@ -221,25 +237,31 @@ export class GameScreen extends BaseScreen {
 
     protected _scrollMap(): void {
         let scrolling_left = (this._tileContainer.x > 0) && (this._scrollXPos > 0);
-        let scrolling_right = (this._tileContainer.x <= -this._map.tileWidth) && (this._scrollXPos < this._map.width);
+        let scrolling_right = (this._tileContainer.x <= -this._map.tileWidth) && ((this._scrollXPos + this._numOfXTiles) < this._map.width);
         let scrolling_up = (this._tileContainer.y > 0) && (this._scrollYPos > 0);
-        let scrolling_down = (this._tileContainer.y <= -this._map.tileHeight) && (this._scrollYPos < this._map.height);
+        let scrolling_down = (this._tileContainer.y <= -this._map.tileHeight) && ((this._scrollYPos + this._numOfYTiles) < this._map.height);
 
+        let x_tiles_moved = 0;
+        let y_tiles_moved = 0;
         if (scrolling_left) {
-            this._scrollXPos -= Math.ceil(this._tileContainer.x / this._map.tileWidth);
+            x_tiles_moved = Math.ceil(this._tileContainer.x / this._map.tileWidth);
+            this._scrollXPos -= x_tiles_moved;
             this._tileContainer.x = (this._tileContainer.x % this._map.tileWidth) - this._map.tileWidth;
         }
         else if (scrolling_right) {
-            this._scrollXPos += Math.abs(Math.ceil(this._tileContainer.x / this._map.tileWidth));
+            x_tiles_moved = Math.ceil(this._tileContainer.x / this._map.tileWidth);
+            this._scrollXPos += Math.abs(x_tiles_moved);
             this._tileContainer.x = this._tileContainer.x % this._map.tileWidth;
         }
 
         if (scrolling_up) {
-            this._scrollYPos -= Math.ceil(this._tileContainer.y / this._map.tileHeight);
+            y_tiles_moved = Math.ceil(this._tileContainer.y / this._map.tileHeight);
+            this._scrollYPos -= y_tiles_moved;
             this._tileContainer.y = (this._tileContainer.y % this._map.tileHeight) - this._map.tileHeight;
         }
         else if (scrolling_down) {
-            this._scrollYPos += Math.abs(Math.ceil(this._tileContainer.y / this._map.tileHeight));
+            y_tiles_moved = Math.ceil(this._tileContainer.y / this._map.tileHeight);
+            this._scrollYPos += Math.abs(y_tiles_moved);
             this._tileContainer.y = this._tileContainer.y % this._map.tileHeight;
         }
 

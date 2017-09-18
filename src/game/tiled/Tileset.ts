@@ -113,6 +113,21 @@ export class Tileset {
         return null;
     }
 
+    getSpriteSheet(): createjs.SpriteSheet {
+        return this._spriteSheet;
+    }
+
+    /**
+     * Returns a sprite sheet frame number from a given global id
+     */
+    getTileFrame(gid: number): number {
+        if (this.hasGID(gid)) {
+            return gid - this._firstGID;
+        }
+
+        return -1;
+    }
+
     /**
      * Corrects image paths to point to the right directory
      */
