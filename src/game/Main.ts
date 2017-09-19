@@ -5,7 +5,7 @@
  */
 
 import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys } from ".";
-import { BaseScreen, TitleScreen } from "./screens";
+import * as screens from "./screens";
 import * as buttons from "./Buttons";
 import * as utils from "./Utils";
 import * as colors from "./Colors";
@@ -72,8 +72,8 @@ export class Game {
     protected _preloaderItemsTotal: number;
     protected _preloaderItemsLoaded: number;
 
-    protected _screens: BaseScreen[];
-    protected _currentScreen: BaseScreen;
+    protected _screens: screens.BaseScreen[];
+    protected _currentScreen: screens.BaseScreen;
 
     protected _keyDownQueueTimeoutHandle: number;
 
@@ -129,13 +129,13 @@ export class Game {
         this._preload();
     }
 
-    pushScreen(screen: BaseScreen): void {
+    pushScreen(screen: screens.BaseScreen): void {
         this._stage.addChild(screen.container);
         this._screens.push(screen);
         this._currentScreen = screen;
     }
 
-    popScreen(): BaseScreen {
+    popScreen(): screens.BaseScreen {
         var screen = this._screens.pop();
         this._stage.removeChild(screen.container);
         this._currentScreen = (this._screens.length > 0) ? this._screens[this._screens.length - 1] : null;
@@ -284,7 +284,7 @@ export class Game {
 
     protected _showTitleScreen(): void {
         this._stage.removeAllChildren();
-        this.pushScreen(new TitleScreen(this));
+        this.pushScreen(new screens.TitleScreen(this));
     }
 
     protected _onKeyEvent(event: KeyboardEvent): void {
@@ -425,11 +425,23 @@ export class Game {
         else if (cmd === "showinvis") {
             // Sets to render invisible layers
             this.renderInvisibleLayers = true;
+            for (let screen of this._screens) {
+                if (screen instanceof screens.GameScreen) {
+                    (<screens.GameScreen>screen).redrawMapArea();
+                    break;
+                }
+            }
             success = true;
         }
         else if (cmd === "hideinvis") {
             // Sets to not render invisible layers
             this.renderInvisibleLayers = false;
+            for (let screen of this._screens) {
+                if (screen instanceof screens.GameScreen) {
+                    (<screens.GameScreen>screen).redrawMapArea();
+                    break;
+                }
+            }
             success = true;
         }
         else if (cmd === "wspeed" && parsed.length === 2) {

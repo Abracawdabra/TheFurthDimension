@@ -4,7 +4,7 @@
         {
          "data":[5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 6, 1, 19, 10, 10, 10, 10, 10, 10, 10, 20, 2, 1, 11, 9, 9, 9, 9, 9, 9, 9, 13, 2, 1, 11, 9, 9, 9, 9, 9, 9, 9, 13, 2, 1, 11, 9, 9, 9, 9, 9, 9, 9, 13, 2, 1, 11, 9, 9, 9, 9, 9, 9, 9, 13, 2, 1, 11, 9, 9, 9, 9, 9, 9, 9, 13, 2, 1, 11, 9, 9, 9, 9, 9, 9, 9, 13, 2, 1, 17, 12, 12, 12, 9, 12, 12, 12, 18, 2, 7, 3, 3, 3, 15, 14, 16, 3, 3, 3, 8, 0, 0, 0, 0, 1, 14, 2, 0, 0, 0, 0],
          "height":11,
-         "name":"Tile Layer 1",
+         "name":"Tiles",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
@@ -13,27 +13,38 @@
          "y":0
         }, 
         {
+         "data":[25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 25, 25, 25, 25, 0, 25, 25, 25, 25, 25, 0, 0, 0, 0, 25, 25, 25, 0, 0, 0, 0],
+         "height":11,
+         "name":"Collisions",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":false,
+         "width":11,
+         "x":0,
+         "y":0
+        }, 
+        {
          "draworder":"topdown",
-         "name":"Meta",
+         "name":"Spawn Points",
          "objects":[
                 {
-                 "height":5.33333333333334,
-                 "id":1,
+                 "height":4,
+                 "id":2,
                  "name":"sp_entrance",
                  "rotation":0,
                  "type":"spawn_point",
                  "visible":true,
-                 "width":5,
-                 "x":85.6666666666667,
-                 "y":118.666666666667
+                 "width":4,
+                 "x":85.5,
+                 "y":118
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }],
- "nextobjectid":2,
+ "nextobjectid":3,
  "orientation":"orthogonal",
  "properties":
     {
@@ -57,6 +68,19 @@
          "name":"Dongola Temple",
          "spacing":0,
          "tilecount":24,
+         "tileheight":16,
+         "tilewidth":16
+        }, 
+        {
+         "columns":1,
+         "firstgid":25,
+         "image":"..\/images\/tilesets\/collision.png",
+         "imageheight":16,
+         "imagewidth":16,
+         "margin":0,
+         "name":"Collision",
+         "spacing":0,
+         "tilecount":1,
          "tileheight":16,
          "tilewidth":16
         }],
