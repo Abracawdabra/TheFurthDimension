@@ -9,6 +9,7 @@ import { Button } from "..";
 import { Game, TextSpeed } from "../Main";     // Needs to be separate for some reason
 import { TextMenu } from "../ui/TextMenu";
 import * as colors from "../Colors";
+import { BitmapText } from "../ui/BitmapText";
 
 const SELECTED_TEXT_BLINK_INTERVAL = 500;
 
@@ -21,7 +22,7 @@ enum Option {
 export class OptionsScreen extends screens.BaseScreen {
     protected _displayScaleMenu: TextMenu;
 
-    protected _txtTextSpeed: createjs.Text;
+    protected _txtTextSpeed: BitmapText;
     protected _textSpeedBlinkTime: number;
 
     protected _currentOption: Option;
@@ -59,11 +60,11 @@ export class OptionsScreen extends screens.BaseScreen {
                         switch (this._gameInstance.textSpeed) {
                             case TextSpeed.MEDIUM:
                                 this._gameInstance.textSpeed = TextSpeed.SLOW;
-                                this._txtTextSpeed.text = "Slow";
+                                this._txtTextSpeed.setText("Slow");
                                 break;
                             case TextSpeed.FAST:
                                 this._gameInstance.textSpeed = TextSpeed.MEDIUM;
-                                this._txtTextSpeed.text = "Medium";
+                                this._txtTextSpeed.setText("Medium");
                         }
 
                 }
@@ -81,11 +82,11 @@ export class OptionsScreen extends screens.BaseScreen {
                         switch (this._gameInstance.textSpeed) {
                             case TextSpeed.SLOW:
                                 this._gameInstance.textSpeed = TextSpeed.MEDIUM;
-                                this._txtTextSpeed.text = "Medium";
+                                this._txtTextSpeed.setText("Medium");
                                 break;
                             case TextSpeed.MEDIUM:
                                 this._gameInstance.textSpeed = TextSpeed.FAST;
-                                this._txtTextSpeed.text = "Fast";
+                                this._txtTextSpeed.setText("Fast");
                         }
                 }
             break;
@@ -124,13 +125,13 @@ export class OptionsScreen extends screens.BaseScreen {
         background.graphics.beginFill(colors.GB_COLOR_LIGHTEST_GREEN);
         background.graphics.drawRect(0, 0, Game.DISPLAY_WIDTH, Game.DISPLAY_HEIGHT);
         this.container.addChild(background);
-        let txt_title = this.container.addChild(new createjs.Text("Options", "8px 'Press Start'", colors.GB_COLOR_DARKEST_GREEN));
+        let txt_title = this.container.addChild(new BitmapText("Options", "8px 'Press Start'", colors.GB_COLOR_DARKEST_GREEN));
         txt_title.x = 2;
         txt_title.y = 2;
 
         let height = txt_title.getBounds().height;
 
-        let txt_display = this.container.addChild(new createjs.Text("Display:", "8px 'Press Start'", colors.GB_COLOR_DARKEST_GREEN));
+        let txt_display = this.container.addChild(new BitmapText("Display:", "8px 'Press Start'", colors.GB_COLOR_DARKEST_GREEN));
         txt_display.x = 2;
         txt_display.y = txt_title.y + height + 8;
         let display_scale_menu = new TextMenu(80, txt_display.y, colors.GB_COLOR_DARKEST_GREEN, 0, 30);
@@ -150,10 +151,10 @@ export class OptionsScreen extends screens.BaseScreen {
         }
         this._displayScaleMenu = display_scale_menu;
 
-        let txt_text_speed = this.container.addChild(new createjs.Text("Text Speed:", "8px 'Press Start'", colors.GB_COLOR_DARKEST_GREEN));
+        let txt_text_speed = this.container.addChild(new BitmapText("Text Speed:", "8px 'Press Start'", colors.GB_COLOR_DARKEST_GREEN));
         txt_text_speed.x = 2;
         txt_text_speed.y = txt_display.y + height + 4;
-        let txt_text_speed_value = this.container.addChild(new createjs.Text(this._getTextSpeedStr(), "8px 'Press Start'", colors.GB_COLOR_DARKEST_GREEN));
+        let txt_text_speed_value = this.container.addChild(new BitmapText(this._getTextSpeedStr(), "8px 'Press Start'", colors.GB_COLOR_DARKEST_GREEN));
         txt_text_speed_value.x = 102;
         txt_text_speed_value.y = txt_text_speed.y;
         this._txtTextSpeed = txt_text_speed_value;

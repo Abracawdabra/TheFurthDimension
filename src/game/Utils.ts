@@ -4,6 +4,8 @@
  * @license MIT
  */
 
+import { Game } from "./Main";
+
 /**
  * Returns if a two arrays are equal
  */
@@ -32,4 +34,15 @@ export function arraysAreEqual(arr1: any[], arr2: any[]): boolean {
  */
 export function sanitizeKeyName(name: string): string {
     return name.toUpperCase().replace(/\s|-/g, "");
+}
+
+export function hexToInt(hex: string): number {
+    hex = hex.replace("0x", "").replace("#", "").toUpperCase();
+    const VALUES = "0123456789ABCDEF";
+    let val = 0;
+    for (let i=(hex.length - 1) * 4, char=0; i>=0; i -= 4, ++char) {
+        val += VALUES.indexOf(hex[char]) << i;
+    }
+
+    return val;
 }

@@ -5,8 +5,9 @@
  */
 
 import { BaseMenu } from "./BaseMenu";
+import { BitmapText } from "./BitmapText";
 
-export class TextMenu extends BaseMenu<createjs.Text> {
+export class TextMenu extends BaseMenu<BitmapText> {
     protected _textColor: string;
 
     protected _marker: createjs.Bitmap | createjs.Shape;
@@ -69,7 +70,7 @@ export class TextMenu extends BaseMenu<createjs.Text> {
     }
 
     addItem(name: string, text: string, next_column: boolean = false): void {
-        let item = new createjs.Text(text, "8px 'Press Start'", this._textColor);
+        let item = new BitmapText(text, "8px Press Start", this._textColor);
         this._addItem(name, item, next_column);
 
         if (this._items.length === 1 && this._items[0].length === 1) {

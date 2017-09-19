@@ -13,4 +13,5 @@ export * from "./Utils";
 export * from "./SpatialGrid";
 export * from "./Direction";
 export * from "./BaseMapObject";
+export * from "./FontData";
 export * from "./Main";

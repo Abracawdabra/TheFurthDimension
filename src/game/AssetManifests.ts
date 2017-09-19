@@ -7,16 +7,15 @@
 export const BASE_URL = "assets/";
 
 export const ASSET_MANIFESTS: { [type: string]: any } = {
-    fonts: [
-        { name: "Press Start", src: BASE_URL + "fonts/PrStart.ttf", format: "truetype" }
-    ],
-
     images: [
         { id: "img_title_screen", src: BASE_URL + "images/title_screen.png" },
 
         // Tilesets
         { id: "tileset_dongola_temple", src: BASE_URL + "images/tilesets/dongola_temple.png" },
-        { id: "tileset_collision", src: BASE_URL + "images/tilesets/collision.png" }
+        { id: "tileset_collision", src: BASE_URL + "images/tilesets/collision.png" },
+
+        // Font Bitmaps
+        { id: "font_8px_press_start", src: BASE_URL + "images/fonts/PressStart_8px.png" }
     ],
 
     sounds: [

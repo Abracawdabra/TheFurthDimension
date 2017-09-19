@@ -9,6 +9,7 @@ import * as screens from "./screens";
 import * as buttons from "./Buttons";
 import * as utils from "./Utils";
 import * as colors from "./Colors";
+import { FontData } from "./FontData";
 
 const PRELOADER_DISPLAY_WIDTH = 100;
 const PRELOADER_DISPLAY_HEIGHT = 20;
@@ -42,6 +43,8 @@ export class Game {
     static readonly FPS = 59.7;
 
     static Assets: { [id: string]: any };
+
+    static FontSpriteSheets: { [id: string]: createjs.SpriteSheet };
 
     keysDown: number[];
     // For keeping track of ordered key presses
@@ -142,17 +145,6 @@ export class Game {
         return screen;
     }
 
-    /**
-     * Creates a new CSS font-face and adds it to the head of the document
-     */
-    protected _createFontFace(name: string, url: string, format: string): void {
-        let font_face = "@font-face { font-family: '" + name + "'; src: url('" + url + "') format('" + format + "'); }";
-        let style_el = document.createElement("style");
-        style_el.type = "text/css";
-        style_el.appendChild(document.createTextNode(font_face));
-        document.head.appendChild(style_el);
-    }
-
     protected _addMainKeyEventListeners(): void {
         this.keysDown = [];
         this.keyDownQueue = [];
@@ -177,6 +169,7 @@ export class Game {
         }
         else {
             Game.Assets = {};
+            Game.FontSpriteSheets = {};
 
             this._showPreloaderDisplay();
 
@@ -186,24 +179,9 @@ export class Game {
             load_queue.on("error", this._onPreloadError, null, true);
 
             let manifest = ASSET_MANIFESTS.images.concat(ASSET_MANIFESTS.sounds).concat(ASSET_MANIFESTS.maps);
-            this._preloaderItemsTotal = ASSET_MANIFESTS.fonts.length + manifest.length;
+            this._preloaderItemsTotal = manifest.length;
             this._preloaderItemsLoaded = 0;
             load_queue.loadManifest(manifest);
-
-            let web_font_config = {
-                custom: {
-                    families: new Array<string>()
-                },
-                fontactive: this._onPreloadFontLoad,
-                fontinactive: this._onPreloadFontInactive
-            };
-            for (let font of ASSET_MANIFESTS.fonts) {
-                // Add all fonts to the document and the web font config
-                this._createFontFace(font.name, font.src, font.format);
-                web_font_config.custom.families.push(font.name);
-            }
-
-            WebFont.load(web_font_config);
         }
     }
 
@@ -255,6 +233,16 @@ export class Game {
 
     protected _onPreloadFileLoad(event: createjs.Event): void {
         Game.Assets[event.item.id] = event.result;
+
+        // Loaded font bitmaps
+        if (event.item.id in FontData) {
+            Game.FontSpriteSheets[event.item.id] = new createjs.SpriteSheet({
+                images: [event.item.src],
+                frames: FontData[event.item.id].frames,
+                animations: FontData[event.item.id].animations
+            });
+        }
+
         this._incrementPreloaderItemCount();
     }
 
