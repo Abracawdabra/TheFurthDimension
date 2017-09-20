@@ -264,15 +264,6 @@ export class Game {
         this._cancelPreloading();
     }
 
-    protected _onPreloadFontLoad(familyName: string, fvd: string): void {
-        this._incrementPreloaderItemCount();
-    }
-
-    protected _onPreloadFontInactive(familyName: string, fvd: string): void {
-        console.log("Error loading font family: '" + familyName + "'");
-        this._cancelPreloading();
-    }
-
     protected _onPreloadComplete(event: createjs.Event): void {
         if (this._preloaderQueue) {
             this._preloaderQueue.destroy();
