@@ -112,8 +112,6 @@ export class Game {
         // Bind event handlers to the game instance
         this._onPreloadFileLoad = this._onPreloadFileLoad.bind(this);
         this._onPreloadError = this._onPreloadError.bind(this);
-        this._onPreloadFontLoad = this._onPreloadFontLoad.bind(this);
-        this._onPreloadFontInactive = this._onPreloadFontInactive.bind(this);
         this._onPreloadComplete = this._onPreloadComplete.bind(this);
         this._onTick = this._onTick.bind(this);
         this._onKeyEvent = this._onKeyEvent.bind(this);
