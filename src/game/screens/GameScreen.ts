@@ -51,10 +51,12 @@ export class GameScreen extends BaseScreen {
 
         this._mapLayerIndices = {};
         this._spatialGrids = {};
-        this._tileContainer.removeAllChildren();
 
+        this._tileContainer.removeAllChildren();
+        this._objectContainer.removeAllChildren();
         let empty_spritesheet = new createjs.SpriteSheet({});
         for (let layer_index=0; layer_index<map.layers.length; ++layer_index) {
+            // Process each map layer
             let layer = map.layers[layer_index];
             this._mapLayerIndices[layer.name] = layer_index;
             if (layer.type === "tilelayer") {
@@ -82,8 +84,6 @@ export class GameScreen extends BaseScreen {
                 this._spatialGrids[layer.name] = grid;
             }
         }
-
-        this._activeObjects = {};
 
         let background = new createjs.Shape();
         background.graphics.beginFill(this._map.backgroundColor);
@@ -195,7 +195,6 @@ export class GameScreen extends BaseScreen {
 
                 for (let sprite of objects_to_remove) {
                     // Remove objects that are no longer in draw distance
-                    this._objectContainer.removeChild(sprite);
                     (<any>sprite).mapObject.destroySprite();
                 }
             }
