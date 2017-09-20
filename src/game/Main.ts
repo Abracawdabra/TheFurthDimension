@@ -4,12 +4,12 @@
  * @license MIT
  */
 
-import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys } from ".";
+import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys, FontData, SpriteSheetData } from ".";
 import * as screens from "./screens";
 import * as buttons from "./Buttons";
 import * as utils from "./Utils";
 import * as colors from "./Colors";
-import { FontData } from "./FontData";
+
 
 const PRELOADER_DISPLAY_WIDTH = 100;
 const PRELOADER_DISPLAY_HEIGHT = 20;
@@ -44,7 +44,11 @@ export class Game {
 
     static Assets: { [id: string]: any };
 
+    /** Populated during preloading */
     static FontSpriteSheets: { [id: string]: createjs.SpriteSheet };
+
+    /** Populated during preloading */
+    static SpriteSheets: { [id: string]: createjs.SpriteSheet };
 
     keysDown: number[];
     // For keeping track of ordered key presses
@@ -170,6 +174,7 @@ export class Game {
         else {
             Game.Assets = {};
             Game.FontSpriteSheets = {};
+            Game.SpriteSheets = {};
 
             this._showPreloaderDisplay();
 
@@ -234,12 +239,20 @@ export class Game {
     protected _onPreloadFileLoad(event: createjs.Event): void {
         Game.Assets[event.item.id] = event.result;
 
-        // Loaded font bitmaps
         if (event.item.id in FontData) {
+            // Loaded font bitmaps
             Game.FontSpriteSheets[event.item.id] = new createjs.SpriteSheet({
                 images: [event.item.src],
                 frames: FontData[event.item.id].frames,
                 animations: FontData[event.item.id].animations
+            });
+        }
+        else if (event.item.id in SpriteSheetData) {
+            // Sprite sheets
+            Game.SpriteSheets[event.item.id] = new createjs.SpriteSheet({
+                images: [event.item.src],
+                frames: SpriteSheetData[event.item.id].frames,
+                animations: SpriteSheetData[event.item.id].animations
             });
         }
 
