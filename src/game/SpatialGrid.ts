@@ -26,9 +26,6 @@ export class SpatialGrid {
     protected _tileWidth: number;
     protected _tileHeight: number;
 
-    protected _gridPixelWidth: number;
-    protected _gridPixelHeight: number;
-
     // 3-dimensional array because each cell can contain any number of objects
     protected _cells: ISpatialGridCellObject[][][];
 
@@ -38,24 +35,25 @@ export class SpatialGrid {
 
         let grid_width = Math.ceil(map_width / CELL_WIDTH);
         let grid_height = Math.ceil(map_height / CELL_HEIGHT);
-        this._gridPixelWidth = grid_width * tile_width * CELL_WIDTH;
-        this._gridPixelHeight = grid_height * tile_height * CELL_HEIGHT;
 
         this._cells = [];
         // Make the grid cells
         for (let row=0; row<grid_height; ++row) {
             this._cells.push([]);
             for (let col=0; col<grid_width; ++col) {
-                this._cells.push([]);
+                this._cells[row].push([]);
             }
         }
     }
 
     addObject(obj: ISpatialGridCellObject): void {
         let span_data = this._getSpanData(obj);
-        for (let row=span_data.startRow; row<=span_data.endRow; ++row) {
-            for (let col=span_data.startCol; col<=span_data.endCol; ++col) {
-                this._cells[row][col].push(obj);
+        if (span_data.startRow < this._cells.length && span_data.startCol < this._cells[0].length) {
+            // Not out of bounds
+            for (let row=span_data.startRow; row<=span_data.endRow; ++row) {
+                for (let col=span_data.startCol; col<=span_data.endCol; ++col) {
+                    this._cells[row][col].push(obj);
+                }
             }
         }
     }
@@ -70,48 +68,51 @@ export class SpatialGrid {
     removeObject(obj: ISpatialGridCellObject): void {
         let span_data = this._getSpanData(obj);
         let updated_before_removing = false;
-        for (let row=span_data.startRow; row<=span_data.endRow; ++row) {
-            for (let col=span_data.startCol; col<=span_data.endCol; ++col) {
-                let index = this._cells[row][col].indexOf(obj);
-                if (index > -1) {
-                    this._cells[row][col].splice(index, 1);
+        if (span_data.startRow < this._cells.length && span_data.startCol < this._cells[0].length) {
+            // Not out of bounds
+            for (let row=span_data.startRow; row<=span_data.endRow; ++row) {
+                for (let col=span_data.startCol; col<=span_data.endCol; ++col) {
+                    let index = this._cells[row][col].indexOf(obj);
+                    if (index > -1) {
+                        this._cells[row][col].splice(index, 1);
+                    }
+                    else {
+                        // This object's position was updated before removing it from the grid
+                        updated_before_removing = true;
+                        break;
+                    }
                 }
-                else {
-                    // This object's position was updated before removing it from the grid
-                    updated_before_removing = true;
+
+                if (updated_before_removing) {
                     break;
                 }
             }
 
             if (updated_before_removing) {
-                break;
-            }
-        }
-
-        if (updated_before_removing) {
-            // Search the entire array for the starting cell for this object
-            // NOTE: This is inefficient and should be noted that removing the object
-            //       from the grid is advised before updating it's position.
-            let end_row   = this._cells.length - 1;
-            let start_col = -1;
-            let end_col   = this._cells[0].length - 1;
-            for (let row=0; row<=end_row; ++row) {
-                for (let col=Math.max(start_col, 0); col<=end_col; ++col) {
-                    if (this._cells[row][col].indexOf(obj) > -1) {
-                        if (start_col === -1) {
-                            // Found the left edge
-                            start_col = col;
+                // Search the entire array for the starting cell for this object
+                // NOTE: This is inefficient and should be noted that removing the object
+                //       from the grid is advised before updating it's position.
+                let end_row   = this._cells.length - 1;
+                let start_col = -1;
+                let end_col   = this._cells[0].length - 1;
+                for (let row=0; row<=end_row; ++row) {
+                    for (let col=Math.max(start_col, 0); col<=end_col; ++col) {
+                        if (this._cells[row][col].indexOf(obj) > -1) {
+                            if (start_col === -1) {
+                                // Found the left edge
+                                start_col = col;
+                            }
                         }
-                    }
-                    else if (start_col > -1 && col === start_col) {
-                        // Found bottom edge
-                        end_row = row - 1;
-                        break;
-                    }
-                    else if (start_col > -1 && end_col === -1) {
-                        // Found the right edge
-                        end_col = col - 1;
-                        break;
+                        else if (start_col > -1 && col === start_col) {
+                            // Found bottom edge
+                            end_row = row - 1;
+                            break;
+                        }
+                        else if (start_col > -1 && end_col === -1) {
+                            // Found the right edge
+                            end_col = col - 1;
+                            break;
+                        }
                     }
                 }
             }
@@ -156,11 +157,21 @@ export class SpatialGrid {
     }
 
     protected _getSpanData(obj: ISpatialGridCellObject): ISpatialGridSpanData {
+        let end_col = Math.floor((obj.x + obj.width) / (this._tileWidth * CELL_WIDTH));
+        if (end_col >= this._cells[0].length) {
+            end_col = this._cells[0].length - 1;
+        }
+
+        let end_row = Math.floor((obj.y + obj.height) / (this._tileHeight * CELL_HEIGHT));
+        if (end_row >= this._cells.length) {
+            end_row = this._cells.length - 1;
+        }
+
         return {
-            startCol: Math.floor(this._gridPixelWidth / obj.x),
-            endCol: Math.floor(this._gridPixelWidth / (obj.x + obj.width)),
-            startRow: Math.floor(this._gridPixelHeight / obj.y),
-            endRow: Math.floor(this._gridPixelHeight / (obj.y + obj.height))
+            startCol: Math.floor(obj.x / (this._tileWidth * CELL_WIDTH)),
+            endCol: end_col,
+            startRow: Math.floor(obj.y / (this._tileHeight * CELL_HEIGHT)),
+            endRow: end_row
         };
     }
 }
