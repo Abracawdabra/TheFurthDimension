@@ -35,12 +35,12 @@
                  "type":"spawn_point",
                  "visible":true,
                  "width":4,
-                 "x":85.5,
+                 "x":86,
                  "y":118
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":false,
+         "visible":true,
          "x":0,
          "y":0
         }],

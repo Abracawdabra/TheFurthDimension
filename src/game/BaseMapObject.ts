@@ -4,31 +4,49 @@
  * @license MIT
  */
 
+import { GameScreen } from "./screens";
+import { Game } from "./Main";
+
 export abstract class BaseMapObject {
+    parent: GameScreen;
     name: string;
-
-    /** Flag for checking if collisions are enabled for this object */
+    // Flag for checking if collisions are enabled for this object
     collisionsEnabled: boolean;
-
-    /** Only for spatial grids */
+    // Only for spatial grids
     width: number;
-    /** Only for spatial grids */
+    // Only for spatial grids
     height: number;
 
+    protected _x: number;
     get x(): number {
-        return this._sprite.x;
+        return this._x;
     }
 
     set x(value: number) {
-        this._sprite.x = value;
+        this._x = value;
+        if (this._sprite) {
+            this._sprite.x = this.localX;
+        }
     }
 
+    protected _y: number;
     get y(): number {
-        return this._sprite.y;
+        return this._y;
     }
 
     set y(value: number) {
-        this._sprite.y = value;
+        this._y = value;
+        if (this._sprite) {
+            this._sprite.y = this.localY;
+        }
+    }
+
+    get localX(): number {
+        return this._x - this.parent.viewportX;
+    }
+
+    get localY(): number {
+        return this._y - this.parent.viewportY;
     }
 
     /**
@@ -41,14 +59,22 @@ export abstract class BaseMapObject {
 
     protected _boundingBox: createjs.Rectangle;
 
-    constructor(name: string, sprite_sheet: createjs.SpriteSheet, frame: number | string = 0, collisions_enabled: boolean = true, bounding_box?: createjs.Rectangle) {
+    protected _spriteName: string;
+    get spriteName(): string {
+        return this._spriteName;
+    }
+
+    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, frame: number | string = 0, collisions_enabled: boolean = true, bounding_box?: createjs.Rectangle) {
+        this.parent = parent;
         this.name = name;
 
-        this._sprite = new createjs.Sprite(sprite_sheet);
-        this._sprite.gotoAndStop(frame);
+        this._spriteName = sprite_name;
         this._spriteSheet = sprite_sheet;
 
-        let sprite_bounds = this._sprite.getBounds();
+        this.x = x;
+        this.y = y;
+
+        let sprite_bounds = sprite_sheet.getFrameBounds(0);
         this.width = sprite_bounds.width;
         this.height = sprite_bounds.height;
 
@@ -68,6 +94,10 @@ export abstract class BaseMapObject {
     getSprite(): createjs.Sprite {
         if (!this._sprite) {
             this._sprite = new createjs.Sprite(this._spriteSheet);
+            this._sprite.name = this._spriteName;
+            this._sprite.gotoAndStop("stand_south");
+            this._sprite.x = this.localX;
+            this._sprite.y = this.localY;
         }
 
         return this._sprite;

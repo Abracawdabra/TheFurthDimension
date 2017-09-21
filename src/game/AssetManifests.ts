@@ -15,7 +15,10 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
         { id: "tileset_collision", src: BASE_URL + "images/tilesets/collision.png" },
 
         // Font Bitmaps
-        { id: "font_8px_press_start", src: BASE_URL + "images/fonts/PressStart_8px.png" }
+        { id: "font_8px_press_start", src: BASE_URL + "images/fonts/PressStart_8px.png" },
+
+        // Sprite sheets
+        { id: "ss_npc_testy", src: BASE_URL + "images/spritesheets/npc_testy.png" }
     ],
 
     sounds: [
@@ -23,6 +26,7 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
     ],
 
     maps: [
+        { id: "map_test", src: BASE_URL + "maps/test.json" },
         { id: "map_dongola_temple", src: BASE_URL + "maps/dongola_temple.json" }
     ]
 };

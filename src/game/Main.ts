@@ -426,11 +426,9 @@ export class Game {
         else if (cmd === "hideinvis") {
             // Sets to not render invisible layers
             this.renderInvisibleLayers = false;
-            for (let screen of this._screens) {
-                if (screen instanceof screens.GameScreen) {
-                    (<screens.GameScreen>screen).redrawMapArea();
-                    break;
-                }
+            let game_screen = this._getGameScreen();
+            if (game_screen) {
+                game_screen.redrawMapArea();
             }
             success = true;
         }
@@ -441,9 +439,38 @@ export class Game {
                 success = true;
             }
         }
+        else if (cmd === "loadmap" && parsed.length > 1) {
+            let game_screen = this._getGameScreen();
+            let map = parsed[1];
+            if (game_screen && map in Game.Assets) {
+                game_screen.loadMap(Game.Assets[map]);
+                if (parsed.length === 3) {
+                    game_screen.gotoSpawnPoint(parsed[2]);
+                }
+                success = true;
+            }
+            else {
+                console.log("Map '" + map + "' not found.");
+            }
+        }
+        else if (cmd === "goto" && parsed.length === 2) {
+            let game_screen = this._getGameScreen();
+            if (game_screen) {
+                game_screen.gotoSpawnPoint(parsed[1]);
+                success = true;
+            }
+        }
 
         if (success) {
             console.log("Cheat '" + command + "' accepted.");
+        }
+    }
+
+    protected _getGameScreen(): screens.GameScreen {
+        for (let screen of this._screens) {
+            if (screen instanceof screens.GameScreen) {
+                return screen;
+            }
         }
     }
 }

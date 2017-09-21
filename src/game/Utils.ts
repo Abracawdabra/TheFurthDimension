@@ -46,3 +46,11 @@ export function hexToInt(hex: string): number {
 
     return val;
 }
+
+/**
+ * Returns a rectangle object given a string in the format of "[x] [y] [width] [height]"
+ */
+export function rectangleFromStr(rect_str: string): createjs.Rectangle {
+    let parsed = rect_str.split(" ");
+    return new createjs.Rectangle(parseInt(parsed[0], 10), parseInt(parsed[1], 10), parseInt(parsed[2], 10), parseInt(parsed[3], 10));
+}

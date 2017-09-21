@@ -6,9 +6,13 @@
 
 import { BaseMapObject } from "../BaseMapObject";
 import { Direction, directionToString } from "../Direction";
+import { GameScreen } from "../screens";
+
+// Pixels per second
+const DEFAULT_WALK_SPEED = 50;
 
 export class Character extends BaseMapObject {
-    /** Pixels per second */
+    // Pixels per second
     walkSpeed: number;
 
     protected _spriteSheet: createjs.SpriteSheet;
@@ -44,14 +48,15 @@ export class Character extends BaseMapObject {
         }
     }
 
-    constructor(name: string, walk_speed: number, sprite_sheet: createjs.SpriteSheet, bounding_box?: createjs.Rectangle) {
-        super(name, sprite_sheet, "stand_west", true, bounding_box);
-        this.walkSpeed = walk_speed;
+    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, bounding_box?: createjs.Rectangle) {
+        super(parent, name, x, y, sprite_name, sprite_sheet, "stand_south", true, bounding_box);
+        this.walkSpeed = DEFAULT_WALK_SPEED;
+        this._isWalking = false;
     }
 
     getSprite(): createjs.Sprite {
         super.getSprite();
-        this._sprite.gotoAndStop("stand_west");
+        this._sprite.gotoAndStop("stand_south");
 
         return this._sprite;
     }

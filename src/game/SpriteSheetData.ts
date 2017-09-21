@@ -21,4 +21,8 @@ interface ISpriteSheetData {
 }
 
 export var SpriteSheetData: { [id: string]: ISpriteSheetData } = {
+    "ss_npc_testy": {
+        frames: { width: 16, height: 16, regX: 0, regY: 0, count: 12 },
+        animations: CHARACTER_ANIMATIONS
+    }
 }
