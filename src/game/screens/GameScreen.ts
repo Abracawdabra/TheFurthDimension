@@ -183,7 +183,7 @@ export class GameScreen extends BaseScreen {
         this.gotoSpawnPoint("default");
     }
 
-    gotoSpawnPoint(name: string): void {
+    gotoSpawnPoint(name: string): boolean {
         let spawn_point = this._map.getSpawnPoint(name);
         if (spawn_point) {
             // Convert spawn point coordinates to tile coordinates
@@ -194,32 +194,49 @@ export class GameScreen extends BaseScreen {
             this._scrollXPos = sp_tile_x - Math.floor(this._numOfXTiles / 2);
             this._scrollYPos = sp_tile_y - Math.floor(this._numOfYTiles / 2);
 
+            // Offset for negative values
+            if (this._scrollXPos < 0) {
+
+            }
+
+            if (this._scrollYPos < 0) {
+            }
+
             // Center the tiles on the screen
             this._tileContainer.x = Math.floor((Game.DISPLAY_WIDTH - (this._numOfXTiles * this._map.tileWidth)) / 2);
             this._tileContainer.y = Math.floor((Game.DISPLAY_HEIGHT - (this._numOfYTiles * this._map.tileHeight)) / 2);
 
             this._updateMapArea(this._scrollXPos, this._scrollYPos, this._numOfXTiles, this._numOfYTiles);
             this.redrawMapArea();
+            return true;
         }
         else {
             console.log("Could not find spawn point '" + name + "'");
+            return false;
         }
     }
 
     redrawMapArea(): void {
+        // For negative scroll positions (which should only occur here with spawn points)
+        let offset_col = (this._scrollXPos < 0) ? Math.abs(this._scrollXPos) : 0;
+        let offset_row = (this._scrollYPos < 0) ? Math.abs(this._scrollYPos) : 0;
         for (let layer_index=0; layer_index<this._mapArea.length; ++layer_index) {
             let area_layer = this._mapArea[layer_index];
             if (area_layer.layer.type === "tilelayer") {
                 let layer_start_index = layer_index * this._numOfYTiles * this._numOfXTiles;
                 for (let row=0; row<this._numOfYTiles; ++row) {
+                    let data_row = row - offset_row;
                     for (let col=0; col<this._numOfXTiles; ++col) {
+                        let data_col = col - offset_col;
                         let sprite = <createjs.Sprite>this._tileContainer.getChildAt(layer_start_index + (row * this._numOfXTiles) + col);
-                        if (row >= area_layer.data.length || col >= area_layer.data[row].length || (!this._gameInstance.renderInvisibleLayers && !area_layer.layer.visible)) {
-                            // Past the last row or column in the layer data, or layer is invisible without cheat enabled
+                        if (row < offset_row || col < offset_col                                                 // Fix for spawn points that are near the top or left edge of the map
+                        || data_row >= area_layer.data.length || data_col >= area_layer.data[data_row].length    // Past last row or column
+                        || (!this._gameInstance.renderInvisibleLayers && !area_layer.layer.visible))             // Invisible layer without cheat enabled
+                        {
                             sprite.alpha = 0.0;
                         }
                         else {
-                            let gid = area_layer.data[row][col];
+                            let gid = area_layer.data[data_row][data_col];
                             let tileset = this._map.getTileset(gid);
                             if (tileset) {
                                 sprite.spriteSheet = tileset.getSpriteSheet();

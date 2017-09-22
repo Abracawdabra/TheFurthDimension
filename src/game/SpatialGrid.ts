@@ -157,21 +157,39 @@ export class SpatialGrid {
     }
 
     protected _getSpanData(obj: ISpatialGridCellObject): ISpatialGridSpanData {
-        let end_col = Math.floor((obj.x + obj.width) / (this._tileWidth * CELL_WIDTH));
+        // Use these just in case they have to be adjusted
+        let width = obj.width;
+        let height = obj.height;
+
+        let start_col = Math.floor(obj.x / (this._tileWidth * CELL_WIDTH));
+        if (start_col < 0) {
+            // Out of bounds, so clamp and subtract the difference
+            width += start_col;
+            start_col = 0;
+        }
+
+        let end_col = Math.floor((obj.x + width) / (this._tileWidth * CELL_WIDTH));
         if (end_col >= this._cells[0].length) {
             end_col = this._cells[0].length - 1;
         }
 
-        let end_row = Math.floor((obj.y + obj.height) / (this._tileHeight * CELL_HEIGHT));
+        let start_row = Math.floor(obj.y / (this._tileHeight * CELL_HEIGHT));
+        if (start_row < 0) {
+            // Out of bounds, so clamp and subtract the difference
+            width += start_row;
+            start_row = 0;
+        }
+
+        let end_row = Math.floor((obj.y + height) / (this._tileHeight * CELL_HEIGHT));
         if (end_row >= this._cells.length) {
             end_row = this._cells.length - 1;
         }
 
         return {
-            startCol: Math.floor(obj.x / (this._tileWidth * CELL_WIDTH)),
-            endCol: end_col,
-            startRow: Math.floor(obj.y / (this._tileHeight * CELL_HEIGHT)),
-            endRow: end_row
+            startCol: start_col ,
+            endCol: (end_col >= 0) ? end_col : 0,
+            startRow: start_row ,
+            endRow: (end_row >= 0) ? end_row : 0
         };
     }
 }

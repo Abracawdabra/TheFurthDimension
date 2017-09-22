@@ -456,8 +456,7 @@ export class Game {
         else if (cmd === "goto" && parsed.length === 2) {
             let game_screen = this._getGameScreen();
             if (game_screen) {
-                game_screen.gotoSpawnPoint(parsed[1]);
-                success = true;
+                success = game_screen.gotoSpawnPoint(parsed[1]);
             }
         }
 
