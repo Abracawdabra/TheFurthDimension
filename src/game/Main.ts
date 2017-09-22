@@ -15,7 +15,7 @@ const PRELOADER_DISPLAY_WIDTH = 100;
 const PRELOADER_DISPLAY_HEIGHT = 20;
 
 const MAX_KEY_DOWN_QUEUE_LENGTH = 5;
-const KEY_DOWN_QUEUE_TIMEOUT = 1500;      // Milliseconds
+const KEY_DOWN_QUEUE_TIMEOUT = 600;      // Milliseconds
 
 const DEFAULT_WALK_SPEED = 60;      // Pixels per second
 
@@ -343,6 +343,8 @@ export class Game {
         cheat_textbox.id = "cheat_textbox";
         cheat_textbox.className = "cheat-textbox";
         cheat_textbox.placeholder = "Enter cheat";
+        cheat_textbox.autocomplete = "off";
+        cheat_textbox.spellcheck = false;
         cheat_textbox.style.top = (40 * this._displayScale).toString() + "px";
         cheat_textbox.style.fontSize = (8 * this._displayScale).toString() + "px";
         cheat_textbox.style.width = (8 * this._displayScale * 18).toString() + "px";
