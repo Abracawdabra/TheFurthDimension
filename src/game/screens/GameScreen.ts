@@ -194,14 +194,6 @@ export class GameScreen extends BaseScreen {
             this._scrollXPos = sp_tile_x - Math.floor(this._numOfXTiles / 2);
             this._scrollYPos = sp_tile_y - Math.floor(this._numOfYTiles / 2);
 
-            // Offset for negative values
-            if (this._scrollXPos < 0) {
-
-            }
-
-            if (this._scrollYPos < 0) {
-            }
-
             // Center the tiles on the screen
             this._tileContainer.x = Math.floor((Game.DISPLAY_WIDTH - (this._numOfXTiles * this._map.tileWidth)) / 2);
             this._tileContainer.y = Math.floor((Game.DISPLAY_HEIGHT - (this._numOfYTiles * this._map.tileHeight)) / 2);
