@@ -247,10 +247,12 @@ export class Game {
         }
         else if (event.item.id in SpriteSheetData) {
             // Sprite sheets
+            let data = SpriteSheetData[event.item.id];
             Game.SpriteSheets[event.item.id] = new createjs.SpriteSheet({
                 images: [event.item.src],
-                frames: SpriteSheetData[event.item.id].frames,
-                animations: SpriteSheetData[event.item.id].animations
+                frames: data.frames,
+                animations: data.animations,
+                framerate: data.framerate
             });
         }
 
@@ -333,7 +335,7 @@ export class Game {
                 this._currentScreen.update(event.delta);
             }
 
-            this._stage.update();
+            this._stage.update(event);
         }
     }
 

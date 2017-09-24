@@ -23,7 +23,7 @@ const CHARACTER_ANIMATIONS = {
     }
 }
 
-const CHARACTER_ANIMATION_FRAMERATE = 10;
+const CHARACTER_ANIMATION_FRAMERATE = 40;
 
 interface ISpriteSheetData {
     frames: { width: number, height: number, regX: number, regY: number, count?: number };
