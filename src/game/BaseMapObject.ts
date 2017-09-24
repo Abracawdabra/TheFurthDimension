@@ -6,6 +6,7 @@
 
 import { GameScreen } from "./screens";
 import { Game } from "./Main";
+import { InteractionHandlers } from ".";
 
 export abstract class BaseMapObject {
     parent: GameScreen;
@@ -59,12 +60,15 @@ export abstract class BaseMapObject {
 
     protected _boundingBox: createjs.Rectangle;
 
+    // Interaction handler ID which corresponds to properties in src/game/InteractionHandlers.ts
+    protected _interactionID: string;
+
     protected _spriteName: string;
     get spriteName(): string {
         return this._spriteName;
     }
 
-    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, frame: number | string = 0, collisions_enabled: boolean = true, bounding_box?: createjs.Rectangle) {
+    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, frame: number | string = 0, collisions_enabled: boolean = true, bounding_box?: createjs.Rectangle, interaction_id?: string) {
         this.parent = parent;
         this.name = name;
 
@@ -83,9 +87,10 @@ export abstract class BaseMapObject {
             this._boundingBox = bounding_box;
         }
         else {
-            this._boundingBox = sprite_bounds.clone();
+            this._boundingBox = new createjs.Rectangle(0, 0, sprite_bounds.width, sprite_bounds.height);;
         }
 
+        this._interactionID = interaction_id;
     }
 
     /**
@@ -108,6 +113,19 @@ export abstract class BaseMapObject {
      */
     getBounds(): createjs.Rectangle {
         return new createjs.Rectangle(this._sprite.x + this._boundingBox.x, this._sprite.y + this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
+    }
+
+    getInteractionID(): string {
+        return this._interactionID;
+    }
+
+    interact(interactor: BaseMapObject): void {
+        if (this._interactionID && this._interactionID in InteractionHandlers) {
+            InteractionHandlers[this._interactionID].call(this, interactor);
+        }
+        else {
+            InteractionHandlers["not_found"].call(this);
+        }
     }
 
     /**

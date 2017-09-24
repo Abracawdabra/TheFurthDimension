@@ -132,6 +132,10 @@ export class SpatialGrid {
             obj.y = y;
             this.addObject(obj);
         }
+        else {
+            obj.x = x;
+            obj.y = y;
+        }
     }
 
     getObjects(area: createjs.Rectangle): ISpatialGridCellObject[] {

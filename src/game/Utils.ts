@@ -54,3 +54,10 @@ export function rectangleFromStr(rect_str: string): createjs.Rectangle {
     let parsed = rect_str.split(" ");
     return new createjs.Rectangle(parseInt(parsed[0], 10), parseInt(parsed[1], 10), parseInt(parsed[2], 10), parseInt(parsed[3], 10));
 }
+
+/**
+ * Returns a random number between a range
+ */
+export function randBetween(min: number, max: number): number {
+    return (Math.random() * (max - min)) + min;
+}

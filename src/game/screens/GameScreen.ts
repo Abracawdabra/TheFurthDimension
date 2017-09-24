@@ -31,8 +31,11 @@ export class GameScreen extends BaseScreen {
     // Hash object for layer names to indices (for faster lookup)
     protected _mapLayerIndices: { [name: string]: number };
 
-    // Array for storing objects that are currently in draw distance
+    // For storing objects that are currently in draw distance
     protected _activeObjects: { [layer: string]: BaseMapObject[] };
+
+    // Current NPCs in draw distance to save on frame workload (Scraped from _activeObjects)
+    protected _activeNPCs: { [layer: string]: NPC[] };
 
     // Spatial grid layers for the current map
     protected _spatialGrids: { [layer: string]: SpatialGrid };
@@ -84,41 +87,51 @@ export class GameScreen extends BaseScreen {
     }
 
     update(delta: number): void {
-        if (this._mapArea && this._scrollDir) {
-            /** @todo Implement collision checking */
-            let x_movement = 0;
-            let y_movement = 0;
-            let scroll_speed = delta / 1000 * this._gameInstance.walkSpeed;
-            if (this._scrollDir & Direction.LEFT) {
-                x_movement = scroll_speed;
-            }
-            else if (this._scrollDir & Direction.RIGHT) {
-                x_movement = -scroll_speed;
-            }
+        if (this._mapArea) {
+            if (this._scrollDir) {
+                /** @todo Implement collision checking */
+                let x_movement = 0;
+                let y_movement = 0;
+                let scroll_speed = delta / 1000 * this._gameInstance.walkSpeed;
+                if (this._scrollDir & Direction.LEFT) {
+                    x_movement = scroll_speed;
+                }
+                else if (this._scrollDir & Direction.RIGHT) {
+                    x_movement = -scroll_speed;
+                }
 
-            if (this._scrollDir & Direction.UP) {
-                y_movement = scroll_speed;
-            }
-            else if (this._scrollDir & Direction.DOWN) {
-                y_movement = -scroll_speed;
-            }
+                if (this._scrollDir & Direction.UP) {
+                    y_movement = scroll_speed;
+                }
+                else if (this._scrollDir & Direction.DOWN) {
+                    y_movement = -scroll_speed;
+                }
 
-            this._tileContainer.x += x_movement;
-            this._tileContainer.y += y_movement;
-            if (x_movement !== 0 || y_movement !== 0) {
-                for (let layer in this._activeObjects) {
-                    if (this._activeObjects.hasOwnProperty(layer)) {
-                        // Move map objects on screen
-                        for (let obj of this._activeObjects[layer]) {
-                            let sprite = obj.getSprite();
-                            sprite.x = obj.localX;
-                            sprite.y = obj.localY;
+                this._tileContainer.x += x_movement;
+                this._tileContainer.y += y_movement;
+                if (x_movement !== 0 || y_movement !== 0) {
+                    for (let layer in this._activeObjects) {
+                        if (this._activeObjects.hasOwnProperty(layer)) {
+                            // Move map objects on screen
+                            for (let obj of this._activeObjects[layer]) {
+                                let sprite = obj.getSprite();
+                                sprite.x = obj.localX;
+                                sprite.y = obj.localY;
+                            }
                         }
                     }
                 }
+
+                this._scrollMap();
             }
 
-            this._scrollMap();
+            for (let layer in this._activeNPCs) {
+                if (this._activeNPCs.hasOwnProperty(layer)) {
+                    for (let npc of this._activeNPCs[layer]) {
+                        npc.update(delta, this._spatialGrids[layer]);
+                    }
+                }
+            }
         }
     }
 
@@ -318,9 +331,18 @@ export class GameScreen extends BaseScreen {
         // Convert to pixel coordinates for spatial grids
         let rect = new createjs.Rectangle(x * this._map.tileWidth, y * this._map.tileHeight, width * this._map.tileWidth, height * this._map.tileHeight);
         this._activeObjects = {};
+        this._activeNPCs = {};
         for (let area_layer of this._mapArea) {
             if (area_layer.layer.type === "objectgroup" && area_layer.layer.name !== "Spawn Points") {
                 this._activeObjects[area_layer.layer.name] = <BaseMapObject[]>this._spatialGrids[area_layer.layer.name].getObjects(rect);
+
+                this._activeNPCs[area_layer.layer.name] = [];
+                for (let obj of this._activeObjects[area_layer.layer.name]) {
+                    if (obj instanceof NPC) {
+                        // Add active NPCs
+                        this._activeNPCs[area_layer.layer.name].push(obj);
+                    }
+                }
             }
         }
     }
@@ -370,11 +392,7 @@ export class GameScreen extends BaseScreen {
                 settings.wanderMaxDirDuration = obj.properties.wanderMaxDirDuration;
             }
 
-            if ("interactionID" in obj.properties) {
-                settings.interactionID = obj.properties.interactionID;
-            }
-
-            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], bounding_box, settings);
+            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], bounding_box, obj.properties.interactionID,  settings);
         }
     }
 }

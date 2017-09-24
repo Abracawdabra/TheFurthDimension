@@ -4,7 +4,9 @@
  * @license MIT
  */
 
-export var InteractionHandlers: { [id: string]: (param: any) => void } = {
+import { BaseMapObject } from ".";
+
+export var InteractionHandlers: { [id: string]: (interactor?: BaseMapObject) => void } = {
     "not_found": function() {
         console.log("Interaction handler '" + this.getInteractionID() + "' not found.");
     }
