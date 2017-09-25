@@ -293,7 +293,7 @@ export class GameScreen extends BaseScreen {
         let bb_x_offset = bounding_box.x - obj.x;
         let bb_y_offset = bounding_box.y - obj.y;
         let bb_left = x + (bounding_box.x - obj.x);
-        let bb_top = y + (bounding_box.y - obj.y);;
+        let bb_top = y + (bounding_box.y - obj.y);
         let bb_right = bb_left + bounding_box.width;
         let bb_bottom = bb_top + bounding_box.height;
 
@@ -334,8 +334,7 @@ export class GameScreen extends BaseScreen {
                     else if (obj.direction & Direction.RIGHT) {
                         bb_left = (col * this._map.tileWidth) - (bounding_box.width + 1);
                     }
-
-                    if (obj.direction & Direction.UP) {
+                    else if (obj.direction & Direction.UP) {
                         bb_top = ((row + 1) * this._map.tileHeight);
                     }
                     else if (obj.direction & Direction.DOWN) {
@@ -345,7 +344,7 @@ export class GameScreen extends BaseScreen {
             }
         }
 
-        return new createjs.Point(bb_left + bb_x_offset, bb_top + bb_y_offset);
+        return new createjs.Point(bb_left - bb_x_offset, bb_top - bb_y_offset);
     }
 
     protected _init(): void {
