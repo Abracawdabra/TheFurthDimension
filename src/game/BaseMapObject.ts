@@ -112,7 +112,7 @@ export abstract class BaseMapObject {
      * Returns newly calculated bounds
      */
     getBounds(): createjs.Rectangle {
-        return new createjs.Rectangle(this._sprite.x + this._boundingBox.x, this._sprite.y + this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
+        return new createjs.Rectangle(this._x + this._boundingBox.x, this._y + this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
     }
 
     getInteractionID(): string {

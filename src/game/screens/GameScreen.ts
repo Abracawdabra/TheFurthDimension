@@ -8,8 +8,16 @@ import { BaseScreen } from "./BaseScreen";
 import * as tiled from "../tiled";
 import { Game } from "../Main";
 import { Direction, Button, SpatialGrid, BaseMapObject } from "..";
-import { INPCSettings, NPC } from "../entities/NPC";
+import { INPCSettings, NPC, Character } from "../entities";
 import * as utils from "../Utils";
+
+interface ICollisionResult {
+    obj: any,
+    // Nearest available X position to the destination X position
+    nearestX: number;
+    // Nearest available Y position to the destination Y position
+    nearestY: number;
+}
 
 export class GameScreen extends BaseScreen {
     protected _map: tiled.Map;
@@ -279,6 +287,169 @@ export class GameScreen extends BaseScreen {
             }
         }
     }
+
+    getMovePos(obj: Character, x: number, y: number): createjs.Point {
+        let bounding_box = obj.getBounds();
+        let bb_x_offset = bounding_box.x - obj.x;
+        let bb_y_offset = bounding_box.y - obj.y;
+        let bb_left = x + (bounding_box.x - obj.x);
+        let bb_top = y + (bounding_box.y - obj.y);;
+        let bb_right = bb_left + bounding_box.width;
+        let bb_bottom = bb_top + bounding_box.height;
+
+        // Map edges
+        let map_right = this._map.width * this._map.tileWidth;
+        let map_bottom = this._map.height * this._map.tileHeight;
+        if (bb_left < 0) {
+            bb_right += Math.abs(bb_left);
+            bb_left = 0;
+        }
+        else if (bb_right > map_right) {
+            bb_left -= bb_right - map_right;
+            bb_right = map_right;
+        }
+
+        if (bb_top < 0) {
+            bb_bottom += Math.abs(bb_top);
+            bb_top = 0;
+        }
+        else if (bb_bottom > map_bottom) {
+            bb_top -= bb_bottom - map_bottom;
+            bb_bottom = map_bottom;
+        }
+
+        // Collision tiles
+        let start_col = Math.floor(bb_left / this._map.tileWidth);
+        let end_col = Math.floor(bb_right / this._map.tileWidth);
+        let start_row = Math.floor(bb_top / this._map.tileHeight);
+        let end_row = Math.floor(bb_bottom / this._map.tileHeight);
+        let collision_layer_index = this._mapLayerIndices["Collisions"];
+        for (let row=start_row; row<=end_row; ++row) {
+            for (let col=start_col; col<=end_col; ++col) {
+                if (this._map.getGID(collision_layer_index, row, col) !== 0) {
+                    // Collision
+                    if (obj.direction & Direction.LEFT) {
+                        bb_left = ((col + 1) * this._map.tileWidth);
+                    }
+                    else if (obj.direction & Direction.RIGHT) {
+                        bb_left = (col * this._map.tileWidth) - (bounding_box.width + 1);
+                    }
+
+                    if (obj.direction & Direction.UP) {
+                        bb_top = ((row + 1) * this._map.tileHeight);
+                    }
+                    else if (obj.direction & Direction.DOWN) {
+                        bb_top = (row * this._map.tileHeight) - (bounding_box.height + 1);
+                    }
+                }
+            }
+        }
+
+        //bb_right = bb_left + bounding_box.width;
+        //bb_bottom = bb_top + bounding_box.height;
+
+        return new createjs.Point(bb_left + bb_x_offset, bb_top + bb_y_offset);
+    }
+
+    /**
+     * Checks for any collisions and returns a new Point object with
+     * where the obj should move to.
+
+    getMovePos(obj: Character, x: number, y: number): createjs.Point {
+        let bounding_box = obj.getBounds();
+        let bb_x_offset = bounding_box.x - obj.x;
+        let bb_y_offset = bounding_box.y - obj.y;
+        bounding_box.x = x;
+        bounding_box.y = y;
+
+        // Map edges
+        let map_right = this._map.width * this._map.tileWidth;
+        let map_bottom = this._map.height * this._map.tileHeight;
+        if (bounding_box.x < 0) {
+            bounding_box.x = 0;
+        }
+        else if ((bounding_box.x + bounding_box.width) > map_right) {
+            bounding_box.x = map_right - bounding_box.width;
+        }
+
+        if (bounding_box.y < 0) {
+            bounding_box.y = 0;
+        }
+        else if ((bounding_box.y + bounding_box.height) > map_bottom) {
+            bounding_box.y = map_bottom - bounding_box.height;
+        }
+
+        let bounding_box_right = bounding_box.x + bounding_box.width;
+        let bounding_box_bottom = bounding_box.y + bounding_box.height;
+
+        // Collision tiles
+        let scroll_x = this._scrollXPos * this._map.tileWidth;
+        let scroll_y = this._scrollYPos * this._map.tileHeight;
+        let start_col = Math.floor((bounding_box.x - scroll_x) / this._map.tileWidth);
+        start_col = (start_col > -1) ? start_col : 0;
+        let end_col   = Math.floor((bounding_box_right - scroll_x) / this._map.tileWidth);
+        end_col = (end_col < this._numOfXTiles) ? end_col : this._numOfXTiles - 1;
+        let start_row = Math.floor((bounding_box.y - scroll_y) / this._map.tileHeight);
+        start_row = (start_row > -1) ? start_row : 0;
+        let end_row   = Math.floor((bounding_box_bottom - scroll_y) / this._map.tileHeight);
+        end_row = (end_row < this._numOfYTiles) ? end_row : this._numOfYTiles - 1;
+        let collision_layer = this._getMapAreaLayer("Collisions");
+        for (let row=start_row; row<=end_row; ++row) {
+            for (let col=start_col; col<=end_col; ++col) {
+                if (collision_layer.data[row][col] !== 0) {
+                    // Collision tile
+                    if (obj.direction & Direction.LEFT) {
+                        bounding_box.x = scroll_x + ((col + 1) * this._map.tileWidth);
+                    }
+                    else if (obj.direction & Direction.RIGHT) {
+                        bounding_box.x = scroll_x + (col * this._map.tileWidth) - bounding_box.width;
+                    }
+
+                    if (obj.direction & Direction.UP) {
+                        bounding_box.y = scroll_y + ((row + 1) * this._map.tileHeight);
+                    }
+                    else if (obj.direction & Direction.DOWN) {
+                        bounding_box.y = scroll_y + (row * this._map.tileHeight) - bounding_box.height;
+                    }
+                }
+            }
+        }
+
+        // Collidable objects
+        for (let layer in this._activeObjects) {
+            if (this._activeObjects.hasOwnProperty(layer)) {
+                for (let collidable_obj of this._activeObjects[layer]) {
+                    if (collidable_obj === obj || !collidable_obj.collisionsEnabled) {
+                        continue;
+                    }
+
+                    let cobj_bb = collidable_obj.getBounds();
+                    bounding_box_right = bounding_box.x + bounding_box.width;
+                    if ((bounding_box.x > cobj_bb.x && bounding_box.x < cobj_bb.x + cobj_bb.width)
+                    || (bounding_box_right > cobj_bb.x && bounding_box_right < cobj_bb.x + cobj_bb.width))  {
+                        if (obj.direction & Direction.LEFT) {
+                            bounding_box.x = cobj_bb.x + cobj_bb.width;
+                        }
+                        else if (obj.direction & Direction.RIGHT) {
+                            bounding_box.x = cobj_bb.x - bounding_box.width;
+                        }
+                    }
+
+                    if (bounding_box.y > cobj_bb.y && bounding_box.y < cobj_bb.y + cobj_bb.height) {
+                        if (obj.direction & Direction.UP) {
+                            bounding_box.y = cobj_bb.y + cobj_bb.height;
+                        }
+                        else if (obj.direction & Direction.DOWN) {
+                            bounding_box.y = cobj_bb.y - bounding_box.height;
+                        }
+                    }
+                }
+            }
+        }
+
+        return new createjs.Point(bounding_box.x - bb_x_offset, bounding_box.y - bb_y_offset);
+    }
+    */
 
     protected _init(): void {
         this._tileContainer = new createjs.Container();

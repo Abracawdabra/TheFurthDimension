@@ -9,6 +9,9 @@ import { Direction, InteractionHandlers, SpatialGrid, directionToString } from "
 import { GameScreen } from "../screens";
 import * as utils from "../Utils";
 
+// How many seconds to wait between wander direction changes
+const WANDER_DIR_CHANGE_PAUSE_DURATION = 2.0;
+
 export interface INPCSettings {
     // Pixels per second
     walkSpeed?: number;
@@ -99,6 +102,9 @@ export class NPC extends Character {
         }
     }
 
+    // Pause between wander direction changes
+    protected _wanderPause: boolean;
+
     constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, bounding_box?: createjs.Rectangle, interaction_id?: string, settings?: INPCSettings) {
         super(parent, name, x, y, sprite_name, sprite_sheet, bounding_box, interaction_id);
 
@@ -118,7 +124,17 @@ export class NPC extends Character {
     update(delta: number, spatial_grid: SpatialGrid): void {
         if (this._wander) {
             if (createjs.Ticker.getTime() > this._wanderDirDurationEndTime) {
-                this._changeWanderDirection();
+                if (this._wanderPause) {
+                    this._wanderPause = false;
+                    this._changeWanderDirection();
+                }
+                else {
+                    this._wanderPause = true;
+                    this._wanderDirDurationEndTime = createjs.Ticker.getTime() + (WANDER_DIR_CHANGE_PAUSE_DURATION * 1000);
+                    if (this._isWalking) {
+                        this.isWalking = false;
+                    }
+                }
             }
 
             if (this._isWalking) {
@@ -139,28 +155,34 @@ export class NPC extends Character {
                     y_movement = move_amount;
                 }
 
-                if (x_movement || y_movement) {
+                if (Math.floor(this._x + x_movement) !== Math.floor(this._x) || Math.floor(this._y + y_movement) !== Math.floor(this._y)) {
+                    // The characteristic of the X or Y values has changed
                     let bounding_box_left = this._x + this._boundingBox.x + x_movement;
                     let bounding_box_top = this._y + this._boundingBox.y + y_movement;
                     let bounding_box_right = bounding_box_left + this._boundingBox.width;
                     let bounding_box_bottom = bounding_box_top + this._boundingBox.height;
-                    let map = this.parent.getMap();
                     if (bounding_box_left >= this._wanderBounds.x
                     && bounding_box_top >= this._wanderBounds.y
                     && bounding_box_right <= this._wanderBounds.x + this._wanderBounds.width
-                    && bounding_box_bottom <= this._wanderBounds.y + this._wanderBounds.height
-                    // Map boundaries
-                    && bounding_box_left >= 0
-                    && bounding_box_top >= 0
-                    && bounding_box_right <= map.width * map.tileWidth
-                    && bounding_box_bottom <= map.height * map.tileHeight) {
-                        // Can move to the new position
-                        spatial_grid.updateObjectPos(this, this._x + x_movement, this.y + y_movement);
+                    && bounding_box_bottom <= this._wanderBounds.y + this._wanderBounds.height) {
+                        // Within wander bounds
+                        let new_pos = this.parent.getMovePos(this, this._x + x_movement, this._y + y_movement);
+                        if (Math.floor(new_pos.x) === Math.floor(this._x) && Math.floor(new_pos.y) === Math.floor(this._y)) {
+                            // Hit something
+                            this.isWalking = false;
+                        }
+                        else {
+                            spatial_grid.updateObjectPos(this, new_pos.x, new_pos.y);
+                        }
                     }
                     else {
-                        this._isWalking = false;
-                        this._sprite.gotoAndStop("stand_" + directionToString(this._direction));
+                        this.isWalking = false;
                     }
+                }
+                else {
+                    // Sub pixel increment
+                    this._x += x_movement;
+                    this._y += y_movement;
                 }
             }
         }
@@ -176,9 +198,6 @@ export class NPC extends Character {
         this._wander = false;
         this._wanderDirDurationEndTime = 0;
         this.isWalking = false;
-        if (this._sprite) {
-            this._sprite.gotoAndStop("stand_" + directionToString(this._direction));
-        }
     }
 
     protected _changeWanderDirection(): void {

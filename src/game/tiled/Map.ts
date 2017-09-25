@@ -78,6 +78,14 @@ export class Map {
         }
     }
 
+    getGID(layer_index: number, row: number, column: number): number {
+        if (row < this._layers[layer_index].data.length && column < this._layers[layer_index].data[row].length) {
+            return this._layers[layer_index].data[row][column];
+        }
+
+        return 0;
+    }
+
     getTileset(gid: number): tiled.Tileset {
         for (let tileset of this._tilesets) {
             if (tileset.hasGID(gid)) {

@@ -5,3 +5,4 @@
  */
 
 export * from "./Character";
+export * from "./NPC";

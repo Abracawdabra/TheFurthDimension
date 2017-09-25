@@ -9,7 +9,7 @@ import { Direction, directionToString } from "../Direction";
 import { GameScreen } from "../screens";
 
 // Pixels per second
-const DEFAULT_WALK_SPEED = 50;
+const DEFAULT_WALK_SPEED = 40;
 
 export class Character extends BaseMapObject {
     // Pixels per second
@@ -29,6 +29,8 @@ export class Character extends BaseMapObject {
         else {
             this._sprite.gotoAndStop("stand_" + directionToString(this._direction));
         }
+
+        this._isWalking = value;
     }
 
     protected _direction: number;
