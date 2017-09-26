@@ -125,6 +125,7 @@ export class GameScreen extends BaseScreen {
                                 let sprite = obj.getSprite();
                                 sprite.x = obj.localX;
                                 sprite.y = obj.localY;
+                                obj.setBoundingBoxOutlinePos(sprite.x, sprite.y);
                             }
                         }
                     }
@@ -275,6 +276,10 @@ export class GameScreen extends BaseScreen {
                         // object just to call destroySprite()
                         (<any>sprite).mapObject = obj;
                         this._objectContainer.addChild(sprite);
+
+                        if (this._gameInstance.renderBoundingBoxes) {
+                            obj.showBoundingBox(true);
+                        }
                     }
 
                     objects_to_remove.splice(objects_to_remove.indexOf(sprite), 1);
@@ -345,6 +350,16 @@ export class GameScreen extends BaseScreen {
         }
 
         return new createjs.Point(bb_left - bb_x_offset, bb_top - bb_y_offset);
+    }
+
+    showBoundingBoxes(show: boolean): void {
+        for (let layer in this._activeObjects) {
+            if (this._activeObjects.hasOwnProperty(layer)) {
+                for (let obj of this._activeObjects[layer]) {
+                    obj.showBoundingBox(show);
+                }
+            }
+        }
     }
 
     protected _init(): void {

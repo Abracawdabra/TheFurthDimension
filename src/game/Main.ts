@@ -55,6 +55,7 @@ export class Game {
     keyDownQueue: number[];
 
     renderInvisibleLayers: boolean;
+    renderBoundingBoxes: boolean;
     walkSpeed: number;
 
     protected _stage: createjs.Stage;
@@ -125,6 +126,7 @@ export class Game {
 
         this.textSpeed = TextSpeed.MEDIUM;
         this.renderInvisibleLayers = false;
+        this.renderBoundingBoxes = false;
         this.walkSpeed = DEFAULT_WALK_SPEED;
 
         createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
@@ -437,6 +439,7 @@ export class Game {
             success = true;
         }
         else if (cmd === "wspeed" && parsed.length === 2) {
+            // Sets walking speed
             let value = parseInt(parsed[1], 10);
             if (!isNaN(value)) {
                 this.walkSpeed = value;
@@ -444,6 +447,7 @@ export class Game {
             }
         }
         else if (cmd === "loadmap" && parsed.length > 1) {
+            // Loads a map
             let game_screen = this._getGameScreen();
             let map = parsed[1];
             if (game_screen && map in Game.Assets) {
@@ -458,10 +462,20 @@ export class Game {
             }
         }
         else if (cmd === "goto" && parsed.length === 2) {
+            // Goes to a spawn point on the map
             let game_screen = this._getGameScreen();
             if (game_screen) {
                 success = game_screen.gotoSpawnPoint(parsed[1]);
             }
+        }
+        else if (cmd === "showbbox" || cmd === "hidebbox") {
+            // Shows or hides object bounding boxes
+            this.renderBoundingBoxes = (cmd === "showbbox");
+            let game_screen = this._getGameScreen();
+            if (game_screen) {
+                game_screen.showBoundingBoxes(this.renderBoundingBoxes);
+            }
+            success = true;
         }
 
         if (success) {

@@ -27,6 +27,9 @@ export abstract class BaseMapObject {
         this._x = value;
         if (this._sprite) {
             this._sprite.x = this.localX;
+            if (this._boundingBoxOutline) {
+                this._boundingBoxOutline.x = this._sprite.x;
+            }
         }
     }
 
@@ -39,6 +42,9 @@ export abstract class BaseMapObject {
         this._y = value;
         if (this._sprite) {
             this._sprite.y = this.localY;
+            if (this._boundingBoxOutline) {
+                this._boundingBoxOutline.y = this._sprite.y;
+            }
         }
     }
 
@@ -59,6 +65,8 @@ export abstract class BaseMapObject {
     protected _spriteSheet: createjs.SpriteSheet;
 
     protected _boundingBox: createjs.Rectangle;
+
+    protected _boundingBoxOutline: createjs.Shape;
 
     // Interaction handler ID which corresponds to properties in src/game/InteractionHandlers.ts
     protected _interactionID: string;
@@ -128,11 +136,47 @@ export abstract class BaseMapObject {
         }
     }
 
+    showBoundingBox(show: boolean): void {
+        if (this._sprite) {
+            if (show && this._boundingBoxOutline) {
+                this.parent.container.addChild(this._boundingBoxOutline);
+            }
+            else if (show) {
+                let outline = new createjs.Shape();
+                outline.graphics.beginStroke("#7B68EE");
+                outline.graphics.setStrokeStyle(1.5);
+                outline.graphics.drawRect(this._boundingBox.x, this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
+                outline.graphics.endStroke();
+                outline.x = this._sprite.x;
+                outline.y = this._sprite.y;
+                outline.cache(this._boundingBox.x, this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
+                this.parent.container.addChild(outline);
+                this._boundingBoxOutline = outline;
+            }
+            else {
+                this._boundingBoxOutline.uncache();
+                this.parent.container.removeChild(this._boundingBoxOutline);
+                this._boundingBoxOutline = null;
+            }
+        }
+    }
+
+    setBoundingBoxOutlinePos(x: number, y: number): void {
+        if (this._boundingBoxOutline) {
+            this._boundingBoxOutline.x = x;
+            this._boundingBoxOutline.y = y;
+        }
+    }
+
     /**
      * Removes the sprite from its parent and destroys the internal reference to it
      */
     destroySprite(): void {
         if (this._sprite) {
+            if (this._boundingBoxOutline) {
+                this.showBoundingBox(false);
+            }
+
             this._sprite.parent.removeChild(this._sprite);
             this._sprite.removeAllEventListeners();
             this._sprite = null;
