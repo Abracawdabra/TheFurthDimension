@@ -409,6 +409,45 @@ export class GameScreen extends BaseScreen {
             }
         }
 
+        // Object collisions
+        // A bounds Rectangle object to reuse for minimalizing the instantiation
+        // and destruction of a bunch of Rectangle objects.
+        let bounds_rect = new createjs.Rectangle(bb_left, bb_top, bounding_box.width, bounding_box.height);
+        for (let layer in this._activeObjects) {
+            if (this._activeObjects.hasOwnProperty(layer)) {
+                for (let active_obj of this._activeObjects[layer]) {
+                    if (obj === active_obj || active_obj === this._player && this._gameInstance.enableNoClip) {
+                        // Don't check against itself, or clip with player when noclip is enabled
+                        continue;
+                    }
+
+                    let active_obj_bounds = active_obj.getBounds();
+                    if (active_obj_bounds.intersects(bounds_rect)) {
+                        // Check which path works
+                        let can_move_x = !bounds_rect.setValues(bb_left, bounding_box.y, bounding_box.width, bounding_box.height).intersects(active_obj_bounds);
+                        let can_move_y = !bounds_rect.setValues(bounding_box.x, bb_top, bounding_box.width, bounding_box.height).intersects(active_obj_bounds);
+                        if (can_move_x && !can_move_y) {
+                            axes = (axes & ~Axes.Y);
+                        }
+                        else if (!can_move_x && can_move_y) {
+                            axes = (axes & ~Axes.X);
+                        }
+                        else {
+                            axes = 0;
+                        }
+
+                        // Reset bounds_rect to original value
+                        bounds_rect.setValues(bb_left, bb_top, bounding_box.width, bounding_box.height);
+                    }
+
+                    if (!axes) {
+                        // No axes left to eliminate
+                        return axes;
+                    }
+                }
+            }
+        }
+
         return axes;
     }
 
@@ -476,7 +515,7 @@ export class GameScreen extends BaseScreen {
 
         // Convert to pixel coordinates for spatial grids
         let rect = new createjs.Rectangle(x * this._map.tileWidth, y * this._map.tileHeight, width * this._map.tileWidth, height * this._map.tileHeight);
-        this._activeObjects = {};
+        this._activeObjects = { __PLAYER__: [this._player] };
         this._activeNPCs = {};
         for (let area_layer of this._mapArea) {
             if (area_layer.layer.type === "objectgroup" && area_layer.layer.name !== "Spawn Points") {
