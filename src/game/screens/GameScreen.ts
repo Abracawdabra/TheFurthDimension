@@ -388,6 +388,16 @@ export class GameScreen extends BaseScreen {
                         else if (!can_move_x && can_move_y) {
                             axes = (axes & ~Axes.X);
                         }
+                        else if (can_move_x && can_move_y) {
+                            if (Math.floor(bounding_box.x / this._map.tileWidth) === col || Math.floor((bounding_box.x + bounding_box.width) / this._map.tileHeight) === col) {
+                                // If on same column, don't move on Y
+                                axes = (axes & ~Axes.Y);
+                            }
+                            if (Math.floor(bounding_box.y / this._map.tileHeight) === row || Math.floor((bounding_box.y + bounding_box.height) / this._map.tileHeight) === row) {
+                                // If on same row, don't move on X
+                                axes = (axes & ~Axes.X);
+                            }
+                        }
                         else {
                             axes = 0;
                         }
