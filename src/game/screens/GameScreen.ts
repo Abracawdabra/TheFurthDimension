@@ -131,13 +131,13 @@ export class GameScreen extends BaseScreen {
                         x_movement = (x_movement < 0) ? Math.abs(x_movement) : x_movement * -1;
                         y_movement = (y_movement < 0) ? Math.abs(y_movement) : y_movement * -1;
                         if (axes & Axes.X) {
-                            this._player.x = player_x_pos;
                             this._tileContainer.x += x_movement;
+                            this._player.x = player_x_pos;
                         }
 
                         if (axes & Axes.Y) {
-                            this._player.y = player_y_pos;
                             this._tileContainer.y += y_movement;
+                            this._player.y = player_y_pos;
                         }
 
                         for (let layer in this._activeObjects) {
@@ -432,7 +432,7 @@ export class GameScreen extends BaseScreen {
         this._objectContainer = new createjs.Container();
         this.container.addChild(this._objectContainer);
 
-        this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], new createjs.Rectangle(2, 4, 12, 12));
+        this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], new createjs.Rectangle(3, 4, 10, 12));
     }
 
     protected _scrollMap(): void {
