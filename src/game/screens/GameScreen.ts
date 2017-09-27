@@ -11,14 +11,6 @@ import { Direction, Button, SpatialGrid, BaseMapObject } from "..";
 import { INPCSettings, NPC, Character } from "../entities";
 import * as utils from "../Utils";
 
-interface ICollisionResult {
-    obj: any,
-    // Nearest available X position to the destination X position
-    nearestX: number;
-    // Nearest available Y position to the destination Y position
-    nearestY: number;
-}
-
 export enum Axes {
     X = 1,
     Y = 2
