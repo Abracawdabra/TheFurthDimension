@@ -19,6 +19,11 @@ interface ICollisionResult {
     nearestY: number;
 }
 
+export enum Axes {
+    X = 1,
+    Y = 2
+}
+
 export class GameScreen extends BaseScreen {
     protected _map: tiled.Map;
 
@@ -54,6 +59,9 @@ export class GameScreen extends BaseScreen {
     // Container for map objects
     protected _objectContainer: createjs.Container;
 
+    // The player
+    protected _player: Character;
+
     // Global x position of the viewport
     get viewportX(): number {
         return (this._scrollXPos * this._map.tileWidth) - this._tileContainer.x;
@@ -67,71 +75,94 @@ export class GameScreen extends BaseScreen {
     handleKeyDown(key_code: number): void {
         if (key_code === Button.LEFT) {
             this._scrollDir |= Direction.LEFT;
+            this._player.direction = this._scrollDir;
         }
         else if (key_code === Button.RIGHT) {
             this._scrollDir |= Direction.RIGHT;
+            this._player.direction = this._scrollDir;
         }
         else if (key_code === Button.UP) {
             this._scrollDir |= Direction.UP;
+            this._player.direction = this._scrollDir;
         }
         else if (key_code === Button.DOWN) {
             this._scrollDir |= Direction.DOWN;
+            this._player.direction = this._scrollDir;
         }
     }
 
     handleKeyUp(key_code: number): void {
         if (key_code === Button.LEFT) {
             this._scrollDir &= ~Direction.LEFT;
+            this._player.direction = this._scrollDir;
         }
         else if (key_code === Button.RIGHT) {
             this._scrollDir &= ~Direction.RIGHT;
+            this._player.direction = this._scrollDir;
         }
         else if (key_code === Button.UP) {
             this._scrollDir &= ~Direction.UP;
+            this._player.direction = this._scrollDir;
         }
         else if (key_code === Button.DOWN) {
             this._scrollDir &= ~Direction.DOWN;
+            this._player.direction = this._scrollDir;
         }
     }
 
     update(delta: number): void {
         if (this._mapArea) {
             if (this._scrollDir) {
-                /** @todo Implement collision checking */
                 let x_movement = 0;
                 let y_movement = 0;
                 let scroll_speed = delta / 1000 * this._gameInstance.walkSpeed;
                 if (this._scrollDir & Direction.LEFT) {
-                    x_movement = scroll_speed;
+                    x_movement = -scroll_speed;
                 }
                 else if (this._scrollDir & Direction.RIGHT) {
-                    x_movement = -scroll_speed;
+                    x_movement = scroll_speed;
                 }
 
                 if (this._scrollDir & Direction.UP) {
-                    y_movement = scroll_speed;
-                }
-                else if (this._scrollDir & Direction.DOWN) {
                     y_movement = -scroll_speed;
                 }
-
-                this._tileContainer.x += x_movement;
-                this._tileContainer.y += y_movement;
-                if (x_movement !== 0 || y_movement !== 0) {
-                    for (let layer in this._activeObjects) {
-                        if (this._activeObjects.hasOwnProperty(layer)) {
-                            // Move map objects on screen
-                            for (let obj of this._activeObjects[layer]) {
-                                let sprite = obj.getSprite();
-                                sprite.x = obj.localX;
-                                sprite.y = obj.localY;
-                                obj.setBoundingBoxOutlinePos(sprite.x, sprite.y);
-                            }
-                        }
-                    }
+                else if (this._scrollDir & Direction.DOWN) {
+                    y_movement = scroll_speed;
                 }
 
-                this._scrollMap();
+                if (x_movement !== 0 || y_movement !== 0) {
+                    let player_x_pos = this._player.x + x_movement;
+                    let player_y_pos = this._player.y + y_movement;
+                    let axes = (this._gameInstance.enableNoClip) ? (Axes.X | Axes.Y) : this.canMoveToPos(this._player, player_x_pos, player_y_pos);
+                    if (axes) {
+                        // Flip the directions for the tile container
+                        x_movement = (x_movement < 0) ? Math.abs(x_movement) : x_movement * -1;
+                        y_movement = (y_movement < 0) ? Math.abs(y_movement) : y_movement * -1;
+                        if (axes & Axes.X) {
+                            this._player.x = player_x_pos;
+                            this._tileContainer.x += x_movement;
+                        }
+
+                        if (axes & Axes.Y) {
+                            this._player.y = player_y_pos;
+                            this._tileContainer.y += y_movement;
+                        }
+
+                        for (let layer in this._activeObjects) {
+                            if (this._activeObjects.hasOwnProperty(layer)) {
+                                // Move map objects on screen
+                                for (let obj of this._activeObjects[layer]) {
+                                    let sprite = obj.getSprite();
+                                    sprite.x = obj.localX;
+                                    sprite.y = obj.localY;
+                                    obj.setBoundingBoxOutlinePos(sprite.x, sprite.y);
+                                }
+                            }
+                        }
+
+                        this._scrollMap();
+                    }
+                }
             }
 
             for (let layer in this._activeNPCs) {
@@ -149,6 +180,8 @@ export class GameScreen extends BaseScreen {
     }
 
     loadMap(map: tiled.IMap): void {
+        this._player.destroySprite();
+
         this._map = new tiled.Map(map);
         this._numOfXTiles = Math.ceil(Game.DISPLAY_WIDTH / map.tilewidth) + 1;
         this._numOfYTiles = Math.ceil(Game.DISPLAY_HEIGHT / map.tileheight) + 1;
@@ -202,6 +235,9 @@ export class GameScreen extends BaseScreen {
         background.graphics.drawRect(0, 0, Game.DISPLAY_WIDTH, Game.DISPLAY_HEIGHT);
         this.container.addChildAt(background, 0);
 
+        this.container.addChild(this._player.getSprite());
+        this._player.showBoundingBox(this._gameInstance.renderBoundingBoxes);
+
         this.gotoSpawnPoint("default");
     }
 
@@ -219,6 +255,9 @@ export class GameScreen extends BaseScreen {
             // Center the tiles on the screen
             this._tileContainer.x = Math.floor((Game.DISPLAY_WIDTH - (this._numOfXTiles * this._map.tileWidth)) / 2);
             this._tileContainer.y = Math.floor((Game.DISPLAY_HEIGHT - (this._numOfYTiles * this._map.tileHeight)) / 2);
+
+            this._player.x = spawn_point.x;
+            this._player.y = spawn_point.y;
 
             this._updateMapArea(this._scrollXPos, this._scrollYPos, this._numOfXTiles, this._numOfYTiles);
             this.redrawMapArea();
@@ -293,34 +332,32 @@ export class GameScreen extends BaseScreen {
         }
     }
 
-    getMovePos(obj: Character, x: number, y: number): createjs.Point {
+    /**
+     * Returns what axes the object can move on
+     */
+    canMoveToPos(obj: Character, x: number, y: number): number {
         let bounding_box = obj.getBounds();
-        let bb_x_offset = bounding_box.x - obj.x;
-        let bb_y_offset = bounding_box.y - obj.y;
+        let old_bb_left = bounding_box.x;
+        let old_bb_top = bounding_box.y;
+        let old_bb_right = old_bb_left + bounding_box.width;
+        let old_bb_bottom = old_bb_top + bounding_box.height;
+
         let bb_left = x + (bounding_box.x - obj.x);
         let bb_top = y + (bounding_box.y - obj.y);
         let bb_right = bb_left + bounding_box.width;
         let bb_bottom = bb_top + bounding_box.height;
 
+        let axes = (Axes.X | Axes.Y);
+
         // Map edges
         let map_right = this._map.width * this._map.tileWidth;
         let map_bottom = this._map.height * this._map.tileHeight;
-        if (bb_left < 0) {
-            bb_right += Math.abs(bb_left);
-            bb_left = 0;
-        }
-        else if (bb_right > map_right) {
-            bb_left -= bb_right - map_right;
-            bb_right = map_right;
+        if (bb_left < 0 || bb_right > map_right) {
+            axes = (axes & ~Axes.X);
         }
 
-        if (bb_top < 0) {
-            bb_bottom += Math.abs(bb_top);
-            bb_top = 0;
-        }
-        else if (bb_bottom > map_bottom) {
-            bb_top -= bb_bottom - map_bottom;
-            bb_bottom = map_bottom;
+        if (bb_top < 0 || bb_bottom > map_bottom) {
+            axes = (axes & ~Axes.Y);
         }
 
         // Collision tiles
@@ -329,30 +366,53 @@ export class GameScreen extends BaseScreen {
         let start_row = Math.floor(bb_top / this._map.tileHeight);
         let end_row = Math.floor(bb_bottom / this._map.tileHeight);
         let collision_layer_index = this._mapLayerIndices["Collisions"];
+        let moving_on_both_axes = ((obj.direction & Direction.LEFT) || (obj.direction & Direction.RIGHT)) && ((obj.direction & Direction.UP) || (obj.direction & Direction.DOWN));
         for (let row=start_row; row<=end_row; ++row) {
             for (let col=start_col; col<=end_col; ++col) {
                 if (this._map.getGID(collision_layer_index, row, col) !== 0) {
                     // Collision
-                    if (obj.direction & Direction.LEFT) {
-                        bb_left = ((col + 1) * this._map.tileWidth);
+                    let tile_left = col * this._map.tileWidth;
+                    let tile_top = row * this._map.tileHeight;
+                    let tile_right = tile_left + this._map.tileWidth;
+                    let tile_bottom = tile_top + this._map.tileHeight;
+
+                    if (moving_on_both_axes) {
+                        // Check which path works
+                        let can_move_x = ((obj.direction & Direction.UP) && this._map.getGID(collision_layer_index, row + 1, col) === 0)
+                                            || ((obj.direction & Direction.DOWN) && this._map.getGID(collision_layer_index, row - 1, col) === 0);
+                        let can_move_y = ((obj.direction & Direction.LEFT) && this._map.getGID(collision_layer_index, row, col + 1) === 0)
+                                            || ((obj.direction & Direction.RIGHT) && this._map.getGID(collision_layer_index, row, col - 1) === 0);
+                        if (can_move_x && !can_move_y) {
+                            axes = (axes & ~Axes.Y);
+                        }
+                        else if (!can_move_x && can_move_y) {
+                            axes = (axes & ~Axes.X);
+                        }
+                        else {
+                            axes = 0;
+                        }
                     }
-                    else if (obj.direction & Direction.RIGHT) {
-                        bb_left = (col * this._map.tileWidth) - (bounding_box.width + 1);
+                    else if ((obj.direction & Direction.LEFT) || (obj.direction & Direction.RIGHT)) {
+                        axes = axes & ~Axes.X;
                     }
-                    else if (obj.direction & Direction.UP) {
-                        bb_top = ((row + 1) * this._map.tileHeight);
+                    else if ((obj.direction & Direction.UP) || (obj.direction & Direction.DOWN)) {
+                        axes = axes & ~Axes.Y;
                     }
-                    else if (obj.direction & Direction.DOWN) {
-                        bb_top = (row * this._map.tileHeight) - (bounding_box.height + 1);
+
+                    if (!axes) {
+                        // No axes left to eliminate
+                        return axes;
                     }
                 }
             }
         }
 
-        return new createjs.Point(bb_left - bb_x_offset, bb_top - bb_y_offset);
+        return axes;
     }
 
     showBoundingBoxes(show: boolean): void {
+        this._player.showBoundingBox(show);
+
         for (let layer in this._activeObjects) {
             if (this._activeObjects.hasOwnProperty(layer)) {
                 for (let obj of this._activeObjects[layer]) {
@@ -369,6 +429,8 @@ export class GameScreen extends BaseScreen {
 
         this._objectContainer = new createjs.Container();
         this.container.addChild(this._objectContainer);
+
+        this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], new createjs.Rectangle(2, 4, 12, 12));
     }
 
     protected _scrollMap(): void {

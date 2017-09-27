@@ -54,6 +54,7 @@ export class Character extends BaseMapObject {
         super(parent, name, x, y, sprite_name, sprite_sheet, "stand_south", true, bounding_box, interaction_id);
         this.walkSpeed = DEFAULT_WALK_SPEED;
         this._isWalking = false;
+        this._direction = Direction.DOWN;
     }
 
     getSprite(): createjs.Sprite {

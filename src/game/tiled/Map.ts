@@ -79,7 +79,7 @@ export class Map {
     }
 
     getGID(layer_index: number, row: number, column: number): number {
-        if (row < this._layers[layer_index].data.length && column < this._layers[layer_index].data[row].length) {
+        if (row > -1 && row < this._layers[layer_index].data.length && column > -1 && column < this._layers[layer_index].data[row].length) {
             return this._layers[layer_index].data[row][column];
         }
 

@@ -42,5 +42,10 @@ export var SpriteSheetData: { [id: string]: ISpriteSheetData } = {
         frames: { width: 16, height: 16, regX: 0, regY: 0, count: 12 },
         animations: CHARACTER_ANIMATIONS,
         framerate: CHARACTER_ANIMATION_FRAMERATE
+    },
+    "ss_victor": {
+        frames: { width: 16, height: 16, regX: 0, regY: 0, count: 12 },
+        animations: CHARACTER_ANIMATIONS,
+        framerate: CHARACTER_ANIMATION_FRAMERATE
     }
 }

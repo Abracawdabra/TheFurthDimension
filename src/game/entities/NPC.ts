@@ -6,7 +6,7 @@
 
 import { Character } from "./Character";
 import { Direction, InteractionHandlers, SpatialGrid, directionToString } from "..";
-import { GameScreen } from "../screens";
+import { GameScreen, Axes } from "../screens";
 import * as utils from "../Utils";
 
 // How many seconds to wait between wander direction changes
@@ -155,34 +155,37 @@ export class NPC extends Character {
                     y_movement = move_amount;
                 }
 
-                if (Math.floor(this._x + x_movement) !== Math.floor(this._x) || Math.floor(this._y + y_movement) !== Math.floor(this._y)) {
-                    // The characteristic of the X or Y values has changed
-                    let bounding_box_left = this._x + this._boundingBox.x + x_movement;
-                    let bounding_box_top = this._y + this._boundingBox.y + y_movement;
-                    let bounding_box_right = bounding_box_left + this._boundingBox.width;
-                    let bounding_box_bottom = bounding_box_top + this._boundingBox.height;
-                    if (bounding_box_left >= this._wanderBounds.x
-                    && bounding_box_top >= this._wanderBounds.y
-                    && bounding_box_right <= this._wanderBounds.x + this._wanderBounds.width
-                    && bounding_box_bottom <= this._wanderBounds.y + this._wanderBounds.height) {
-                        // Within wander bounds
-                        let new_pos = this.parent.getMovePos(this, this._x + x_movement, this._y + y_movement);
-                        if (Math.floor(new_pos.x) === Math.floor(this._x) && Math.floor(new_pos.y) === Math.floor(this._y)) {
-                            // Hit something
-                            this.isWalking = false;
-                        }
-                        else {
-                            spatial_grid.updateObjectPos(this, new_pos.x, new_pos.y);
-                        }
+                let new_x = this._x + x_movement;
+                let new_y = this._y + y_movement;
+                let bounding_box_left = new_x + this._boundingBox.x;
+                let bounding_box_top = new_y + this._boundingBox.y;
+                let bounding_box_right = bounding_box_left + this._boundingBox.width;
+                let bounding_box_bottom = bounding_box_top + this._boundingBox.height;
+                if (bounding_box_left >= this._wanderBounds.x
+                && bounding_box_top >= this._wanderBounds.y
+                && bounding_box_right <= this._wanderBounds.x + this._wanderBounds.width
+                && bounding_box_bottom <= this._wanderBounds.y + this._wanderBounds.height) {
+                    // Within wander bounds
+                    let move_axes = this.parent.canMoveToPos(this, new_x, new_y);
+                    if ((((this.direction & Direction.LEFT) || (this.direction & Direction.RIGHT)) && !(move_axes & Axes.X))
+                    || (((this.direction & Direction.UP) || (this.direction & Direction.DOWN)) && !(move_axes & Axes.Y))) {
+                        this.isWalking = false;
                     }
                     else {
-                        this.isWalking = false;
+                        if (move_axes & Axes.X && move_axes & Axes.Y) {
+                            spatial_grid.updateObjectPos(this, new_x, new_y);
+                        }
+                        else if (move_axes & Axes.X) {
+                            spatial_grid.updateObjectPos(this, new_x, this._y);
+                        }
+                        else if (move_axes & Axes.Y) {
+                            spatial_grid.updateObjectPos(this, this._x, new_y);
+                        }
                     }
                 }
                 else {
-                    // Sub pixel increment
-                    this._x += x_movement;
-                    this._y += y_movement;
+                    // Outside of wander bounds
+                    this.isWalking = false;
                 }
             }
         }

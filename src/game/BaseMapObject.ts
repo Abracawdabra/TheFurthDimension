@@ -138,8 +138,15 @@ export abstract class BaseMapObject {
 
     showBoundingBox(show: boolean): void {
         if (this._sprite) {
-            if (show && this._boundingBoxOutline) {
-                this.parent.container.addChild(this._boundingBoxOutline);
+            if (this._boundingBoxOutline) {
+                if (show) {
+                    this.parent.container.addChild(this._boundingBoxOutline);
+                }
+                else {
+                    this._boundingBoxOutline.uncache();
+                    this.parent.container.removeChild(this._boundingBoxOutline);
+                    this._boundingBoxOutline = null;
+                }
             }
             else if (show) {
                 let outline = new createjs.Shape();
@@ -152,11 +159,6 @@ export abstract class BaseMapObject {
                 outline.cache(this._boundingBox.x, this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
                 this.parent.container.addChild(outline);
                 this._boundingBoxOutline = outline;
-            }
-            else {
-                this._boundingBoxOutline.uncache();
-                this.parent.container.removeChild(this._boundingBoxOutline);
-                this._boundingBoxOutline = null;
             }
         }
     }

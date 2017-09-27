@@ -56,6 +56,7 @@ export class Game {
 
     renderInvisibleLayers: boolean;
     renderBoundingBoxes: boolean;
+    enableNoClip: boolean;
     walkSpeed: number;
 
     protected _stage: createjs.Stage;
@@ -127,6 +128,7 @@ export class Game {
         this.textSpeed = TextSpeed.MEDIUM;
         this.renderInvisibleLayers = false;
         this.renderBoundingBoxes = false;
+        this.enableNoClip = false;
         this.walkSpeed = DEFAULT_WALK_SPEED;
 
         createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
@@ -475,6 +477,11 @@ export class Game {
             if (game_screen) {
                 game_screen.showBoundingBoxes(this.renderBoundingBoxes);
             }
+            success = true;
+        }
+        else if (cmd === "noclip" || cmd === "yesclip") {
+            // Enables/disables player collision
+            this.enableNoClip = (cmd === "noclip");
             success = true;
         }
 

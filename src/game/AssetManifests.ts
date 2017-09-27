@@ -18,7 +18,8 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
         { id: "font_8px_press_start", src: BASE_URL + "images/fonts/PressStart_8px.png" },
 
         // Sprite sheets
-        { id: "ss_npc_testy", src: BASE_URL + "images/spritesheets/npc_testy.png" }
+        { id: "ss_npc_testy", src: BASE_URL + "images/spritesheets/npc_testy.png" },
+        { id: "ss_victor", src: BASE_URL + "images/spritesheets/victor.png" }
     ],
 
     sounds: [
