@@ -127,6 +127,10 @@ export class GameScreen extends BaseScreen {
                     let player_y_pos = this._player.y + y_movement;
                     let axes = (this._gameInstance.enableNoClip) ? (Axes.X | Axes.Y) : this.canMoveToPos(this._player, player_x_pos, player_y_pos);
                     if (axes) {
+                        if (!this._player.isWalking) {
+                            this._player.isWalking = true;
+                        }
+
                         // Flip the directions for the tile container
                         x_movement = (x_movement < 0) ? Math.abs(x_movement) : x_movement * -1;
                         y_movement = (y_movement < 0) ? Math.abs(y_movement) : y_movement * -1;
@@ -154,7 +158,13 @@ export class GameScreen extends BaseScreen {
 
                         this._scrollMap();
                     }
+                    else if (this._player.isWalking) {
+                        this._player.isWalking = false;
+                    }
                 }
+            }
+            else if (this._player.isWalking) {
+                this._player.isWalking = false;
             }
 
             for (let layer in this._activeNPCs) {
@@ -394,11 +404,9 @@ export class GameScreen extends BaseScreen {
                             axes = 0;
                         }
                     }
-                    else if ((obj.direction & Direction.LEFT) || (obj.direction & Direction.RIGHT)) {
-                        axes = axes & ~Axes.X;
-                    }
-                    else if ((obj.direction & Direction.UP) || (obj.direction & Direction.DOWN)) {
-                        axes = axes & ~Axes.Y;
+                    else {
+                        // Moving on one axis, don't move
+                        axes = 0;
                     }
 
                     if (!axes) {
@@ -416,23 +424,29 @@ export class GameScreen extends BaseScreen {
         for (let layer in this._activeObjects) {
             if (this._activeObjects.hasOwnProperty(layer)) {
                 for (let active_obj of this._activeObjects[layer]) {
-                    if (obj === active_obj || active_obj === this._player && this._gameInstance.enableNoClip) {
-                        // Don't check against itself, or clip with player when noclip is enabled
+                    if (obj === active_obj || !active_obj.collisionsEnabled || active_obj === this._player && this._gameInstance.enableNoClip) {
+                        // Don't check against itself, or a collision disabled object, or clip with the player when noclip is enabled
                         continue;
                     }
 
                     let active_obj_bounds = active_obj.getBounds();
                     if (active_obj_bounds.intersects(bounds_rect)) {
-                        // Check which path works
-                        let can_move_x = !bounds_rect.setValues(bb_left, bounding_box.y, bounding_box.width, bounding_box.height).intersects(active_obj_bounds);
-                        let can_move_y = !bounds_rect.setValues(bounding_box.x, bb_top, bounding_box.width, bounding_box.height).intersects(active_obj_bounds);
-                        if (can_move_x && !can_move_y) {
-                            axes = (axes & ~Axes.Y);
-                        }
-                        else if (!can_move_x && can_move_y) {
-                            axes = (axes & ~Axes.X);
+                        if (moving_on_both_axes) {
+                            // Check which path works
+                            let can_move_x = !bounds_rect.setValues(bb_left, bounding_box.y, bounding_box.width, bounding_box.height).intersects(active_obj_bounds);
+                            let can_move_y = !bounds_rect.setValues(bounding_box.x, bb_top, bounding_box.width, bounding_box.height).intersects(active_obj_bounds);
+                            if (can_move_x && !can_move_y) {
+                                axes = (axes & ~Axes.Y);
+                            }
+                            else if (!can_move_x && can_move_y) {
+                                axes = (axes & ~Axes.X);
+                            }
+                            else {
+                                axes = 0;
+                            }
                         }
                         else {
+                            // Moving on one axis, don't move
                             axes = 0;
                         }
 
@@ -471,7 +485,7 @@ export class GameScreen extends BaseScreen {
         this._objectContainer = new createjs.Container();
         this.container.addChild(this._objectContainer);
 
-        this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], new createjs.Rectangle(3, 4, 10, 12));
+        this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], new createjs.Rectangle(3, 8, 10, 8));
     }
 
     protected _scrollMap(): void {

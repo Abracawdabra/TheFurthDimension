@@ -39,13 +39,16 @@ export class Character extends BaseMapObject {
     }
 
     set direction(dir: number) {
-        this._direction = dir;
-        if (this._sprite) {
-            if (this._isWalking) {
-                this._sprite.gotoAndPlay("walk_" + directionToString(dir));
-            }
-            else {
-                this._sprite.gotoAndStop("stand_" + directionToString(dir));
+        if (dir) {
+            // Only change if dir is not 0 (That screws up the animations)
+            this._direction = dir;
+            if (this._sprite) {
+                if (this._isWalking) {
+                    this._sprite.gotoAndPlay("walk_" + directionToString(dir));
+                }
+                else {
+                    this._sprite.gotoAndStop("stand_" + directionToString(dir));
+                }
             }
         }
     }

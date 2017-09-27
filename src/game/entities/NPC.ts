@@ -166,7 +166,7 @@ export class NPC extends Character {
                 && bounding_box_right <= this._wanderBounds.x + this._wanderBounds.width
                 && bounding_box_bottom <= this._wanderBounds.y + this._wanderBounds.height) {
                     // Within wander bounds
-                    let move_axes = this.parent.canMoveToPos(this, new_x, new_y);
+                    let move_axes = (!this.collisionsEnabled) ? (Axes.X | Axes.Y) : this.parent.canMoveToPos(this, new_x, new_y);
                     if ((((this.direction & Direction.LEFT) || (this.direction & Direction.RIGHT)) && !(move_axes & Axes.X))
                     || (((this.direction & Direction.UP) || (this.direction & Direction.DOWN)) && !(move_axes & Axes.Y))) {
                         this.isWalking = false;
