@@ -27,8 +27,8 @@ export abstract class BaseMapObject {
         this._x = value;
         if (this._sprite) {
             this._sprite.x = this.localX;
-            if (this._boundingBoxOutline) {
-                this._boundingBoxOutline.x = this._sprite.x;
+            if (this._hitboxOutline) {
+                this._hitboxOutline.x = this._sprite.x;
             }
         }
     }
@@ -42,8 +42,8 @@ export abstract class BaseMapObject {
         this._y = value;
         if (this._sprite) {
             this._sprite.y = this.localY;
-            if (this._boundingBoxOutline) {
-                this._boundingBoxOutline.y = this._sprite.y;
+            if (this._hitboxOutline) {
+                this._hitboxOutline.y = this._sprite.y;
             }
         }
     }
@@ -64,9 +64,9 @@ export abstract class BaseMapObject {
 
     protected _spriteSheet: createjs.SpriteSheet;
 
-    protected _boundingBox: createjs.Rectangle;
+    protected _hitbox: createjs.Rectangle;
 
-    protected _boundingBoxOutline: createjs.Shape;
+    protected _hitboxOutline: createjs.Shape;
 
     // Interaction handler ID which corresponds to properties in src/game/InteractionHandlers.ts
     protected _interactionID: string;
@@ -76,7 +76,7 @@ export abstract class BaseMapObject {
         return this._spriteName;
     }
 
-    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, frame: number | string = 0, collisions_enabled: boolean = true, bounding_box?: createjs.Rectangle, interaction_id?: string) {
+    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, frame: number | string = 0, collisions_enabled: boolean = true, hitbox?: createjs.Rectangle, interaction_id?: string) {
         this.parent = parent;
         this.name = name;
 
@@ -91,11 +91,11 @@ export abstract class BaseMapObject {
         this.height = sprite_bounds.height;
 
         this.collisionsEnabled = collisions_enabled;
-        if (bounding_box) {
-            this._boundingBox = bounding_box;
+        if (hitbox) {
+            this._hitbox = hitbox;
         }
         else {
-            this._boundingBox = new createjs.Rectangle(0, 0, sprite_bounds.width, sprite_bounds.height);;
+            this._hitbox = new createjs.Rectangle(0, 0, sprite_bounds.width, sprite_bounds.height);;
         }
 
         this._interactionID = interaction_id;
@@ -117,10 +117,10 @@ export abstract class BaseMapObject {
     }
 
     /**
-     * Returns newly calculated bounds
+     * Returns global calculated hitbox bounds
      */
-    getBounds(): createjs.Rectangle {
-        return new createjs.Rectangle(this._x + this._boundingBox.x, this._y + this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
+    getHitbox(): createjs.Rectangle {
+        return new createjs.Rectangle(this._x + this._hitbox.x, this._y + this._hitbox.y, this._hitbox.width, this._hitbox.height);
     }
 
     getInteractionID(): string {
@@ -136,37 +136,37 @@ export abstract class BaseMapObject {
         }
     }
 
-    showBoundingBox(show: boolean): void {
+    showHitbox(show: boolean): void {
         if (this._sprite) {
-            if (this._boundingBoxOutline) {
+            if (this._hitboxOutline) {
                 if (show) {
-                    this.parent.container.addChild(this._boundingBoxOutline);
+                    this.parent.container.addChild(this._hitboxOutline);
                 }
                 else {
-                    this._boundingBoxOutline.uncache();
-                    this.parent.container.removeChild(this._boundingBoxOutline);
-                    this._boundingBoxOutline = null;
+                    this._hitboxOutline.uncache();
+                    this.parent.container.removeChild(this._hitboxOutline);
+                    this._hitboxOutline = null;
                 }
             }
             else if (show) {
                 let outline = new createjs.Shape();
                 outline.graphics.beginStroke("#7B68EE");
                 outline.graphics.setStrokeStyle(1.5);
-                outline.graphics.drawRect(this._boundingBox.x, this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
+                outline.graphics.drawRect(this._hitbox.x, this._hitbox.y, this._hitbox.width, this._hitbox.height);
                 outline.graphics.endStroke();
                 outline.x = this._sprite.x;
                 outline.y = this._sprite.y;
-                outline.cache(this._boundingBox.x, this._boundingBox.y, this._boundingBox.width, this._boundingBox.height);
+                outline.cache(this._hitbox.x, this._hitbox.y, this._hitbox.width, this._hitbox.height);
                 this.parent.container.addChild(outline);
-                this._boundingBoxOutline = outline;
+                this._hitboxOutline = outline;
             }
         }
     }
 
-    setBoundingBoxOutlinePos(x: number, y: number): void {
-        if (this._boundingBoxOutline) {
-            this._boundingBoxOutline.x = x;
-            this._boundingBoxOutline.y = y;
+    setHitboxOutlinePos(x: number, y: number): void {
+        if (this._hitboxOutline) {
+            this._hitboxOutline.x = x;
+            this._hitboxOutline.y = y;
         }
     }
 
@@ -175,8 +175,8 @@ export abstract class BaseMapObject {
      */
     destroySprite(): void {
         if (this._sprite) {
-            if (this._boundingBoxOutline) {
-                this.showBoundingBox(false);
+            if (this._hitboxOutline) {
+                this.showHitbox(false);
             }
 
             this._sprite.parent.removeChild(this._sprite);

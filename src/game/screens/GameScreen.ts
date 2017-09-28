@@ -151,7 +151,7 @@ export class GameScreen extends BaseScreen {
                                     let sprite = obj.getSprite();
                                     sprite.x = obj.localX;
                                     sprite.y = obj.localY;
-                                    obj.setBoundingBoxOutlinePos(sprite.x, sprite.y);
+                                    obj.setHitboxOutlinePos(sprite.x, sprite.y);
                                 }
                             }
                         }
@@ -238,7 +238,7 @@ export class GameScreen extends BaseScreen {
         this.container.addChildAt(background, 0);
 
         this.container.addChild(this._player.getSprite());
-        this._player.showBoundingBox(this._gameInstance.renderBoundingBoxes);
+        this._player.showHitbox(this._gameInstance.renderHitboxes);
 
         this.gotoSpawnPoint("default");
     }
@@ -318,8 +318,8 @@ export class GameScreen extends BaseScreen {
                         (<any>sprite).mapObject = obj;
                         this._objectContainer.addChild(sprite);
 
-                        if (this._gameInstance.renderBoundingBoxes) {
-                            obj.showBoundingBox(true);
+                        if (this._gameInstance.renderHitboxes) {
+                            obj.showHitbox(true);
                         }
                     }
 
@@ -338,35 +338,30 @@ export class GameScreen extends BaseScreen {
      * Returns what axes the object can move on
      */
     canMoveToPos(obj: Character, x: number, y: number): number {
-        let bounding_box = obj.getBounds();
-        let old_bb_left = bounding_box.x;
-        let old_bb_top = bounding_box.y;
-        let old_bb_right = old_bb_left + bounding_box.width;
-        let old_bb_bottom = old_bb_top + bounding_box.height;
-
-        let bb_left = x + (bounding_box.x - obj.x);
-        let bb_top = y + (bounding_box.y - obj.y);
-        let bb_right = bb_left + bounding_box.width;
-        let bb_bottom = bb_top + bounding_box.height;
+        let hitbox = obj.getHitbox();
+        let hitbox_left = x + (hitbox.x - obj.x);
+        let hitbox_top = y + (hitbox.y - obj.y);
+        let hitbox_right = hitbox_left + hitbox.width;
+        let hitbox_bottom = hitbox_top + hitbox.height;
 
         let axes = (Axes.X | Axes.Y);
 
         // Map edges
         let map_right = this._map.width * this._map.tileWidth;
         let map_bottom = this._map.height * this._map.tileHeight;
-        if (bb_left < 0 || bb_right > map_right) {
+        if (hitbox_left < 0 || hitbox_right > map_right) {
             axes = (axes & ~Axes.X);
         }
 
-        if (bb_top < 0 || bb_bottom > map_bottom) {
+        if (hitbox_top < 0 || hitbox_bottom > map_bottom) {
             axes = (axes & ~Axes.Y);
         }
 
         // Collision tiles
-        let start_col = Math.floor(bb_left / this._map.tileWidth);
-        let end_col = Math.floor(bb_right / this._map.tileWidth);
-        let start_row = Math.floor(bb_top / this._map.tileHeight);
-        let end_row = Math.floor(bb_bottom / this._map.tileHeight);
+        let start_col = Math.floor(hitbox_left / this._map.tileWidth);
+        let end_col = Math.floor(hitbox_right / this._map.tileWidth);
+        let start_row = Math.floor(hitbox_top / this._map.tileHeight);
+        let end_row = Math.floor(hitbox_bottom / this._map.tileHeight);
         let collision_layer_index = this._mapLayerIndices["Collisions"];
         let moving_on_both_axes = ((obj.direction & Direction.LEFT) || (obj.direction & Direction.RIGHT)) && ((obj.direction & Direction.UP) || (obj.direction & Direction.DOWN));
         for (let row=start_row; row<=end_row; ++row) {
@@ -391,11 +386,11 @@ export class GameScreen extends BaseScreen {
                             axes = (axes & ~Axes.X);
                         }
                         else if (can_move_x && can_move_y) {
-                            if (Math.floor(bounding_box.x / this._map.tileWidth) === col || Math.floor((bounding_box.x + bounding_box.width) / this._map.tileHeight) === col) {
+                            if (Math.floor(hitbox.x / this._map.tileWidth) === col || Math.floor((hitbox.x + hitbox.width) / this._map.tileHeight) === col) {
                                 // If on same column, don't move on Y
                                 axes = (axes & ~Axes.Y);
                             }
-                            if (Math.floor(bounding_box.y / this._map.tileHeight) === row || Math.floor((bounding_box.y + bounding_box.height) / this._map.tileHeight) === row) {
+                            if (Math.floor(hitbox.y / this._map.tileHeight) === row || Math.floor((hitbox.y + hitbox.height) / this._map.tileHeight) === row) {
                                 // If on same row, don't move on X
                                 axes = (axes & ~Axes.X);
                             }
@@ -420,7 +415,7 @@ export class GameScreen extends BaseScreen {
         // Object collisions
         // A bounds Rectangle object to reuse for minimalizing the instantiation
         // and destruction of a bunch of Rectangle objects.
-        let bounds_rect = new createjs.Rectangle(bb_left, bb_top, bounding_box.width, bounding_box.height);
+        let bounds_rect = new createjs.Rectangle(hitbox_left, hitbox_top, hitbox.width, hitbox.height);
         for (let layer in this._activeObjects) {
             if (this._activeObjects.hasOwnProperty(layer)) {
                 for (let active_obj of this._activeObjects[layer]) {
@@ -429,12 +424,12 @@ export class GameScreen extends BaseScreen {
                         continue;
                     }
 
-                    let active_obj_bounds = active_obj.getBounds();
+                    let active_obj_bounds = active_obj.getHitbox();
                     if (active_obj_bounds.intersects(bounds_rect)) {
                         if (moving_on_both_axes) {
                             // Check which path works
-                            let can_move_x = !bounds_rect.setValues(bb_left, bounding_box.y, bounding_box.width, bounding_box.height).intersects(active_obj_bounds);
-                            let can_move_y = !bounds_rect.setValues(bounding_box.x, bb_top, bounding_box.width, bounding_box.height).intersects(active_obj_bounds);
+                            let can_move_x = !bounds_rect.setValues(hitbox_left, hitbox.y, hitbox.width, hitbox.height).intersects(active_obj_bounds);
+                            let can_move_y = !bounds_rect.setValues(hitbox.x, hitbox_top, hitbox.width, hitbox.height).intersects(active_obj_bounds);
                             if (can_move_x && !can_move_y) {
                                 axes = (axes & ~Axes.Y);
                             }
@@ -451,7 +446,7 @@ export class GameScreen extends BaseScreen {
                         }
 
                         // Reset bounds_rect to original value
-                        bounds_rect.setValues(bb_left, bb_top, bounding_box.width, bounding_box.height);
+                        bounds_rect.setValues(hitbox_left, hitbox_top, hitbox.width, hitbox.height);
                     }
 
                     if (!axes) {
@@ -465,13 +460,13 @@ export class GameScreen extends BaseScreen {
         return axes;
     }
 
-    showBoundingBoxes(show: boolean): void {
-        this._player.showBoundingBox(show);
+    showHitboxes(show: boolean): void {
+        this._player.showHitbox(show);
 
         for (let layer in this._activeObjects) {
             if (this._activeObjects.hasOwnProperty(layer)) {
                 for (let obj of this._activeObjects[layer]) {
-                    obj.showBoundingBox(show);
+                    obj.showHitbox(show);
                 }
             }
         }
@@ -565,9 +560,9 @@ export class GameScreen extends BaseScreen {
      */
     protected _createMapObject(obj: tiled.IObject): any {
         if (obj.type === "npc") {
-            let bounding_box: createjs.Rectangle;
-            if ("boundingBox" in obj.properties) {
-                bounding_box = utils.rectangleFromStr(obj.properties.boundingBox);
+            let hitbox: createjs.Rectangle;
+            if ("hitbox" in obj.properties) {
+                hitbox = utils.rectangleFromStr(obj.properties.boundingBox);
             }
 
             let settings: INPCSettings = {};
@@ -591,7 +586,7 @@ export class GameScreen extends BaseScreen {
                 settings.wanderMaxDirDuration = obj.properties.wanderMaxDirDuration;
             }
 
-            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], bounding_box, obj.properties.interactionID,  settings);
+            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, obj.properties.interactionID,  settings);
         }
     }
 }

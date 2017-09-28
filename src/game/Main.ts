@@ -55,7 +55,7 @@ export class Game {
     keyDownQueue: number[];
 
     renderInvisibleLayers: boolean;
-    renderBoundingBoxes: boolean;
+    renderHitboxes: boolean;
     enableNoClip: boolean;
     walkSpeed: number;
 
@@ -127,7 +127,7 @@ export class Game {
 
         this.textSpeed = TextSpeed.MEDIUM;
         this.renderInvisibleLayers = false;
-        this.renderBoundingBoxes = false;
+        this.renderHitboxes = false;
         this.enableNoClip = false;
         this.walkSpeed = DEFAULT_WALK_SPEED;
 
@@ -470,12 +470,12 @@ export class Game {
                 success = game_screen.gotoSpawnPoint(parsed[1]);
             }
         }
-        else if (cmd === "showbbox" || cmd === "hidebbox") {
-            // Shows or hides object bounding boxes
-            this.renderBoundingBoxes = (cmd === "showbbox");
+        else if (cmd === "showhitbox" || cmd === "hidehitbox") {
+            // Shows or hides object hitboxes
+            this.renderHitboxes = (cmd === "showhitbox");
             let game_screen = this._getGameScreen();
             if (game_screen) {
-                game_screen.showBoundingBoxes(this.renderBoundingBoxes);
+                game_screen.showHitboxes(this.renderHitboxes);
             }
             success = true;
         }

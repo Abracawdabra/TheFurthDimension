@@ -105,8 +105,8 @@ export class NPC extends Character {
     // Pause between wander direction changes
     protected _wanderPause: boolean;
 
-    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, bounding_box?: createjs.Rectangle, interaction_id?: string, settings?: INPCSettings) {
-        super(parent, name, x, y, sprite_name, sprite_sheet, bounding_box, interaction_id);
+    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, interaction_id?: string, settings?: INPCSettings) {
+        super(parent, name, x, y, sprite_name, sprite_sheet, hitbox, interaction_id);
 
         if (settings) {
             this.walkSpeed = ("walkSpeed" in settings) ? settings.walkSpeed : this.walkSpeed;
@@ -157,14 +157,14 @@ export class NPC extends Character {
 
                 let new_x = this._x + x_movement;
                 let new_y = this._y + y_movement;
-                let bounding_box_left = new_x + this._boundingBox.x;
-                let bounding_box_top = new_y + this._boundingBox.y;
-                let bounding_box_right = bounding_box_left + this._boundingBox.width;
-                let bounding_box_bottom = bounding_box_top + this._boundingBox.height;
-                if (bounding_box_left >= this._wanderBounds.x
-                && bounding_box_top >= this._wanderBounds.y
-                && bounding_box_right <= this._wanderBounds.x + this._wanderBounds.width
-                && bounding_box_bottom <= this._wanderBounds.y + this._wanderBounds.height) {
+                let hitbox_left = new_x + this._hitbox.x;
+                let hitbox_top = new_y + this._hitbox.y;
+                let hitbox_right = hitbox_left + this._hitbox.width;
+                let hitbox_bottom = hitbox_top + this._hitbox.height;
+                if (hitbox_left >= this._wanderBounds.x
+                && hitbox_top >= this._wanderBounds.y
+                && hitbox_right <= this._wanderBounds.x + this._wanderBounds.width
+                && hitbox_bottom <= this._wanderBounds.y + this._wanderBounds.height) {
                     // Within wander bounds
                     let move_axes = (!this.collisionsEnabled) ? (Axes.X | Axes.Y) : this.parent.canMoveToPos(this, new_x, new_y);
                     if ((((this.direction & Direction.LEFT) || (this.direction & Direction.RIGHT)) && !(move_axes & Axes.X))
