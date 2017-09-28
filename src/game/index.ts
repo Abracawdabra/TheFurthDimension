@@ -16,4 +16,5 @@ export * from "./BaseMapObject";
 export * from "./FontData";
 export * from "./SpriteSheetData";
 export * from "./InteractionHandlers";
+export * from "./GameState";
 export * from "./Main";

@@ -4,11 +4,12 @@
  * @license MIT
  */
 
-import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys, FontData, SpriteSheetData } from ".";
+import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys, FontData, SpriteSheetData, GameState, ISettings } from ".";
 import * as screens from "./screens";
 import * as buttons from "./Buttons";
 import * as utils from "./Utils";
 import * as colors from "./Colors";
+import * as LZString from "lz-string";
 
 
 const PRELOADER_DISPLAY_WIDTH = 100;
@@ -54,28 +55,19 @@ export class Game {
     // For keeping track of ordered key presses
     keyDownQueue: number[];
 
+    settings: ISettings;
+
+    // Cheat settings
     renderInvisibleLayers: boolean;
     renderHitboxes: boolean;
     enableNoClip: boolean;
     walkSpeed: number;
 
+    // Object for the game session that can be saved to localStorage
+    gameState: GameState;
+
     protected _stage: createjs.Stage;
     protected _canvasContext: CanvasRenderingContext2D;
-
-    // Settings
-    textSpeed: number;
-    protected _displayScale: number;
-    get displayScale(): number {
-        return this._displayScale;
-    }
-
-    set displayScale(scale: number) {
-        this._displayScale = scale;
-
-        let canvas = <HTMLCanvasElement>this._stage.canvas;
-        canvas.style.width = (Game.DISPLAY_WIDTH * scale).toString() + "px";
-        canvas.style.height = (Game.DISPLAY_HEIGHT * scale).toString() + "px";
-    }
 
     protected _preloaderQueue: createjs.LoadQueue;
     protected _preloaderItemsTotal: number;
@@ -90,11 +82,27 @@ export class Game {
 
     constructor(canvas_id: string) {
         this._stage = new createjs.Stage(canvas_id);
+
+        // Load or generate game state
+        let game_state = localStorage.getItem("TFD_GS");
+        if (game_state !== null) {
+            this.gameState = JSON.parse(LZString.decompress(game_state));
+        }
+        else {
+            this.gameState  = {
+                settings: {
+                    textSpeed: TextSpeed.MEDIUM,
+                    displayScale: Game.DEFAULT_DISPLAY_SCALE
+                }
+            };
+        }
+
+        this.settings = this.gameState.settings;
         this.init();
     }
 
     init(): void {
-        this.displayScale = Game.DEFAULT_DISPLAY_SCALE;
+        this.setDisplayScale(this.settings.displayScale);
 
         let canvas = <HTMLCanvasElement>this._stage.canvas;
         canvas.style.backgroundColor = Game.BACKGROUND_COLOR;
@@ -125,7 +133,6 @@ export class Game {
 
         this._cheatTextbox = null;
 
-        this.textSpeed = TextSpeed.MEDIUM;
         this.renderInvisibleLayers = false;
         this.renderHitboxes = false;
         this.enableNoClip = false;
@@ -136,6 +143,14 @@ export class Game {
         createjs.Ticker.addEventListener("tick", this._onTick);
 
         this._preload();
+    }
+
+    setDisplayScale(scale: number): void {
+        this.settings.displayScale = scale;
+
+        let canvas = <HTMLCanvasElement>this._stage.canvas;
+        canvas.style.width = (Game.DISPLAY_WIDTH * scale).toString() + "px";
+        canvas.style.height = (Game.DISPLAY_HEIGHT * scale).toString() + "px";
     }
 
     pushScreen(screen: screens.BaseScreen): void {
@@ -351,9 +366,9 @@ export class Game {
         cheat_textbox.placeholder = "Enter cheat";
         cheat_textbox.autocomplete = "off";
         cheat_textbox.spellcheck = false;
-        cheat_textbox.style.top = (40 * this._displayScale).toString() + "px";
-        cheat_textbox.style.fontSize = (8 * this._displayScale).toString() + "px";
-        cheat_textbox.style.width = (8 * this._displayScale * 18).toString() + "px";
+        cheat_textbox.style.top = (40 * this.settings.displayScale).toString() + "px";
+        cheat_textbox.style.fontSize = (8 * this.settings.displayScale).toString() + "px";
+        cheat_textbox.style.width = (8 * this.settings.displayScale * 18).toString() + "px";
         cheat_textbox.style.height = "1.5em";
         cheat_textbox.addEventListener("keydown", this._onCheatTextboxKeyDown);
         (<HTMLCanvasElement>this._stage.canvas).parentElement.appendChild(cheat_textbox);

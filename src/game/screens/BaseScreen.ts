@@ -11,10 +11,10 @@ export abstract class BaseScreen {
     container: createjs.Container;
     parent: BaseScreen;
 
-    protected _gameInstance: Game;
+    gameInstance: Game;
 
     constructor(game_instance: Game, parent?: BaseScreen) {
-        this._gameInstance = game_instance;
+        this.gameInstance = game_instance;
         this.parent = parent;
         this.container = new createjs.Container();
         this.container.setBounds(0, 0, Game.DISPLAY_WIDTH, Game.DISPLAY_HEIGHT);

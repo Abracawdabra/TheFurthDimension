@@ -24,15 +24,15 @@ export class TitleScreen extends screens.BaseScreen {
             let selection = this._textMenu.selectedItem;
             switch(selection) {
                 case "new_game":
-                    this._gameInstance.popScreen();
-                    let game_screen = new screens.GameScreen(this._gameInstance);
-                    this._gameInstance.pushScreen(game_screen);
+                    this.gameInstance.popScreen();
+                    let game_screen = new screens.GameScreen(this.gameInstance);
+                    this.gameInstance.pushScreen(game_screen);
                     game_screen.loadMap(Game.Assets["map_dongola_temple"]);
                     break;
                 case "continue_game":
                     break;
                 case "options":
-                    this._gameInstance.pushScreen(new screens.OptionsScreen(this._gameInstance, this));
+                    this.gameInstance.pushScreen(new screens.OptionsScreen(this.gameInstance, this));
             }
         }
     }

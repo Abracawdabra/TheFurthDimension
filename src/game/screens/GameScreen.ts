@@ -107,7 +107,7 @@ export class GameScreen extends BaseScreen {
             if (this._scrollDir) {
                 let x_movement = 0;
                 let y_movement = 0;
-                let scroll_speed = delta / 1000 * this._gameInstance.walkSpeed;
+                let scroll_speed = delta / 1000 * this.gameInstance.walkSpeed;
                 if (this._scrollDir & Direction.LEFT) {
                     x_movement = -scroll_speed;
                 }
@@ -125,7 +125,7 @@ export class GameScreen extends BaseScreen {
                 if (x_movement !== 0 || y_movement !== 0) {
                     let player_x_pos = this._player.x + x_movement;
                     let player_y_pos = this._player.y + y_movement;
-                    let axes = (this._gameInstance.enableNoClip) ? (Axes.X | Axes.Y) : this.canMoveToPos(this._player, player_x_pos, player_y_pos);
+                    let axes = (this.gameInstance.enableNoClip) ? (Axes.X | Axes.Y) : this.canMoveToPos(this._player, player_x_pos, player_y_pos);
                     if (axes) {
                         if (!this._player.isWalking) {
                             this._player.isWalking = true;
@@ -238,7 +238,7 @@ export class GameScreen extends BaseScreen {
         this.container.addChildAt(background, 0);
 
         this.container.addChild(this._player.getSprite());
-        this._player.showHitbox(this._gameInstance.renderHitboxes);
+        this._player.showHitbox(this.gameInstance.renderHitboxes);
 
         this.gotoSpawnPoint("default");
     }
@@ -286,7 +286,7 @@ export class GameScreen extends BaseScreen {
                         let sprite = <createjs.Sprite>this._tileContainer.getChildAt(layer_start_index + (row * this._numOfXTiles) + col);
                         if (row < offset_row || col < offset_col                                                 // Fix for spawn points that are near the top or left edge of the map
                         || data_row >= area_layer.data.length || data_col >= area_layer.data[data_row].length    // Past last row or column
-                        || (!this._gameInstance.renderInvisibleLayers && !area_layer.layer.visible))             // Invisible layer without cheat enabled
+                        || (!this.gameInstance.renderInvisibleLayers && !area_layer.layer.visible))             // Invisible layer without cheat enabled
                         {
                             sprite.alpha = 0.0;
                         }
@@ -318,7 +318,7 @@ export class GameScreen extends BaseScreen {
                         (<any>sprite).mapObject = obj;
                         this._objectContainer.addChild(sprite);
 
-                        if (this._gameInstance.renderHitboxes) {
+                        if (this.gameInstance.renderHitboxes) {
                             obj.showHitbox(true);
                         }
                     }
@@ -419,7 +419,7 @@ export class GameScreen extends BaseScreen {
         for (let layer in this._activeObjects) {
             if (this._activeObjects.hasOwnProperty(layer)) {
                 for (let active_obj of this._activeObjects[layer]) {
-                    if (obj === active_obj || !active_obj.collisionsEnabled || active_obj === this._player && this._gameInstance.enableNoClip) {
+                    if (obj === active_obj || !active_obj.collisionsEnabled || active_obj === this._player && this.gameInstance.enableNoClip) {
                         // Don't check against itself, or a collision disabled object, or clip with the player when noclip is enabled
                         continue;
                     }

@@ -30,7 +30,7 @@ export class OptionsScreen extends screens.BaseScreen {
     handleKeyDown(key_code: number): void {
         switch (key_code) {
             case Button.B:
-                this._gameInstance.popScreen();
+                this.gameInstance.popScreen();
                 break;
             case Button.A:
             case Button.DOWN:
@@ -52,18 +52,18 @@ export class OptionsScreen extends screens.BaseScreen {
                     case Option.DISPLAY_SCALE:
                         this._displayScaleMenu.selectPrevColumn();
                         let scale = this._displayScaleMenu.selectedItem;
-                        this._gameInstance.displayScale = parseInt(scale.substring(0, scale.length - 1), 10);
+                        this.gameInstance.setDisplayScale(parseInt(scale.substring(0, scale.length - 1), 10));
                         break;
                     case Option.TEXT_SPEED:
                         this._txtTextSpeed.visible = true;
                         this._textSpeedBlinkTime = createjs.Ticker.getTime() + SELECTED_TEXT_BLINK_INTERVAL;
-                        switch (this._gameInstance.textSpeed) {
+                        switch (this.gameInstance.settings.textSpeed) {
                             case TextSpeed.MEDIUM:
-                                this._gameInstance.textSpeed = TextSpeed.SLOW;
+                                this.gameInstance.settings.textSpeed = TextSpeed.SLOW;
                                 this._txtTextSpeed.setText("Slow");
                                 break;
                             case TextSpeed.FAST:
-                                this._gameInstance.textSpeed = TextSpeed.MEDIUM;
+                                this.gameInstance.settings.textSpeed = TextSpeed.MEDIUM;
                                 this._txtTextSpeed.setText("Medium");
                         }
 
@@ -74,18 +74,18 @@ export class OptionsScreen extends screens.BaseScreen {
                     case Option.DISPLAY_SCALE:
                         this._displayScaleMenu.selectNextColumn();
                         let scale = this._displayScaleMenu.selectedItem;
-                        this._gameInstance.displayScale = parseInt(scale.substring(0, scale.length - 1), 10);
+                        this.gameInstance.setDisplayScale(parseInt(scale.substring(0, scale.length - 1), 10));
                         break;
                     case Option.TEXT_SPEED:
                         this._txtTextSpeed.visible = true;
                         this._textSpeedBlinkTime = createjs.Ticker.getTime() + SELECTED_TEXT_BLINK_INTERVAL;
-                        switch (this._gameInstance.textSpeed) {
+                        switch (this.gameInstance.settings.textSpeed) {
                             case TextSpeed.SLOW:
-                                this._gameInstance.textSpeed = TextSpeed.MEDIUM;
+                                this.gameInstance.settings.textSpeed = TextSpeed.MEDIUM;
                                 this._txtTextSpeed.setText("Medium");
                                 break;
                             case TextSpeed.MEDIUM:
-                                this._gameInstance.textSpeed = TextSpeed.FAST;
+                                this.gameInstance.settings.textSpeed = TextSpeed.FAST;
                                 this._txtTextSpeed.setText("Fast");
                         }
                 }
@@ -139,7 +139,7 @@ export class OptionsScreen extends screens.BaseScreen {
         display_scale_menu.addItem("2x", "2x", true);
         display_scale_menu.addItem("4x", "4x", true);
         this.container.addChild(display_scale_menu.container);
-        switch (this._gameInstance.displayScale) {
+        switch (this.gameInstance.settings.displayScale) {
             case 1:
                 display_scale_menu.selectedItem = "1x";
                 break;
@@ -165,7 +165,7 @@ export class OptionsScreen extends screens.BaseScreen {
     }
 
     protected _getTextSpeedStr(): string {
-        let speed = this._gameInstance.textSpeed;
+        let speed = this.gameInstance.settings.textSpeed;
         switch (speed) {
             case TextSpeed.SLOW:
                 return "Slow";
