@@ -4,11 +4,5 @@
  * @license MIT
  */
 
-export interface ISettings {
-    displayScale: number;
-    textSpeed: number;
-}
-
 export interface GameState {
-    settings: ISettings;
 }

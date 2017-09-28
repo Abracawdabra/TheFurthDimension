@@ -30,6 +30,7 @@ export class OptionsScreen extends screens.BaseScreen {
     handleKeyDown(key_code: number): void {
         switch (key_code) {
             case Button.B:
+                this.gameInstance.saveSettings();
                 this.gameInstance.popScreen();
                 break;
             case Button.A:

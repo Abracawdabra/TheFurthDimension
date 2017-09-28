@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys, FontData, SpriteSheetData, GameState, ISettings } from ".";
+import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys, FontData, SpriteSheetData, GameState } from ".";
 import * as screens from "./screens";
 import * as buttons from "./Buttons";
 import * as utils from "./Utils";
@@ -23,6 +23,11 @@ const DEFAULT_WALK_SPEED = 60;      // Pixels per second
 // Set to false for local testing in order to fix
 // preloading issues. Set to true for production.
 const PREFER_XHR = false;
+
+interface ISettings {
+    displayScale: number;
+    textSpeed: number;
+}
 
 // Characters per second
 export enum TextSpeed {
@@ -83,21 +88,18 @@ export class Game {
     constructor(canvas_id: string) {
         this._stage = new createjs.Stage(canvas_id);
 
-        // Load or generate game state
-        let game_state = localStorage.getItem("TFD_GS");
-        if (game_state !== null) {
-            this.gameState = JSON.parse(LZString.decompress(game_state));
+        // Load or generate game settings
+        let settings = localStorage.getItem("TFD_SETTINGS");
+        if (settings !== null) {
+            this.settings = JSON.parse(LZString.decompress(settings));
         }
         else {
-            this.gameState  = {
-                settings: {
-                    textSpeed: TextSpeed.MEDIUM,
-                    displayScale: Game.DEFAULT_DISPLAY_SCALE
-                }
+            this.settings = {
+                textSpeed: TextSpeed.MEDIUM,
+                displayScale: Game.DEFAULT_DISPLAY_SCALE
             };
         }
 
-        this.settings = this.gameState.settings;
         this.init();
     }
 
@@ -151,6 +153,10 @@ export class Game {
         let canvas = <HTMLCanvasElement>this._stage.canvas;
         canvas.style.width = (Game.DISPLAY_WIDTH * scale).toString() + "px";
         canvas.style.height = (Game.DISPLAY_HEIGHT * scale).toString() + "px";
+    }
+
+    saveSettings(): void {
+        localStorage.setItem("TFD_SETTINGS", LZString.compress(JSON.stringify(this.settings)));
     }
 
     pushScreen(screen: screens.BaseScreen): void {
