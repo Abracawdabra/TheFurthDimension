@@ -7,3 +7,4 @@
 export * from "./BaseMenu";
 export * from "./TextMenu";
 export * from "./BitmapText";
+export * from "./BorderBox";

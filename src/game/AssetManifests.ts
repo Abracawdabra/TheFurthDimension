@@ -10,6 +10,9 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
     images: [
         { id: "img_title_screen", src: BASE_URL + "images/title_screen.png" },
 
+        // UI
+        { id: "ui_border_boxes", src: BASE_URL + "images/ui/border_boxes.png" },
+
         // Tilesets
         { id: "tileset_dongola_temple", src: BASE_URL + "images/tilesets/dongola_temple.png" },
         { id: "tileset_collision", src: BASE_URL + "images/tilesets/collision.png" },
