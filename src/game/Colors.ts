@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-export const GB_COLOR_DARKEST_GREEN  = "#0f380f";
-export const GB_COLOR_DARK_GREEN     = "#306230";
-export const GB_COLOR_LIGHT_GREEN    = "#8bac0f";
-export const GB_COLOR_LIGHTEST_GREEN = "#9bbc0f";
+export const DARKEST  = "#142b00";
+export const DARK     = "#536a3f";
+export const LIGHT    = "#91a87d";
+export const LIGHTEST = "#d3eabf";

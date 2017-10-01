@@ -11,6 +11,8 @@ import * as utils from "./Utils";
 import * as colors from "./Colors";
 import * as LZString from "lz-string";
 
+export const DISPLAY_WIDTH = 160;
+export const DISPLAY_HEIGHT = 144;
 
 const PRELOADER_DISPLAY_WIDTH = 100;
 const PRELOADER_DISPLAY_HEIGHT = 20;
@@ -37,14 +39,12 @@ export enum TextSpeed {
 }
 
 export class Game {
-    static readonly DISPLAY_WIDTH = 160;
-    static readonly DISPLAY_HEIGHT = 144;
     static readonly DEFAULT_DISPLAY_SCALE = 2;
 
-    static readonly CENTER_X = Math.floor(Game.DISPLAY_WIDTH / 2);
-    static readonly CENTER_Y = Math.floor(Game.DISPLAY_HEIGHT / 2);
+    static readonly CENTER_X = Math.floor(DISPLAY_WIDTH / 2);
+    static readonly CENTER_Y = Math.floor(DISPLAY_HEIGHT / 2);
 
-    static readonly BACKGROUND_COLOR = colors.GB_COLOR_LIGHT_GREEN;
+    static readonly BACKGROUND_COLOR = colors.LIGHT;
 
     static readonly FPS = 59.7;
 
@@ -108,8 +108,8 @@ export class Game {
 
         let canvas = <HTMLCanvasElement>this._stage.canvas;
         canvas.style.backgroundColor = Game.BACKGROUND_COLOR;
-        canvas.width = Game.DISPLAY_WIDTH;
-        canvas.height = Game.DISPLAY_HEIGHT;
+        canvas.width = DISPLAY_WIDTH;
+        canvas.height = DISPLAY_HEIGHT;
         canvas.className = "pixelate";
 
         this._canvasContext = canvas.getContext("2d");
@@ -151,8 +151,8 @@ export class Game {
         this.settings.displayScale = scale;
 
         let canvas = <HTMLCanvasElement>this._stage.canvas;
-        canvas.style.width = (Game.DISPLAY_WIDTH * scale).toString() + "px";
-        canvas.style.height = (Game.DISPLAY_HEIGHT * scale).toString() + "px";
+        canvas.style.width = (DISPLAY_WIDTH * scale).toString() + "px";
+        canvas.style.height = (DISPLAY_HEIGHT * scale).toString() + "px";
     }
 
     saveSettings(): void {
@@ -232,7 +232,7 @@ export class Game {
             this._preloaderQueue = null;
 
             this._stage.removeAllChildren();
-            let error_text = new createjs.Text("ERROR LOADING ASSETS", "12px monospace", colors.GB_COLOR_DARKEST_GREEN);
+            let error_text = new createjs.Text("ERROR LOADING ASSETS", "12px monospace", colors.DARKEST);
             let error_text_bounds = error_text.getBounds();
             error_text.x = Game.CENTER_X - Math.floor(error_text_bounds.width / 2);
             error_text.y = Game.CENTER_Y - Math.floor(error_text_bounds.height / 2);
@@ -242,7 +242,7 @@ export class Game {
 
     protected _showPreloaderDisplay(): void {
         let preloader_border = new createjs.Shape();
-        preloader_border.graphics.beginStroke(colors.GB_COLOR_DARKEST_GREEN);
+        preloader_border.graphics.beginStroke(colors.DARKEST);
         preloader_border.graphics.setStrokeStyle(1);
         preloader_border.graphics.drawRect(0, 0, PRELOADER_DISPLAY_WIDTH, PRELOADER_DISPLAY_HEIGHT);
         preloader_border.x = Game.CENTER_X - Math.floor(PRELOADER_DISPLAY_WIDTH / 2);
@@ -250,7 +250,7 @@ export class Game {
 
         let preloader_bar = new createjs.Shape();
         preloader_bar.name = "preloader_bar";
-        preloader_bar.graphics.beginFill(colors.GB_COLOR_DARKEST_GREEN);
+        preloader_bar.graphics.beginFill(colors.DARKEST);
         preloader_bar.graphics.drawRect(0, 0, PRELOADER_DISPLAY_WIDTH, PRELOADER_DISPLAY_HEIGHT);
         preloader_bar.x = preloader_border.x;
         preloader_bar.y = preloader_border.y;

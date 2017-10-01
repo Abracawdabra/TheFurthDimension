@@ -17,7 +17,10 @@ export class BitmapText extends createjs.BitmapText {
         this.filters = [
                 new createjs.ColorFilter(utils.hexToInt(hex.substr(1, 2)) / 255, utils.hexToInt(hex.substr(3, 2)) / 255, utils.hexToInt(hex.substr(5, 2)) / 255)
         ];
-        this.updateCache();
+
+        if (this.getBounds()) {
+            this.updateCache();
+        }
     }
 
     setText(value: string): void {
@@ -25,7 +28,9 @@ export class BitmapText extends createjs.BitmapText {
 
         this.uncache();
         let bounds = this.getBounds();
-        this.cache(0, 0, bounds.width, bounds.height);
+        if (bounds) {
+            this.cache(0, 0, bounds.width, bounds.height);
+        }
     }
 
     constructor(text: string, font: string, color: string) {
@@ -36,7 +41,9 @@ export class BitmapText extends createjs.BitmapText {
 
         super(text, Game.FontSpriteSheets[font_id]);
         let bounds = this.getBounds();
-        this.cache(0, 0, bounds.width, bounds.height);
+        if (bounds) {
+            this.cache(0, 0, bounds.width, bounds.height);
+        }
 
         if (color) {
             this.color = color;

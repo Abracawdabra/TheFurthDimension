@@ -6,9 +6,10 @@
 
 import { BaseScreen } from "./BaseScreen";
 import * as tiled from "../tiled";
-import { Game } from "../Main";
+import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
 import { Direction, Button, SpatialGrid, BaseMapObject } from "..";
 import { INPCSettings, NPC, Character } from "../entities";
+import { DialogBox } from "../ui";
 import * as utils from "../Utils";
 
 export enum Axes {
@@ -185,8 +186,8 @@ export class GameScreen extends BaseScreen {
         this._player.destroySprite();
 
         this._map = new tiled.Map(map);
-        this._numOfXTiles = Math.ceil(Game.DISPLAY_WIDTH / map.tilewidth) + 1;
-        this._numOfYTiles = Math.ceil(Game.DISPLAY_HEIGHT / map.tileheight) + 1;
+        this._numOfXTiles = Math.ceil(DISPLAY_WIDTH / map.tilewidth) + 1;
+        this._numOfYTiles = Math.ceil(DISPLAY_HEIGHT / map.tileheight) + 1;
 
         this._scrollXPos = 0;
         this._scrollYPos = 0;
@@ -234,7 +235,7 @@ export class GameScreen extends BaseScreen {
 
         let background = new createjs.Shape();
         background.graphics.beginFill(this._map.backgroundColor);
-        background.graphics.drawRect(0, 0, Game.DISPLAY_WIDTH, Game.DISPLAY_HEIGHT);
+        background.graphics.drawRect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
         this.container.addChildAt(background, 0);
 
         this.container.addChild(this._player.getSprite());
@@ -255,8 +256,8 @@ export class GameScreen extends BaseScreen {
             this._scrollYPos = sp_tile_y - Math.floor(this._numOfYTiles / 2);
 
             // Center the tiles on the screen
-            this._tileContainer.x = Math.floor((Game.DISPLAY_WIDTH - (this._numOfXTiles * this._map.tileWidth)) / 2);
-            this._tileContainer.y = Math.floor((Game.DISPLAY_HEIGHT - (this._numOfYTiles * this._map.tileHeight)) / 2);
+            this._tileContainer.x = Math.floor((DISPLAY_WIDTH - (this._numOfXTiles * this._map.tileWidth)) / 2);
+            this._tileContainer.y = Math.floor((DISPLAY_HEIGHT - (this._numOfYTiles * this._map.tileHeight)) / 2);
 
             this._player.x = spawn_point.x;
             this._player.y = spawn_point.y;

@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { Game } from "../Main";
+import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
 import { IEventDispatcher } from "..";
 
 export abstract class BaseScreen {
@@ -17,7 +17,7 @@ export abstract class BaseScreen {
         this.gameInstance = game_instance;
         this.parent = parent;
         this.container = new createjs.Container();
-        this.container.setBounds(0, 0, Game.DISPLAY_WIDTH, Game.DISPLAY_HEIGHT);
+        this.container.setBounds(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
         this._init();
     }
 

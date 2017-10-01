@@ -46,7 +46,7 @@ export class TitleScreen extends screens.BaseScreen {
     protected _init(): void {
         this.container.addChild(new createjs.Bitmap(Game.Assets["img_title_screen"]));
 
-        let text_menu = new TextMenu(50, 85, colors.GB_COLOR_LIGHT_GREEN, 5);
+        let text_menu = new TextMenu(50, 85, colors.LIGHT, 5);
         text_menu.addItem("new_game", "New Game");
         if (localStorage.getItem("gameSave") === "1") {
             text_menu.addItem("continue_game", "Continue");
