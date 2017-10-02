@@ -30,7 +30,6 @@ export class GameScreen extends BaseScreen {
     protected _scrollXPos: number;
     protected _scrollYPos: number;
 
-    /** @todo Remove in favor of using player character's direction */
     protected _scrollDir: number;
 
     // Stored map area for rendering, checking collisions, etc.
