@@ -6,6 +6,8 @@
 
 import { BaseMenu } from "./BaseMenu";
 import { BitmapText } from "./BitmapText";
+import { Game } from "../Main";
+import { hexToInt } from "../Utils";
 
 export class TextMenu extends BaseMenu<BitmapText> {
     protected _textColor: string;
@@ -23,6 +25,11 @@ export class TextMenu extends BaseMenu<BitmapText> {
                 item.color = color;
             }
         }
+
+        this._marker.filters = [
+            new createjs.ColorFilter(hexToInt(color.substr(1, 2)) / 255, hexToInt(color.substr(3, 2)) / 255, hexToInt(color.substr(5, 2)) / 255 )
+        ];
+        this._marker.updateCache();
 
         this._textColor = color;
     }
@@ -55,17 +62,10 @@ export class TextMenu extends BaseMenu<BitmapText> {
 
     constructor(x: number, y: number, text_color: string, vertical_spacing: number, horizontal_margin?: number) {
         super(x, y, vertical_spacing, horizontal_margin);
-        this._textColor = text_color;
-
-        let marker = new createjs.Shape();
-        marker.graphics.beginFill(text_color);
-        marker.graphics.moveTo(0, 0);
-        marker.graphics.lineTo(6, 3);
-        marker.graphics.lineTo(0, 6);
-        marker.graphics.lineTo(0, 0);
-        marker.graphics.closePath();
-        marker.setBounds(0, 0, 8, 8);
-        this._marker = marker;
+        this._marker = new createjs.Bitmap(Game.Assets["ui_marker"]);
+        let marker_bounds = this._marker.getBounds();
+        this._marker.cache(0, 0, marker_bounds.width, marker_bounds.height);
+        this.textColor = text_color;
         this._markerPos = { row: 0, col: 0 };
     }
 
@@ -109,7 +109,7 @@ export class TextMenu extends BaseMenu<BitmapText> {
     setMarkerPos(row: number, col: number): void {
         let marker_bounds = this._marker.getBounds();
         if (col >= 0 && col < this._items.length) {
-            this._marker.x = (col * this._horizontalMargin) - (marker_bounds.width + 2);
+            this._marker.x = (col * this._horizontalMargin) - (marker_bounds.width + 5);
             this._markerPos.col = col;
         }
 
