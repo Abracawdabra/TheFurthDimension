@@ -20,6 +20,8 @@ export enum Axes {
 export class GameScreen extends BaseScreen {
     protected _map: tiled.Map;
 
+    protected _background: createjs.Shape;
+
     // Number of tiles to draw across the screen
     protected _numOfXTiles: number;
     protected _numOfYTiles: number;
@@ -55,6 +57,23 @@ export class GameScreen extends BaseScreen {
     // The player
     protected _player: Character;
 
+    // Enables/disables player input
+    protected _inputEnabled: boolean;
+
+    // Dialog box for uh, dialog
+    protected _dialogBox: DialogBox;
+
+    // Shake screen effect
+    protected _screenIsShaking: boolean;
+    // The duration of a screen shake "frame" in milliseconds
+    protected _screenShakeFrameDuration: number;
+    // The time until the next shake "frame" occurs
+    protected _screenShakeFrameTime: number;
+    // Intensity multiplier for moving the container (correlates to tile dimensions)
+    protected _screenShakeIntensity: number;
+    // How long the effect will last
+    protected _screenShakeDuration: number;
+
     // Global x position of the viewport
     get viewportX(): number {
         return (this._scrollXPos * this._map.tileWidth) - this._tileContainer.x;
@@ -66,21 +85,31 @@ export class GameScreen extends BaseScreen {
     }
 
     handleKeyDown(key_code: number): void {
-        if (key_code === Button.LEFT) {
-            this._scrollDir |= Direction.LEFT;
-            this._player.direction = this._scrollDir;
-        }
-        else if (key_code === Button.RIGHT) {
-            this._scrollDir |= Direction.RIGHT;
-            this._player.direction = this._scrollDir;
-        }
-        else if (key_code === Button.UP) {
-            this._scrollDir |= Direction.UP;
-            this._player.direction = this._scrollDir;
-        }
-        else if (key_code === Button.DOWN) {
-            this._scrollDir |= Direction.DOWN;
-            this._player.direction = this._scrollDir;
+        if (this._inputEnabled) {
+            if (this._dialogBox && !this._dialogBox.isTransitioning() && key_code === Button.A) {
+                if (!this._dialogBox.showNext()) {
+                    this.container.removeChild(this._dialogBox);
+                    this._dialogBox = null;
+                }
+            }
+            else if (!this._dialogBox) {
+                if (key_code === Button.LEFT) {
+                    this._scrollDir |= Direction.LEFT;
+                    this._player.direction = this._scrollDir;
+                }
+                else if (key_code === Button.RIGHT) {
+                    this._scrollDir |= Direction.RIGHT;
+                    this._player.direction = this._scrollDir;
+                }
+                else if (key_code === Button.UP) {
+                    this._scrollDir |= Direction.UP;
+                    this._player.direction = this._scrollDir;
+                }
+                else if (key_code === Button.DOWN) {
+                    this._scrollDir |= Direction.DOWN;
+                    this._player.direction = this._scrollDir;
+                }
+            }
         }
     }
 
@@ -176,6 +205,18 @@ export class GameScreen extends BaseScreen {
                 }
             }
         }
+
+        if (this._screenIsShaking && createjs.Ticker.getTime() >= this._screenShakeFrameTime) {
+            // Screen shake effect
+            if (this._screenShakeDuration > 0 && createjs.Ticker.getTime() >= this._screenShakeDuration) {
+                this.stopScreenShake();
+            }
+            else {
+                this.container.x = Math.random() * this._map.tileWidth * this._screenShakeIntensity * -1;
+                this.container.y = Math.random() * this._map.tileHeight * this._screenShakeIntensity * -1;
+                this._screenShakeFrameTime = createjs.Ticker.getTime() + this._screenShakeFrameDuration;
+            }
+        }
     }
 
     getMap(): tiled.Map {
@@ -183,11 +224,13 @@ export class GameScreen extends BaseScreen {
     }
 
     loadMap(map: tiled.IMap): void {
+        this._inputEnabled = false;
         this._player.destroySprite();
 
         this._map = new tiled.Map(map);
-        this._numOfXTiles = Math.ceil(DISPLAY_WIDTH / map.tilewidth) + 1;
-        this._numOfYTiles = Math.ceil(DISPLAY_HEIGHT / map.tileheight) + 1;
+        // One extra row/column on each axis for scrolling, and another for fixing screen effects (like shaking)
+        this._numOfXTiles = Math.ceil(DISPLAY_WIDTH / map.tilewidth) + 2;
+        this._numOfYTiles = Math.ceil(DISPLAY_HEIGHT / map.tileheight) + 2;
 
         this._scrollXPos = 0;
         this._scrollYPos = 0;
@@ -195,10 +238,12 @@ export class GameScreen extends BaseScreen {
         this._mapLayerIndices = {};
         this._spatialGrids = {};
 
-        if (this.container.getChildIndex(this._tileContainer) !== 0) {
-            // Remove previous background
-            this.container.removeChildAt(0);
+        // Remove previous background if it exists
+        let stage = this.gameInstance.getStage();
+        if (this._background) {
+            stage.removeChild(this._background);
         }
+
         this._tileContainer.removeAllChildren();
         this._objectContainer.removeAllChildren();
         let empty_spritesheet = new createjs.SpriteSheet({});
@@ -236,12 +281,16 @@ export class GameScreen extends BaseScreen {
         let background = new createjs.Shape();
         background.graphics.beginFill(this._map.backgroundColor);
         background.graphics.drawRect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-        this.container.addChildAt(background, 0);
+        // Add the background behind this screen's container so that
+        // screen effects don't need to worry about it moving
+        stage.addChildAt(background, stage.getChildIndex(this.container));
+        this._background = background;
 
         this.container.addChild(this._player.getSprite());
         this._player.showHitbox(this.gameInstance.renderHitboxes);
 
         this.gotoSpawnPoint("default");
+        this._inputEnabled = true;
     }
 
     gotoSpawnPoint(name: string): boolean {
@@ -473,6 +522,26 @@ export class GameScreen extends BaseScreen {
         }
     }
 
+    /**
+     * Starts a screen shake effect
+     * @param {number} frame_duration Duration of each shake frame in milliseconds
+     * @param {number} intensity Percentage of tile dimensions to move the container
+     * @param {number} [max_duration] How long the effect lasts in milliseconds
+     */
+    startScreenShake(frame_duration: number, intensity: number, duration?: number): void {
+        this._screenIsShaking = true;
+        this._screenShakeFrameDuration = frame_duration;
+        this._screenShakeIntensity = intensity;
+        this._screenShakeFrameTime = createjs.Ticker.getTime() + frame_duration;
+        this._screenShakeDuration = duration ? createjs.Ticker.getTime() + duration : 0;
+    }
+
+    stopScreenShake(): void {
+        this._screenIsShaking = false;
+        this.container.x = 0;
+        this.container.y = 0;
+    }
+
     protected _init(): void {
         this._tileContainer = new createjs.Container();
         this._tileContainer.tickChildren = false;
@@ -482,6 +551,19 @@ export class GameScreen extends BaseScreen {
         this.container.addChild(this._objectContainer);
 
         this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], new createjs.Rectangle(3, 8, 10, 8));
+
+        this._inputEnabled = false;
+
+        this._screenIsShaking = false;
+
+        // Remove the background since it's not in this container
+        this.container.on("removed", this._onRemoved, this, true);
+    }
+
+    protected _onRemoved(event: createjs.Event): void {
+        if (this._background) {
+            this.gameInstance.getStage().removeChild(this._background);
+        }
     }
 
     protected _scrollMap(): void {

@@ -147,6 +147,10 @@ export class Game {
         this._preload();
     }
 
+    getStage(): createjs.Stage {
+        return this._stage;
+    }
+
     setDisplayScale(scale: number): void {
         this.settings.displayScale = scale;
 
