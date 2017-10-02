@@ -14,6 +14,9 @@ const LINE_HEIGHT = 12;
 
 const CLEAR_CHAR = "\u2742";
 
+// Blink duration in milliseconds
+const TEXT_CONTINUE_MARKER_BLINK_DURATION = 500;
+
 export class DialogBox extends createjs.Container {
     static get BOX_WIDTH(): number {
         return DISPLAY_WIDTH - 2;
@@ -41,8 +44,9 @@ export class DialogBox extends createjs.Container {
     // at which point it resets to 0.
     protected _transitionCharDelta: number;
 
-    /** @todo Implement text continue marker */
     protected _textContinueMarker: createjs.Bitmap;
+    // The desired point in time for the text continue marker to blink on or off
+    protected _textContinueMarkerBlinkTime: number;
 
     constructor(text: string, text_speed: number, text_color: string = colors.DARKEST, fill_color: string = colors.LIGHTEST, border_start_x: number = 0, border_start_y: number = 0) {
         super();
@@ -64,6 +68,18 @@ export class DialogBox extends createjs.Container {
         this._currentLineIndex = -1;
         this._transitioning = false;
         this._transitionCharDelta = 0;
+
+        let marker = new createjs.Bitmap(Game.Assets["ui_marker"]);
+        let marker_bounds = marker.getBounds();
+        marker.x = this.x + DialogBox.BOX_WIDTH - 12 - marker_bounds.width;
+        marker.y = this.y + DialogBox.BOX_HEIGHT - 12;
+        marker.rotation = 90;
+        this._textContinueMarker = marker;
+        this._textContinueMarkerBlinkTime = 0;
+    }
+
+    isTransitioning(): boolean {
+        return this._transitioning;
     }
 
     /**
@@ -86,6 +102,8 @@ export class DialogBox extends createjs.Container {
             this._currentCharIndex = 0;
             this._transitioning = true;
             this._transitionCharDelta = 0;
+            this.removeChild(this._textContinueMarker);
+            this._textContinueMarkerBlinkTime = 0;
             return true;
         }
         else {
@@ -110,13 +128,17 @@ export class DialogBox extends createjs.Container {
                     }
                     else {
                         this._transitioning = false;
-                        // Show text continue marker here
+                        this._textContinueMarker.visible = true;
+                        this.addChild(this._textContinueMarker);
+                        this._textContinueMarkerBlinkTime = createjs.Ticker.getTime() + TEXT_CONTINUE_MARKER_BLINK_DURATION;
                     }
                 }
             }
         }
-        else if (this._textContinueMarker) {
+        else if (this._textContinueMarkerBlinkTime > 0 && createjs.Ticker.getTime() >= this._textContinueMarkerBlinkTime) {
             // Make text continue marker blink
+            this._textContinueMarker.visible = !this._textContinueMarker.visible;
+            this._textContinueMarkerBlinkTime = createjs.Ticker.getTime() + TEXT_CONTINUE_MARKER_BLINK_DURATION;
         }
     }
 
