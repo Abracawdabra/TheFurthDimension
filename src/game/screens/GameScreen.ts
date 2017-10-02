@@ -319,16 +319,37 @@ export class GameScreen extends BaseScreen {
             let sp_tile_x = Math.floor(spawn_point.x / this._map.tileWidth);
             let sp_tile_y = Math.floor(spawn_point.y / this._map.tileHeight);
 
+            // For checking if the spawn point spans multiple tiles
+            let sp_tile_x_right = Math.floor((spawn_point.x + spawn_point.width) / this._map.tileWidth);
+            let sp_tile_y_bottom = Math.floor((spawn_point.y + spawn_point.height) / this._map.tileHeight);
+
             // Stretch out to the top left corner of the screen
-            this._scrollXPos = sp_tile_x - Math.floor(this._numOfXTiles / 2);
-            this._scrollYPos = sp_tile_y - Math.floor(this._numOfYTiles / 2);
+            let num_of_x_tiles = this._numOfXTiles - 2;
+            if (sp_tile_x !== sp_tile_x_right) {
+                // Spawn point spans multiple X tiles
+                this._scrollXPos = sp_tile_x_right - Math.round(num_of_x_tiles / 2);
+                this._tileContainer.x = (num_of_x_tiles % 2 === 0) ? 0 : Math.floor(this._map.tileWidth / -2);
+            }
+            else {
+                this._scrollXPos = sp_tile_x - Math.round(num_of_x_tiles / 2);
+                this._tileContainer.x = Math.floor(this._map.tileWidth / -2);
+            }
 
-            // Center the tiles on the screen
-            this._tileContainer.x = Math.floor((DISPLAY_WIDTH - (this._numOfXTiles * this._map.tileWidth)) / 2);
-            this._tileContainer.y = Math.floor((DISPLAY_HEIGHT - (this._numOfYTiles * this._map.tileHeight)) / 2);
+            let num_of_y_tiles = this._numOfYTiles - 2;
+            if (sp_tile_y !== sp_tile_y_bottom) {
+                // Spawn point spans multiple Y tiles
+                this._scrollYPos = sp_tile_y_bottom - Math.round(num_of_y_tiles / 2);
+                this._tileContainer.y = (num_of_y_tiles % 2 === 0) ? 0 : Math.floor(this._map.tileWidth / -2);
+            }
+            else {
+                this._scrollYPos = sp_tile_y - Math.round(num_of_y_tiles / 2);
+                this._tileContainer.y = Math.floor(this._map.tileHeight / -2);
+            }
 
-            this._player.x = spawn_point.x;
-            this._player.y = spawn_point.y;
+            // Center the player on the spawn point
+            let player_bounds = this._player.getSprite().getBounds();
+            this._player.x = spawn_point.x - Math.floor(player_bounds.width / 2) + Math.floor(spawn_point.width / 2);
+            this._player.y = spawn_point.y - Math.floor(player_bounds.height / 2) + Math.floor(spawn_point.height / 2);
 
             this._updateMapArea(this._scrollXPos, this._scrollYPos, this._numOfXTiles, this._numOfYTiles);
             this.redrawMapArea();
