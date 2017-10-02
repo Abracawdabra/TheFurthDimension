@@ -424,6 +424,7 @@ export class Game {
         let parsed = command.split(" ");
         let cmd = parsed[0].toLowerCase();
         let success = false;
+        let game_screen = this._getGameScreen();
 
         if (cmd === "exposeme") {
             // Add instance to the global scope
@@ -445,24 +446,16 @@ export class Game {
 
             success = true;
         }
-        else if (cmd === "showinvis") {
+        else if (cmd === "showinvis" && game_screen) {
             // Sets to render invisible layers
             this.renderInvisibleLayers = true;
-            for (let screen of this._screens) {
-                if (screen instanceof screens.GameScreen) {
-                    (<screens.GameScreen>screen).redrawMapArea();
-                    break;
-                }
-            }
+            game_screen.redrawMapArea();
             success = true;
         }
-        else if (cmd === "hideinvis") {
+        else if (cmd === "hideinvis" && game_screen) {
             // Sets to not render invisible layers
             this.renderInvisibleLayers = false;
-            let game_screen = this._getGameScreen();
-            if (game_screen) {
-                game_screen.redrawMapArea();
-            }
+            game_screen.redrawMapArea();
             success = true;
         }
         else if (cmd === "wspeed" && parsed.length === 2) {
@@ -473,11 +466,10 @@ export class Game {
                 success = true;
             }
         }
-        else if (cmd === "loadmap" && parsed.length > 1) {
+        else if (cmd === "loadmap" && parsed.length > 1 && game_screen) {
             // Loads a map
-            let game_screen = this._getGameScreen();
             let map = parsed[1];
-            if (game_screen && map in Game.Assets) {
+            if (map in Game.Assets) {
                 game_screen.loadMap(Game.Assets[map]);
                 if (parsed.length === 3) {
                     game_screen.gotoSpawnPoint(parsed[2]);
@@ -488,25 +480,39 @@ export class Game {
                 console.log("Map '" + map + "' not found.");
             }
         }
-        else if (cmd === "goto" && parsed.length === 2) {
+        else if (cmd === "goto" && parsed.length === 2 && game_screen) {
             // Goes to a spawn point on the map
-            let game_screen = this._getGameScreen();
-            if (game_screen) {
-                success = game_screen.gotoSpawnPoint(parsed[1]);
-            }
+            success = game_screen.gotoSpawnPoint(parsed[1]);
         }
-        else if (cmd === "showhitbox" || cmd === "hidehitbox") {
+        else if ((cmd === "showhitbox" || cmd === "hidehitbox") && game_screen) {
             // Shows or hides object hitboxes
             this.renderHitboxes = (cmd === "showhitbox");
-            let game_screen = this._getGameScreen();
-            if (game_screen) {
-                game_screen.showHitboxes(this.renderHitboxes);
-            }
+            game_screen.showHitboxes(this.renderHitboxes);
             success = true;
         }
         else if (cmd === "noclip" || cmd === "yesclip") {
             // Enables/disables player collision
             this.enableNoClip = (cmd === "noclip");
+            success = true;
+        }
+        else if (cmd === "shakeshakeshake" && game_screen) {
+            // Shake screen effect
+            game_screen.startScreenShake(25, 1.0);
+            success = true;
+        }
+        else if (cmd === "noshake" && game_screen) {
+            // Stop shake screen effect
+            game_screen.stopScreenShake();
+            success = true;
+        }
+        else if (cmd === "youspinmerightroundbaby" && game_screen) {
+            // Start screen spin effect
+            game_screen.startScreenSpin();
+            success = true;
+        }
+        else if (cmd === "nospin" && game_screen) {
+            // Stop screen spin effect
+            game_screen.stopScreenSpin();
             success = true;
         }
 

@@ -12,6 +12,9 @@ import { INPCSettings, NPC, Character } from "../entities";
 import { DialogBox } from "../ui";
 import * as utils from "../Utils";
 
+// For the screen spin effect
+const SCREEN_SPIN_FRAME_DURATION = 25;
+
 export enum Axes {
     X = 1,
     Y = 2
@@ -66,12 +69,17 @@ export class GameScreen extends BaseScreen {
     protected _screenIsShaking: boolean;
     // The duration of a screen shake "frame" in milliseconds
     protected _screenShakeFrameDuration: number;
-    // The time until the next shake "frame" occurs
+    // The time until the next shake frame occurs
     protected _screenShakeFrameTime: number;
     // Intensity multiplier for moving the container (correlates to tile dimensions)
     protected _screenShakeIntensity: number;
     // How long the effect will last
     protected _screenShakeDuration: number;
+
+    // Spin screen effect
+    protected _screenIsSpinning: boolean;
+    // The time until the next spin frame
+    protected _screenSpinFrameTime: number;
 
     // Global x position of the viewport
     get viewportX(): number {
@@ -211,10 +219,22 @@ export class GameScreen extends BaseScreen {
                 this.stopScreenShake();
             }
             else {
-                this.container.x = Math.random() * this._map.tileWidth * this._screenShakeIntensity * -1;
-                this.container.y = Math.random() * this._map.tileHeight * this._screenShakeIntensity * -1;
+                if (this._screenIsSpinning) {
+                    this.container.x = (DISPLAY_WIDTH / 2) - (Math.random() * this._map.tileWidth * this._screenShakeIntensity);
+                    this.container.y = (DISPLAY_HEIGHT / 2) - (Math.random() * this._map.tileHeight * this._screenShakeIntensity);
+                }
+                else {
+                    this.container.x = Math.random() * this._map.tileWidth * this._screenShakeIntensity * -1;
+                    this.container.y = Math.random() * this._map.tileHeight * this._screenShakeIntensity * -1;
+                }
                 this._screenShakeFrameTime = createjs.Ticker.getTime() + this._screenShakeFrameDuration;
             }
+        }
+
+        if (this._screenIsSpinning && createjs.Ticker.getTime() >= this._screenSpinFrameTime) {
+            // Screen spin effect
+            this.container.rotation += 1;
+            this._screenSpinFrameTime = createjs.Ticker.getTime() + SCREEN_SPIN_FRAME_DURATION;
         }
     }
 
@@ -537,8 +557,32 @@ export class GameScreen extends BaseScreen {
 
     stopScreenShake(): void {
         this._screenIsShaking = false;
+        if (this._screenIsSpinning) {
+            this.container.x = DISPLAY_WIDTH / 2;
+            this.container.y = DISPLAY_HEIGHT / 2;
+        }
+        else {
+            this.container.x = 0;
+            this.container.y = 0;
+        }
+    }
+
+    startScreenSpin(): void {
+        this._screenIsSpinning =true;
+        this.container.regX = DISPLAY_WIDTH / 2;
+        this.container.regY = DISPLAY_HEIGHT / 2;
+        this.container.x = this.container.regX;
+        this.container.y = this.container.regY;
+        this._screenSpinFrameTime = createjs.Ticker.getTime() + SCREEN_SPIN_FRAME_DURATION;
+    }
+
+    stopScreenSpin(): void {
+        this._screenIsSpinning = false;
+        this.container.regX = 0;
+        this.container.regY = 0;
         this.container.x = 0;
         this.container.y = 0;
+        this.container.rotation = 0;
     }
 
     protected _init(): void {
@@ -554,6 +598,7 @@ export class GameScreen extends BaseScreen {
         this._inputEnabled = false;
 
         this._screenIsShaking = false;
+        this._screenIsSpinning = false;
 
         // Remove the background since it's not in this container
         this.container.on("removed", this._onRemoved, this, true);
