@@ -5,6 +5,7 @@
  */
 
 import { Game } from "./Main";
+import { Direction } from "./Direction";
 
 /**
  * Returns if a two arrays are equal
@@ -60,4 +61,21 @@ export function rectangleFromStr(rect_str: string): createjs.Rectangle {
  */
 export function randBetween(min: number, max: number): number {
     return (Math.random() * (max - min)) + min;
+}
+
+export function getOppositeDirection(dir: number): Direction {
+    if (dir & Direction.LEFT) {
+        return Direction.RIGHT;
+    }
+    else if (dir & Direction.RIGHT) {
+        return Direction.LEFT;
+    }
+    else if (dir & Direction.UP) {
+        return Direction.DOWN;
+    }
+    else if (dir & Direction.DOWN) {
+        return Direction.UP;
+    }
+
+    return Direction.LEFT;
 }

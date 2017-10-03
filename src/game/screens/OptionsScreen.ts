@@ -60,12 +60,13 @@ export class OptionsScreen extends screens.BaseScreen {
                         this._textSpeedBlinkTime = createjs.Ticker.getTime() + SELECTED_TEXT_BLINK_INTERVAL;
                         switch (this.gameInstance.settings.textSpeed) {
                             case TextSpeed.MEDIUM:
-                                this.gameInstance.settings.textSpeed = TextSpeed.SLOW;
-                                this._txtTextSpeed.setText("Slow");
+                                this._setTextSpeed(TextSpeed.SLOW);
                                 break;
                             case TextSpeed.FAST:
-                                this.gameInstance.settings.textSpeed = TextSpeed.MEDIUM;
-                                this._txtTextSpeed.setText("Medium");
+                                this._setTextSpeed(TextSpeed.MEDIUM);
+                                break;
+                            case TextSpeed.ULTRA:
+                                this._setTextSpeed(TextSpeed.FAST);
                         }
 
                 }
@@ -83,11 +84,13 @@ export class OptionsScreen extends screens.BaseScreen {
                         switch (this.gameInstance.settings.textSpeed) {
                             case TextSpeed.SLOW:
                                 this.gameInstance.settings.textSpeed = TextSpeed.MEDIUM;
-                                this._txtTextSpeed.setText("Medium");
+                                this._setTextSpeed(TextSpeed.MEDIUM);
                                 break;
                             case TextSpeed.MEDIUM:
-                                this.gameInstance.settings.textSpeed = TextSpeed.FAST;
-                                this._txtTextSpeed.setText("Fast");
+                                this._setTextSpeed(TextSpeed.FAST);
+                                break;
+                            case TextSpeed.FAST:
+                                this._setTextSpeed(TextSpeed.ULTRA);
                         }
                 }
             break;
@@ -155,7 +158,7 @@ export class OptionsScreen extends screens.BaseScreen {
         let txt_text_speed = this.container.addChild(new BitmapText("Text Speed:", "8px 'Press Start'", colors.DARKEST));
         txt_text_speed.x = 2;
         txt_text_speed.y = txt_display.y + height + 4;
-        let txt_text_speed_value = this.container.addChild(new BitmapText(this._getTextSpeedStr(), "8px 'Press Start'", colors.DARKEST));
+        let txt_text_speed_value = this.container.addChild(new BitmapText(OptionsScreen._getTextSpeedStr(this.gameInstance.settings.textSpeed), "8px 'Press Start'", colors.DARKEST));
         txt_text_speed_value.x = 102;
         txt_text_speed_value.y = txt_text_speed.y;
         this._txtTextSpeed = txt_text_speed_value;
@@ -165,8 +168,7 @@ export class OptionsScreen extends screens.BaseScreen {
         this._textSpeedBlinkTime = 0;
     }
 
-    protected _getTextSpeedStr(): string {
-        let speed = this.gameInstance.settings.textSpeed;
+    protected static _getTextSpeedStr(speed: TextSpeed): string {
         switch (speed) {
             case TextSpeed.SLOW:
                 return "Slow";
@@ -174,8 +176,15 @@ export class OptionsScreen extends screens.BaseScreen {
                 return "Medium";
             case TextSpeed.FAST:
                 return "Fast";
+            case TextSpeed.ULTRA:
+                return "Ultra";
         }
 
         return "";
+    }
+
+    protected _setTextSpeed(speed: TextSpeed): void {
+        this.gameInstance.settings.textSpeed = speed;
+        this._txtTextSpeed.setText(OptionsScreen._getTextSpeedStr(speed));
     }
 }

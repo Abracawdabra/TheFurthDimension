@@ -23,9 +23,16 @@ export interface INPCSettings {
     wanderMinDirDuration?: number;
     // Maximum duration to wander in one direction (Seconds)
     wanderMaxDirDuration?: number;
+    // Indicates if NPC will face the direction of the player when talking
+    faceWhenTalking?: boolean;
+    // Shorthand for characters that only talk when interacted with
+    dialog?: string;
 }
 
 export class NPC extends Character {
+    // Indicates if NPC will face the direction of the player when talking
+    faceWhenTalking: boolean;
+
     // Bounds in local tile coordinates where the NPC will wander within
     protected _wanderBounds: createjs.Rectangle;
     get wanderBounds(): createjs.Rectangle {
@@ -118,6 +125,11 @@ export class NPC extends Character {
             }
 
             this.wander = ("wander" in settings) ? settings.wander : false;
+            this.faceWhenTalking = ("faceWhenTalking" in settings) ? true : false;
+
+            if ("dialog" in settings) {
+                this.dialog = settings.dialog;
+            }
         }
     }
 

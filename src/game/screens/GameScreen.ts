@@ -10,7 +10,11 @@ import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
 import { Direction, Button, SpatialGrid, BaseMapObject } from "..";
 import { INPCSettings, NPC, Character } from "../entities";
 import { DialogBox } from "../ui";
+import * as colors from "../Colors";
 import * as utils from "../Utils";
+
+// Maximum distance in pixels of an object to be interacted with
+const MAX_INTERACTION_DISTANCE = 15;
 
 // For the screen spin effect
 const SCREEN_SPIN_FRAME_DURATION = 25;
@@ -93,49 +97,84 @@ export class GameScreen extends BaseScreen {
 
     handleKeyDown(key_code: number): void {
         if (this._inputEnabled) {
-            if (this._dialogBox && !this._dialogBox.isTransitioning() && key_code === Button.A) {
-                if (!this._dialogBox.showNext()) {
+            if (this._dialogBox && key_code === Button.A) {
+                if (this._dialogBox.isTransitioning()) {
+                    // Double the speeeeed
+                    this._dialogBox.textSpeed = this.gameInstance.settings.textSpeed *  2;
+                }
+                else if (!this._dialogBox.showNext()) {
                     this.container.removeChild(this._dialogBox);
+                    let owner = this._dialogBox.owner;
+                    if (owner instanceof NPC) {
+                        if (owner.wanderBounds) {
+                            owner.wander = true;
+                        }
+                    }
                     this._dialogBox = null;
                 }
             }
             else if (!this._dialogBox) {
-                if (key_code === Button.LEFT) {
-                    this._scrollDir |= Direction.LEFT;
-                    this._player.direction = this._scrollDir;
-                }
-                else if (key_code === Button.RIGHT) {
-                    this._scrollDir |= Direction.RIGHT;
-                    this._player.direction = this._scrollDir;
-                }
-                else if (key_code === Button.UP) {
-                    this._scrollDir |= Direction.UP;
-                    this._player.direction = this._scrollDir;
-                }
-                else if (key_code === Button.DOWN) {
-                    this._scrollDir |= Direction.DOWN;
-                    this._player.direction = this._scrollDir;
+                switch (key_code) {
+                    case Button.LEFT:
+                        this._scrollDir |= Direction.LEFT;
+                        this._player.direction = this._scrollDir;
+                        break;
+                    case Button.RIGHT:
+                        this._scrollDir |= Direction.RIGHT;
+                        this._player.direction = this._scrollDir;
+                        break;
+                    case Button.UP:
+                        this._scrollDir |= Direction.UP;
+                        this._player.direction = this._scrollDir;
+                        break;
+                    case Button.DOWN:
+                        this._scrollDir |= Direction.DOWN;
+                        this._player.direction = this._scrollDir;
+                        break;
+                    case Button.A:
+                        let interactive_obj = this._getInteractiveObject();
+                        if (interactive_obj) {
+                            if (interactive_obj instanceof NPC) {
+                                if (interactive_obj.wander) {
+                                    interactive_obj.wander = false;
+                                }
+
+                                if (interactive_obj.faceWhenTalking) {
+                                    interactive_obj.direction = utils.getOppositeDirection(this._player.direction);
+                                }
+                            }
+
+                            interactive_obj.interact(this._player);
+                        }
+                        break;
                 }
             }
         }
     }
 
     handleKeyUp(key_code: number): void {
-        if (key_code === Button.LEFT) {
-            this._scrollDir &= ~Direction.LEFT;
-            this._player.direction = this._scrollDir;
-        }
-        else if (key_code === Button.RIGHT) {
-            this._scrollDir &= ~Direction.RIGHT;
-            this._player.direction = this._scrollDir;
-        }
-        else if (key_code === Button.UP) {
-            this._scrollDir &= ~Direction.UP;
-            this._player.direction = this._scrollDir;
-        }
-        else if (key_code === Button.DOWN) {
-            this._scrollDir &= ~Direction.DOWN;
-            this._player.direction = this._scrollDir;
+        switch (key_code) {
+            case Button.LEFT:
+                this._scrollDir &= ~Direction.LEFT;
+                this._player.direction = this._scrollDir;
+                break;
+            case Button.RIGHT:
+                this._scrollDir &= ~Direction.RIGHT;
+                this._player.direction = this._scrollDir;
+                break;
+            case Button.UP:
+                this._scrollDir &= ~Direction.UP;
+                this._player.direction = this._scrollDir;
+                break;
+            case Button.DOWN:
+                this._scrollDir &= ~Direction.DOWN;
+                this._player.direction = this._scrollDir;
+                break;
+            case Button.A:
+                if (this._dialogBox && this._dialogBox.isTransitioning()) {
+                    this._dialogBox.textSpeed = this.gameInstance.settings.textSpeed;
+                }
+                break;
         }
     }
 
@@ -213,7 +252,10 @@ export class GameScreen extends BaseScreen {
             }
         }
 
-        if (this._screenIsShaking && createjs.Ticker.getTime() >= this._screenShakeFrameTime) {
+        if (this._dialogBox) {
+            this._dialogBox.update(delta);
+        }
+        else if (this._screenIsShaking && createjs.Ticker.getTime() >= this._screenShakeFrameTime) {
             // Screen shake effect
             if (this._screenShakeDuration > 0 && createjs.Ticker.getTime() >= this._screenShakeDuration) {
                 this.stopScreenShake();
@@ -509,7 +551,7 @@ export class GameScreen extends BaseScreen {
         for (let layer in this._activeObjects) {
             if (this._activeObjects.hasOwnProperty(layer)) {
                 for (let active_obj of this._activeObjects[layer]) {
-                    if (obj === active_obj || !active_obj.collisionsEnabled || active_obj === this._player && this.gameInstance.enableNoClip) {
+                    if (obj === active_obj || !active_obj.collisionsEnabled || (active_obj === this._player && this.gameInstance.enableNoClip)) {
                         // Don't check against itself, or a collision disabled object, or clip with the player when noclip is enabled
                         continue;
                     }
@@ -548,6 +590,17 @@ export class GameScreen extends BaseScreen {
         }
 
         return axes;
+    }
+
+    showDialog(owner: BaseMapObject, message: string): void {
+        if (this._dialogBox) {
+            this.container.removeChild(this._dialogBox);
+        }
+
+        this._dialogBox = new DialogBox(message, this.gameInstance.settings.textSpeed, owner, colors.DARKEST, colors.LIGHTEST, 0, 0);
+        this._dialogBox.y = DISPLAY_HEIGHT - this._dialogBox.getBounds().height;
+        this.container.addChild(this._dialogBox);
+        this._dialogBox.showNext();
     }
 
     showHitboxes(show: boolean): void {
@@ -734,7 +787,45 @@ export class GameScreen extends BaseScreen {
                 settings.wanderMaxDirDuration = obj.properties.wanderMaxDirDuration;
             }
 
-            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, obj.properties.interactionID,  settings);
+            if ("faceWhenTalking" in obj.properties) {
+                settings.faceWhenTalking = true;
+            }
+
+            if ("dialog" in obj.properties) {
+                settings.dialog = obj.properties.dialog;
+            }
+
+            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, obj.properties.interactionID, settings);
         }
+    }
+
+    protected _getInteractiveObject(): BaseMapObject {
+        let player_hitbox = this._player.getHitbox();
+        let interaction_test_box: createjs.Rectangle;
+        let dir = this._player.direction;
+        if (dir & Direction.LEFT) {
+            interaction_test_box = new createjs.Rectangle(player_hitbox.x - player_hitbox.width, player_hitbox.y + Math.floor(player_hitbox.height / 2), MAX_INTERACTION_DISTANCE, 1);
+        }
+        else if (dir & Direction.RIGHT) {
+            interaction_test_box = new createjs.Rectangle(player_hitbox.x + player_hitbox.width, player_hitbox.y + Math.floor(player_hitbox.height / 2), MAX_INTERACTION_DISTANCE, 1);
+        }
+        else if (dir & Direction.UP) {
+            interaction_test_box = new createjs.Rectangle(player_hitbox.x + Math.floor(player_hitbox.width / 2), player_hitbox.y - player_hitbox.height, 1, MAX_INTERACTION_DISTANCE);
+        }
+        else if (dir & Direction.DOWN) {
+            interaction_test_box = new createjs.Rectangle(player_hitbox.x + Math.floor(player_hitbox.width / 2), player_hitbox.y + player_hitbox.height, 1, MAX_INTERACTION_DISTANCE);
+        }
+
+        for (let layer in this._activeObjects) {
+            if (this._activeObjects.hasOwnProperty(layer)) {
+                for (let obj of this._activeObjects[layer]) {
+                    if (obj !== this._player && obj.getHitbox().intersects(interaction_test_box)) {
+                        return obj;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }

@@ -33,6 +33,7 @@
                  "name":"npc_testy",
                  "properties":
                     {
+                     "faceWhenTalking":true,
                      "interactionID":"test_map_npc_testy",
                      "name":"Testy",
                      "spriteSheet":"ss_npc_testy",
@@ -43,6 +44,7 @@
                     },
                  "propertytypes":
                     {
+                     "faceWhenTalking":"bool",
                      "interactionID":"string",
                      "name":"string",
                      "spriteSheet":"string",

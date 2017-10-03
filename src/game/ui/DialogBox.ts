@@ -7,6 +7,8 @@
 import { BorderBox, BitmapText } from ".";
 import * as colors from "../Colors";
 import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
+import { BaseMapObject } from "..";
+import * as utils from "../Utils";
 
 const BOX_HORIZONTAL_PADDING = 12;
 const BOX_VERTICAL_PADDING  = 12;
@@ -29,6 +31,7 @@ export class DialogBox extends createjs.Container {
     box: BorderBox;
     bitmapText: BitmapText;
     textSpeed: number;
+    owner: BaseMapObject;
 
     // The text split into word wrapped lines
     protected _splitTextLines: string[];
@@ -48,9 +51,10 @@ export class DialogBox extends createjs.Container {
     // The desired point in time for the text continue marker to blink on or off
     protected _textContinueMarkerBlinkTime: number;
 
-    constructor(text: string, text_speed: number, text_color: string = colors.DARKEST, fill_color: string = colors.LIGHTEST, border_start_x: number = 0, border_start_y: number = 0) {
+    constructor(text: string, text_speed: number, owner: BaseMapObject, text_color: string = colors.DARKEST, fill_color: string = colors.LIGHTEST, border_start_x: number = 0, border_start_y: number = 0) {
         super();
         this.textSpeed = text_speed;
+        this.owner = owner;
 
         this.box = new BorderBox(Game.Assets["ui_border_boxes"], DialogBox.BOX_WIDTH, DialogBox.BOX_HEIGHT, fill_color, border_start_x, border_start_y, 12, 12);
         this.x = 1;
@@ -74,6 +78,10 @@ export class DialogBox extends createjs.Container {
         marker.x = this.x + DialogBox.BOX_WIDTH - 12 - marker_bounds.width;
         marker.y = this.y + DialogBox.BOX_HEIGHT - 12;
         marker.rotation = 90;
+        marker.filters = [
+            new createjs.ColorFilter(utils.hexToInt(text_color.substr(1, 2)) / 255, utils.hexToInt(text_color.substr(3, 2)) / 255, utils.hexToInt(text_color.substr(5, 2)) / 255)
+        ]
+        marker.cache(0, 0, marker_bounds.width, marker_bounds.height);
         this._textContinueMarker = marker;
         this._textContinueMarkerBlinkTime = 0;
     }

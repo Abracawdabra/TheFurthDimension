@@ -56,6 +56,9 @@ export abstract class BaseMapObject {
         return this._y - this.parent.viewportY;
     }
 
+    // Shorthand for characters that only talk when interacted with
+    dialog: string;
+
     /**
      * Reference to the sprite created by getSprite()
      * Call destroySprite() when no longer needed
@@ -128,7 +131,10 @@ export abstract class BaseMapObject {
     }
 
     interact(interactor: BaseMapObject): void {
-        if (this._interactionID && this._interactionID in InteractionHandlers) {
+        if (this.dialog) {
+            this.parent.showDialog(this, this.dialog);
+        }
+        else if (this._interactionID && this._interactionID in InteractionHandlers) {
             InteractionHandlers[this._interactionID].call(this, interactor);
         }
         else {

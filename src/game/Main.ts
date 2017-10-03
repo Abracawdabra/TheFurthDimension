@@ -33,9 +33,10 @@ interface ISettings {
 
 // Characters per second
 export enum TextSpeed {
-    SLOW = 3,
-    MEDIUM = 6,
-    FAST = 10
+    SLOW   = 12,
+    MEDIUM = 18,
+    FAST   = 30,
+    ULTRA  = 80
 }
 
 export class Game {
@@ -152,7 +153,9 @@ export class Game {
     }
 
     setDisplayScale(scale: number): void {
-        this.settings.displayScale = scale;
+        if (this.settings.displayScale !== scale) {
+            this.settings.displayScale = scale;
+        }
 
         let canvas = <HTMLCanvasElement>this._stage.canvas;
         canvas.style.width = (DISPLAY_WIDTH * scale).toString() + "px";
@@ -514,6 +517,15 @@ export class Game {
             // Stop screen spin effect
             game_screen.stopScreenSpin();
             success = true;
+        }
+        else if (cmd === "delsettings") {
+           localStorage.removeItem("TFD_SETTINGS");
+           this.settings = {
+               textSpeed: TextSpeed.MEDIUM,
+               displayScale: Game.DEFAULT_DISPLAY_SCALE
+           };
+           this.setDisplayScale(this.settings.displayScale);
+           success = true;
         }
 
         if (success) {
