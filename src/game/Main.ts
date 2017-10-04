@@ -166,6 +166,10 @@ export class Game {
         localStorage.setItem("TFD_SETTINGS", LZString.compress(JSON.stringify(this.settings)));
     }
 
+    saveGame(): void {
+        localStorage.setItem("TFD_GAMESAVE", LZString.compress(JSON.stringify(this.gameState)));
+    }
+
     pushScreen(screen: screens.BaseScreen): void {
         this._stage.addChild(screen.container);
         this._screens.push(screen);
@@ -177,6 +181,14 @@ export class Game {
         this._stage.removeChild(screen.container);
         this._currentScreen = (this._screens.length > 0) ? this._screens[this._screens.length - 1] : null;
         return screen;
+    }
+
+    quitGame(): void {
+        for (let i=0; i<this._screens.length; ++i) {
+            this.popScreen();
+        }
+
+        this.pushScreen(new screens.TitleScreen(this, null));
     }
 
     protected _addMainKeyEventListeners(): void {

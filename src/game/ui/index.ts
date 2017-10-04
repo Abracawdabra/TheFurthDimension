@@ -9,3 +9,4 @@ export * from "./TextMenu";
 export * from "./BitmapText";
 export * from "./BorderBox";
 export * from "./DialogBox";
+export * from "./MessageBox";

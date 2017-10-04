@@ -4,6 +4,9 @@
  * @license MIT
  */
 
+import { Game } from "../Main";
+import * as colors from "../Colors";
+
 const FRAME_TOP_LEFT_CORNER      = 0;
 const FRAME_TOP_EDGE             = 1;
 const FRAME_TOP_RIGHT_CORNER     = 2;
@@ -52,20 +55,20 @@ export class BorderBox extends createjs.Container {
     protected _frameWidth: number;
     protected _frameHeight: number;
 
-    constructor(image: HTMLImageElement, width: number, height: number, color: string, start_x: number = 0, start_y: number = 0, frame_width?: number, frame_height?: number) {
+    constructor(width: number, height: number, color = colors.LIGHTEST, start_x: number = 0, start_y: number = 0, frame_width = 12, frame_height = 12) {
         super();
         if (width < (frame_width * 2) || height < (frame_height * 2)) {
             throw new Error("Width and height cannot be less than the size of 2 frames.");
         }
 
-        this._image = image;
+        this._image = Game.Assets["ui_border_boxes"];
         this._width = width;
         this._height = height;
         this._color = color;
         this._startX = start_x;
         this._startY = start_y;
-        this._frameWidth = frame_width || Math.floor(image.width / 8);
-        this._frameHeight = frame_height || image.height;
+        this._frameWidth = frame_width || Math.floor(this._image.width / 8);
+        this._frameHeight = frame_height || this._image.height;
 
         this.setBounds(this.x, this.y, this._width, this._height);
         this._redraw();

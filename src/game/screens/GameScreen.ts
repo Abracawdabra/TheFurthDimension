@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { BaseScreen } from "./BaseScreen";
+import { BaseScreen, PauseScreen } from ".";
 import * as tiled from "../tiled";
 import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
 import { Direction, Button, SpatialGrid, BaseMapObject } from "..";
@@ -96,11 +96,32 @@ export class GameScreen extends BaseScreen {
     }
 
     handleKeyDown(key_code: number): void {
-        if (this._inputEnabled) {
+        if (key_code === Button.START) {
+            this.gameInstance.pushScreen(new PauseScreen(this.gameInstance, this));
+
+            // Stop any walking characters or their animations will keep going while they're paused
+            for (let layer in this._activeNPCs) {
+                if (this._activeNPCs.hasOwnProperty(layer)) {
+                    for (let npc of this._activeNPCs[layer]) {
+                        if (npc.isWalking) {
+                            npc.isWalking = false;
+                        }
+                    }
+                }
+            }
+
+            // Stop the player also
+            if (this._player.isWalking) {
+                this._player.isWalking = false;
+                // Don't resume scrolling or the direction button becomes "stuck"
+                this._scrollDir = 0;
+            }
+        }
+        else if (this._inputEnabled) {
             if (this._dialogBox && key_code === Button.A) {
                 if (this._dialogBox.isTransitioning()) {
                     // Double the speeeeed
-                    this._dialogBox.textSpeed = this.gameInstance.settings.textSpeed *  2;
+                    this._dialogBox.textSpeed = this.gameInstance.settings.textSpeed * 2;
                 }
                 else if (!this._dialogBox.showNext()) {
                     this.container.removeChild(this._dialogBox);

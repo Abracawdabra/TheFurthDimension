@@ -56,7 +56,7 @@ export class DialogBox extends createjs.Container {
         this.textSpeed = text_speed;
         this.owner = owner;
 
-        this.box = new BorderBox(Game.Assets["ui_border_boxes"], DialogBox.BOX_WIDTH, DialogBox.BOX_HEIGHT, fill_color, border_start_x, border_start_y, 12, 12);
+        this.box = new BorderBox(DialogBox.BOX_WIDTH, DialogBox.BOX_HEIGHT, fill_color, border_start_x, border_start_y, 12, 12);
         this.x = 1;
         this.addChild(this.box);
 

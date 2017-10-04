@@ -8,3 +8,4 @@ export * from "./BaseScreen";
 export * from "./TitleScreen";
 export * from "./OptionsScreen";
 export * from "./GameScreen";
+export * from "./PauseScreen";

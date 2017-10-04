@@ -14,26 +14,29 @@ export class TitleScreen extends screens.BaseScreen {
     protected _textMenu: TextMenu;
 
     handleKeyDown(key_code: number): void {
-        if (key_code === Button.DOWN) {
-            this._textMenu.selectNextRow();
-        }
-        else if (key_code === Button.UP) {
-            this._textMenu.selectPrevRow();
-        }
-        else if (key_code === Button.A) {
-            let selection = this._textMenu.selectedItem;
-            switch(selection) {
-                case "new_game":
-                    this.gameInstance.popScreen();
-                    let game_screen = new screens.GameScreen(this.gameInstance);
-                    this.gameInstance.pushScreen(game_screen);
-                    game_screen.loadMap(Game.Assets["map_dongola_temple"]);
-                    break;
-                case "continue_game":
-                    break;
-                case "options":
-                    this.gameInstance.pushScreen(new screens.OptionsScreen(this.gameInstance, this));
-            }
+        switch (key_code) {
+            case Button.A:
+            case Button.START:
+                switch(this._textMenu.selectedItem) {
+                    case "new_game":
+                        this.gameInstance.popScreen();
+                        let game_screen = new screens.GameScreen(this.gameInstance);
+                        this.gameInstance.pushScreen(game_screen);
+                        /** @todo Show intro screen before the map */
+                        game_screen.loadMap(Game.Assets["map_dongola_temple"]);
+                        break;
+                    case "continue_game":
+                        /** @todo Implement */
+                        break;
+                    case "options":
+                        this.gameInstance.pushScreen(new screens.OptionsScreen(this.gameInstance, this));
+                }
+                break;
+            case Button.UP:
+                this._textMenu.selectPrevRow();
+                break;
+            case Button.DOWN:
+                this._textMenu.selectNextRow();
         }
     }
 
