@@ -28,7 +28,7 @@
          "name":"NPCs",
          "objects":[
                 {
-                 "height":10,
+                 "height":0,
                  "id":7,
                  "name":"npc_testy",
                  "properties":
@@ -56,13 +56,44 @@
                  "rotation":0,
                  "type":"npc",
                  "visible":true,
-                 "width":10,
+                 "width":0,
                  "x":275,
                  "y":18
+                }, 
+                {
+                 "height":0,
+                 "id":14,
+                 "name":"npc_testy2",
+                 "properties":
+                    {
+                     "dialog":"I'm using the dialog property instead of an interaction handler!",
+                     "faceWhenTalking":true,
+                     "hitbox":"2 2 12 12",
+                     "interactionID":"test_map_npc_testy2",
+                     "name":"Testy 2",
+                     "spriteSheet":"ss_npc_testy",
+                     "wander":false
+                    },
+                 "propertytypes":
+                    {
+                     "dialog":"string",
+                     "faceWhenTalking":"bool",
+                     "hitbox":"string",
+                     "interactionID":"string",
+                     "name":"string",
+                     "spriteSheet":"string",
+                     "wander":"bool"
+                    },
+                 "rotation":0,
+                 "type":"npc",
+                 "visible":true,
+                 "width":0,
+                 "x":24,
+                 "y":160
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":false,
+         "visible":true,
          "x":0,
          "y":0
         }, 
@@ -131,7 +162,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":11,
+ "nextobjectid":16,
  "orientation":"orthogonal",
  "properties":
     {

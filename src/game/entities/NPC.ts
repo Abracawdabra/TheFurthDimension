@@ -90,11 +90,7 @@ export class NPC extends Character {
 
     set wander(value: boolean) {
         if (value) {
-            let map = this.parent.getMap();
-            let tile_x = Math.floor(this._x / map.tileWidth);
-            let tile_y = Math.floor(this._y / map.tileHeight);
-            if ((this._wanderMaxDirDuration > 0.0 && this.wanderMaxDirDuration <= this.wanderMinDirDuration)
-                || !this._wanderBounds || Math.floor(this._wanderBounds.x / map.tileWidth) > tile_x || Math.floor(this.wanderBounds.y / map.tileHeight) > tile_y) {
+            if (!this.canWander()) {
                 console.log("Invalid wander settings for NPC '" + this.name + "'.");
                 if (this._wander) {
                     this._stopWandering();
@@ -109,11 +105,21 @@ export class NPC extends Character {
         }
     }
 
+    canWander(): boolean {
+        let map = this.parent.getMap();
+        let tile_x = Math.floor(this._x / map.tileWidth);
+        let tile_y = Math.floor(this._y / map.tileHeight);
+        return this._wanderMaxDirDuration > 0.0 && this.wanderMaxDirDuration > this.wanderMinDirDuration
+        && this._wanderBounds
+        && Math.floor(this._wanderBounds.x / map.tileWidth) <= tile_x
+        && Math.floor(this.wanderBounds.y / map.tileHeight) <= tile_y;
+    }
+
     // Pause between wander direction changes
     protected _wanderPause: boolean;
 
-    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, interaction_id?: string, settings?: INPCSettings) {
-        super(parent, name, x, y, sprite_name, sprite_sheet, hitbox, interaction_id);
+    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string, settings?: INPCSettings) {
+        super(parent, name, x, y, sprite_name, sprite_sheet, hitbox, projectiles_hitbox, interaction_id);
 
         if (settings) {
             this.walkSpeed = ("walkSpeed" in settings) ? settings.walkSpeed : this.walkSpeed;
@@ -205,7 +211,7 @@ export class NPC extends Character {
 
     protected _startWandering(): void {
         this._wander = true;
-        this._isWalking = true;
+        this.isWalking = true;
         this._changeWanderDirection();
     }
 

@@ -111,7 +111,6 @@ export abstract class BaseMapObject {
         if (!this._sprite) {
             this._sprite = new createjs.Sprite(this._spriteSheet);
             this._sprite.name = this._spriteName;
-            this._sprite.gotoAndStop("stand_south");
             this._sprite.x = this.localX;
             this._sprite.y = this.localY;
         }
@@ -131,13 +130,22 @@ export abstract class BaseMapObject {
     }
 
     interact(interactor: BaseMapObject): void {
+        let has_handler = this._interactionID && this._interactionID in InteractionHandlers;
         if (this.dialog) {
-            this.parent.showDialog(this, this.dialog);
+            if (has_handler) {
+                this.parent.showDialog(this, this.dialog, InteractionHandlers[this._interactionID], { interactor: interactor } );
+            }
+            else {
+                this.parent.showDialog(this, this.dialog);
+                if (this._interactionID) {
+                    InteractionHandlers["not_found"].call(this);
+                }
+            }
         }
-        else if (this._interactionID && this._interactionID in InteractionHandlers) {
+        else if (has_handler) {
             InteractionHandlers[this._interactionID].call(this, interactor);
         }
-        else {
+        else if (this._interactionID) {
             InteractionHandlers["not_found"].call(this);
         }
     }

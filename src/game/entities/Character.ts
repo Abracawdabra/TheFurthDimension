@@ -15,7 +15,9 @@ export class Character extends BaseMapObject {
     // Pixels per second
     walkSpeed: number;
 
-    protected _spriteSheet: createjs.SpriteSheet;
+    // Characters should have a different hitbox for projectiles or it would
+    // be harder to shoot them by trying to guess where their normal hitbox is (usually near the bottom).
+    protected _projectilesHitbox: createjs.Rectangle;
 
     protected _isWalking: boolean;
     get isWalking(): boolean {
@@ -23,11 +25,8 @@ export class Character extends BaseMapObject {
     }
 
     set isWalking(value: boolean) {
-        if (value) {
-            this._sprite.gotoAndPlay("walk_" + directionToString(this._direction));
-        }
-        else {
-            this._sprite.gotoAndStop("stand_" + directionToString(this._direction));
+        if (this._sprite) {
+            this._sprite.gotoAndPlay((value ? "walk_" : "stand_") + directionToString(this._direction));
         }
 
         this._isWalking = value;
@@ -43,35 +42,31 @@ export class Character extends BaseMapObject {
             // Only change if dir is not 0 (That screws up the animations)
             this._direction = dir;
             if (this._sprite) {
-                if (this._isWalking) {
-                    this._sprite.gotoAndPlay("walk_" + directionToString(dir));
-                }
-                else {
-                    this._sprite.gotoAndStop("stand_" + directionToString(dir));
-                }
+                this._sprite.gotoAndPlay((this._isWalking ? "walk_" : "stand_") + directionToString(dir));
             }
         }
     }
 
-    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, interaction_id?: string) {
+    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string) {
         super(parent, name, x, y, sprite_name, sprite_sheet, "stand_south", true, hitbox, interaction_id);
         this.walkSpeed = DEFAULT_WALK_SPEED;
+        this._projectilesHitbox = projectiles_hitbox || this._hitbox;
         this._isWalking = false;
         this._direction = Direction.DOWN;
     }
 
+    /** @override */
     getSprite(): createjs.Sprite {
         let new_sprite = !this._sprite;
         super.getSprite();
         if (new_sprite) {
-            if (this._isWalking) {
-                this._sprite.gotoAndPlay("walk_" + directionToString(this._direction));
-            }
-            else {
-                this._sprite.gotoAndStop("stand_" + directionToString(this._direction));
-            }
+            this._sprite.gotoAndPlay((this._isWalking ? "walk_" : "stand_") + directionToString(this._direction));
         }
 
         return this._sprite;
+    }
+
+    getProjectilesHitbox(): createjs.Rectangle {
+        return this._projectilesHitbox;
     }
 }

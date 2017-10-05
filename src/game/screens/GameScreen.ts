@@ -13,6 +13,10 @@ import { DialogBox } from "../ui";
 import * as colors from "../Colors";
 import * as utils from "../Utils";
 
+// Player hitboxes
+const PLAYER_HITBOX = new createjs.Rectangle(1, 8, 10, 10);
+const PLAYER_PROJECTILES_HITBOX = new createjs.Rectangle(1, 4, 10, 14);
+
 // Maximum distance in pixels of an object to be interacted with
 const MAX_INTERACTION_DISTANCE = 15;
 
@@ -118,20 +122,22 @@ export class GameScreen extends BaseScreen {
             }
         }
         else if (this._inputEnabled) {
-            if (this._dialogBox && key_code === Button.A) {
+            if (this._dialogBox && key_code === Button.B) {
                 if (this._dialogBox.isTransitioning()) {
                     // Double the speeeeed
                     this._dialogBox.textSpeed = this.gameInstance.settings.textSpeed * 2;
                 }
                 else if (!this._dialogBox.showNext()) {
+                    // Dialog is finished
                     this.container.removeChild(this._dialogBox);
                     let owner = this._dialogBox.owner;
                     if (owner instanceof NPC) {
-                        if (owner.wanderBounds) {
+                        if (owner.canWander()) {
                             owner.wander = true;
                         }
                     }
                     this._dialogBox = null;
+                    this.dispatchEvent(new createjs.Event("finished_dialog", false, true));
                 }
             }
             else if (!this._dialogBox) {
@@ -152,7 +158,7 @@ export class GameScreen extends BaseScreen {
                         this._scrollDir |= Direction.DOWN;
                         this._player.direction = this._scrollDir;
                         break;
-                    case Button.A:
+                    case Button.B:
                         let interactive_obj = this._getInteractiveObject();
                         if (interactive_obj) {
                             if (interactive_obj instanceof NPC) {
@@ -168,6 +174,8 @@ export class GameScreen extends BaseScreen {
                             interactive_obj.interact(this._player);
                         }
                         break;
+                    case Button.A:
+                        /** @todo Implement attack */
                 }
             }
         }
@@ -613,13 +621,16 @@ export class GameScreen extends BaseScreen {
         return axes;
     }
 
-    showDialog(owner: BaseMapObject, message: string): void {
+    showDialog(owner: BaseMapObject, message: string, finished_callback?: any, data?: any): void {
         if (this._dialogBox) {
             this.container.removeChild(this._dialogBox);
         }
 
         this._dialogBox = new DialogBox(message, this.gameInstance.settings.textSpeed, owner, colors.DARKEST, colors.LIGHTEST, 0, 0);
         this._dialogBox.y = DISPLAY_HEIGHT - this._dialogBox.getBounds().height;
+        if (finished_callback) {
+            this.on("finished_dialog", finished_callback, owner, true, data);
+        }
         this.container.addChild(this._dialogBox);
         this._dialogBox.showNext();
     }
@@ -688,7 +699,7 @@ export class GameScreen extends BaseScreen {
         this._objectContainer = new createjs.Container();
         this.container.addChild(this._objectContainer);
 
-        this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], new createjs.Rectangle(1, 8, 10, 10));
+        this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], PLAYER_HITBOX, PLAYER_PROJECTILES_HITBOX);
 
         this._inputEnabled = false;
 
@@ -783,8 +794,10 @@ export class GameScreen extends BaseScreen {
     protected _createMapObject(obj: tiled.IObject): any {
         if (obj.type === "npc") {
             let hitbox: createjs.Rectangle;
+            let projectiles_hitbox: createjs.Rectangle;
             if ("hitbox" in obj.properties) {
-                hitbox = utils.rectangleFromStr(obj.properties.boundingBox);
+                hitbox = utils.rectangleFromStr(obj.properties.hitbox);
+                projectiles_hitbox = ("projectilesHitbox" in obj.properties) ? utils.rectangleFromStr(obj.properties.projectilesHitbox) : hitbox;
             }
 
             let settings: INPCSettings = {};
@@ -816,7 +829,7 @@ export class GameScreen extends BaseScreen {
                 settings.dialog = obj.properties.dialog;
             }
 
-            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, obj.properties.interactionID, settings);
+            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, projectiles_hitbox, obj.properties.interactionID, settings);
         }
     }
 
