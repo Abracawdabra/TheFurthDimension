@@ -23,7 +23,7 @@ const CHARACTER_ANIMATIONS = {
     }
 }
 
-const CHARACTER_ANIMATION_FRAMERATE = 40;
+const CHARACTER_ANIMATION_FRAMERATE = 20;
 
 interface ISpriteSheetData {
     frames: { width: number, height: number, regX: number, regY: number, count?: number };
@@ -44,7 +44,7 @@ export var SpriteSheetData: { [id: string]: ISpriteSheetData } = {
         framerate: CHARACTER_ANIMATION_FRAMERATE
     },
     "ss_victor": {
-        frames: { width: 16, height: 16, regX: 0, regY: 0, count: 12 },
+        frames: { width: 12, height: 18, regX: 0, regY: 0, count: 12 },
         animations: CHARACTER_ANIMATIONS,
         framerate: CHARACTER_ANIMATION_FRAMERATE
     }
