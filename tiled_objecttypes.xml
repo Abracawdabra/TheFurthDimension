@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Object types for editing inside of Tiled -->
+<objecttypes>
+ <objecttype name="npc" color="#0055ff">
+  <property name="dialog" type="string"/>
+  <property name="faceWhenTalking" type="bool" default="false"/>
+  <property name="hitbox" type="string"/>
+  <property name="interactionID" type="string"/>
+  <property name="name" type="string"/>
+  <property name="projectilesHitbox" type="string"/>
+  <property name="spriteSheet" type="string"/>
+  <property name="wander" type="bool" default="false"/>
+  <property name="wanderBounds" type="string"/>
+  <property name="wanderMaxDirDuration" type="float" default="0"/>
+  <property name="wanderMinDirDuration" type="float" default="0"/>
+ </objecttype>
+</objecttypes>
