@@ -14,4 +14,7 @@
   <property name="wanderMaxDirDuration" type="float" default="0"/>
   <property name="wanderMinDirDuration" type="float" default="0"/>
  </objecttype>
+ <objecttype name="spawn_point" color="#a0a0a4">
+  <property name="endPoint" type="string"/>
+ </objecttype>
 </objecttypes>

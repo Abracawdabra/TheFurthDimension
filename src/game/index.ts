@@ -17,4 +17,5 @@ export * from "./FontData";
 export * from "./SpriteSheetData";
 export * from "./InteractionHandlers";
 export * from "./GameState";
+export * from "./SpawnPointWithEndPoint";
 export * from "./Main";

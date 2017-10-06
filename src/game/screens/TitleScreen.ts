@@ -23,7 +23,7 @@ export class TitleScreen extends screens.BaseScreen {
                         let game_screen = new screens.GameScreen(this.gameInstance);
                         this.gameInstance.pushScreen(game_screen);
                         /** @todo Show intro screen before the map */
-                        game_screen.loadMap(Game.Assets["map_dongola_temple"]);
+                        game_screen.loadMap("map_dongola_temple");
                         break;
                     case "continue_game":
                         /** @todo Implement */

@@ -484,16 +484,7 @@ export class Game {
         else if (cmd === "loadmap" && parsed.length > 1 && game_screen) {
             // Loads a map
             let map = parsed[1];
-            if (map in Game.Assets) {
-                game_screen.loadMap(Game.Assets[map]);
-                if (parsed.length === 3) {
-                    game_screen.gotoSpawnPoint(parsed[2]);
-                }
-                success = true;
-            }
-            else {
-                console.log("Map '" + map + "' not found.");
-            }
+            success = game_screen.loadMap(map, (parsed.length === 3) ? parsed[2] : undefined);
         }
         else if (cmd === "goto" && parsed.length === 2 && game_screen) {
             // Goes to a spawn point on the map

@@ -7,7 +7,7 @@
 import { BaseScreen, PauseScreen } from ".";
 import * as tiled from "../tiled";
 import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
-import { Direction, Button, SpatialGrid, BaseMapObject } from "..";
+import { Direction, Button, SpatialGrid, BaseMapObject, SpawnPointWithEndPoint } from "..";
 import { INPCSettings, NPC, Character } from "../entities";
 import { DialogBox } from "../ui";
 import * as colors from "../Colors";
@@ -57,6 +57,12 @@ export class GameScreen extends BaseScreen {
 
     // Spatial grid layers for the current map
     protected _spatialGrids: { [layer: string]: SpatialGrid };
+
+    // A special spatial grid for spawn points with end points
+    protected _spawnPointSpatialGrid: SpatialGrid;
+
+    // Indicates the player just teleported and to ignore the end point until the player steps off of it
+    protected _ignoreEndPoint: boolean;
 
     // Container for map tiles
     protected _tileContainer: createjs.Container;
@@ -249,19 +255,38 @@ export class GameScreen extends BaseScreen {
                             this._player.y = player_y_pos;
                         }
 
-                        for (let layer in this._activeObjects) {
-                            if (this._activeObjects.hasOwnProperty(layer)) {
-                                // Move map objects on screen
-                                for (let obj of this._activeObjects[layer]) {
-                                    let sprite = obj.getSprite();
-                                    sprite.x = obj.localX;
-                                    sprite.y = obj.localY;
-                                    obj.setHitboxOutlinePos(sprite.x, sprite.y);
-                                }
+                        // Check if player stepped on a spawn point with an end point
+                        let player_hitbox = this._player.getHitbox();
+                        let spawn_points = <SpawnPointWithEndPoint[]>this._spawnPointSpatialGrid.getObjects(player_hitbox);
+                        if (spawn_points.length > 0 && !this._ignoreEndPoint) {
+                            let spawn_point = spawn_points[0];
+                            this._ignoreEndPoint = true;
+                            if ("map" in spawn_point.endPoint && spawn_point.endPoint.map !== this._map.name) {
+                                this.loadMap(spawn_point.endPoint.map, spawn_point.endPoint.spawnPoint);
+                            }
+                            else {
+                                this.gotoSpawnPoint(spawn_point.endPoint.spawnPoint);
                             }
                         }
+                        else {
+                            if (this._ignoreEndPoint && spawn_points.length === 0) {
+                                this._ignoreEndPoint = false;
+                            }
 
-                        this._scrollMap();
+                            for (let layer in this._activeObjects) {
+                                if (this._activeObjects.hasOwnProperty(layer)) {
+                                    // Move map objects on screen
+                                    for (let obj of this._activeObjects[layer]) {
+                                        let sprite = obj.getSprite();
+                                        sprite.x = obj.localX;
+                                        sprite.y = obj.localY;
+                                        obj.setHitboxOutlinePos(sprite.x, sprite.y);
+                                    }
+                                }
+                            }
+
+                            this._scrollMap();
+                        }
                     }
                     else if (this._player.isWalking) {
                         this._player.isWalking = false;
@@ -313,86 +338,135 @@ export class GameScreen extends BaseScreen {
         return this._map;
     }
 
-    loadMap(map: tiled.IMap): void {
-        this._inputEnabled = false;
-        this._player.destroySprite();
+    loadMap(name: string, spawn_point = "default"): boolean {
+        let map: tiled.IMap;
+        if (name.substr(0, 4) === "map_" && name in Game.Assets) {
+            map = Game.Assets[name];
 
-        this._map = new tiled.Map(map);
-        // One extra row/column on each axis for scrolling, and another for fixing screen effects (like shaking)
-        this._numOfXTiles = Math.ceil(DISPLAY_WIDTH / map.tilewidth) + 2;
-        this._numOfYTiles = Math.ceil(DISPLAY_HEIGHT / map.tileheight) + 2;
+            this._inputEnabled = false;
+            this._player.destroySprite();
 
-        this._scrollXPos = 0;
-        this._scrollYPos = 0;
+            this._map = new tiled.Map(name, map);
+            // One extra row/column on each axis for scrolling, and another for fixing screen effects (like shaking)
+            this._numOfXTiles = Math.ceil(DISPLAY_WIDTH / map.tilewidth) + 2;
+            this._numOfYTiles = Math.ceil(DISPLAY_HEIGHT / map.tileheight) + 2;
 
-        this._mapLayerIndices = {};
-        this._spatialGrids = {};
+            this._scrollXPos = 0;
+            this._scrollYPos = 0;
 
-        // Remove previous background if it exists
-        let stage = this.gameInstance.getStage();
-        if (this._background) {
-            stage.removeChild(this._background);
-        }
+            this._mapLayerIndices = {};
+            this._spatialGrids = {};
 
-        this._tileContainer.removeAllChildren();
-        this._objectContainer.removeAllChildren();
-        let empty_spritesheet = new createjs.SpriteSheet({});
-        for (let layer_index=0; layer_index<map.layers.length; ++layer_index) {
-            // Process each map layer
-            let layer = map.layers[layer_index];
-            this._mapLayerIndices[layer.name] = layer_index;
-            if (layer.type === "tilelayer") {
-                // Populate the tile container with reusable sprites to fill the screen
-                let start_index = layer_index * this._numOfXTiles * this._numOfYTiles;
-                for (let row=0; row<this._numOfYTiles; ++row) {
-                    for (let col=0; col<this._numOfXTiles; ++col) {
-                        let sprite = new createjs.Sprite(empty_spritesheet);
-                        sprite.x = col * this._map.tileWidth;
-                        sprite.y = row * this._map.tileHeight;
-                        this._tileContainer.addChildAt(sprite, start_index + (row * this._numOfXTiles) + col);
+            // Remove previous background if it exists
+            let stage = this.gameInstance.getStage();
+            if (this._background) {
+                stage.removeChild(this._background);
+            }
+
+            this._tileContainer.removeAllChildren();
+            this._objectContainer.removeAllChildren();
+            let empty_spritesheet = new createjs.SpriteSheet({});
+            for (let layer_index=0; layer_index<map.layers.length; ++layer_index) {
+                // Process each map layer
+                let layer = map.layers[layer_index];
+                this._mapLayerIndices[layer.name] = layer_index;
+                if (layer.type === "tilelayer") {
+                    // Populate the tile container with reusable sprites to fill the screen
+                    let start_index = layer_index * this._numOfXTiles * this._numOfYTiles;
+                    for (let row=0; row<this._numOfYTiles; ++row) {
+                        for (let col=0; col<this._numOfXTiles; ++col) {
+                            let sprite = new createjs.Sprite(empty_spritesheet);
+                            sprite.x = col * this._map.tileWidth;
+                            sprite.y = row * this._map.tileHeight;
+                            this._tileContainer.addChildAt(sprite, start_index + (row * this._numOfXTiles) + col);
+                        }
+                    }
+                }
+                else if (layer.type === "objectgroup") {
+                    let grid = new SpatialGrid(map.tilewidth, map.tileheight, map.width, map.height);
+                    if (layer.name === "Spawn Points") {
+                        // Spawn points with end points have their own spatial grid separate from the rest
+                        for (let obj of layer.objects) {
+                            if (obj.properties && obj.properties.endPoint) {
+                                let parsed = (<string>obj.properties.endPoint).split(" ");
+                                let map_name = parsed[0];
+                                if (parsed.length === 1 && map_name.substr(0, 3) === "sp_") {
+                                    // Local end point
+                                    console.log("Spawn point '" + obj.name + "' has local end point '" + obj.properties.endPoint + "'");
+                                    grid.addObject(new SpawnPointWithEndPoint(obj.x, obj.y, obj.width, obj.height, { spawnPoint: parsed[0] }));
+                                }
+                                else {
+                                    // Global end point
+                                    console.log("Spawn point '" + obj.name + "' has global end point '" + obj.properties.endPoint + "'");
+                                    grid.addObject(new SpawnPointWithEndPoint(obj.x, obj.y, obj.width, obj.height, {
+                                        map: map_name,
+                                        spawnPoint: parsed[1]
+                                    }));
+                                }
+                            }
+                        }
+                        this._spawnPointSpatialGrid = grid;
+                    }
+                    else {
+                        for (let obj of layer.objects) {
+                            if (obj.type === "spawn_point") {
+                                // Don't add spawn points to the spatial grids (if they happen to not be on their own special layer)
+                                continue;
+                            }
+
+                            grid.addObject(this._createMapObject(obj));
+                        }
+                        this._spatialGrids[layer.name] = grid;
                     }
                 }
             }
-            else if (layer.type === "objectgroup" && layer.name !== "Spawn Points") {
-                // Don't make a spatial grid for a "Spawn Points" object layer
-                let grid = new SpatialGrid(map.tilewidth, map.tileheight, map.width, map.height);
-                for (let obj of layer.objects) {
-                    if (obj.type === "spawn_point") {
-                        // Don't add spawn points to the spatial grids (if they happen to not be on their own special layer)
-                        continue;
-                    }
 
-                    grid.addObject(this._createMapObject(obj));
-                }
-                this._spatialGrids[layer.name] = grid;
-            }
+            let background = new createjs.Shape();
+            background.graphics.beginFill(this._map.backgroundColor);
+            background.graphics.drawRect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            // Add the background behind this screen's container so that
+            // screen effects don't need to worry about it moving
+            stage.addChildAt(background, stage.getChildIndex(this.container));
+            this._background = background;
+
+            this.container.addChild(this._player.getSprite());
+            this._player.showHitbox(this.gameInstance.renderHitboxes);
+
+            let success = this.gotoSpawnPoint(spawn_point);
+            this._inputEnabled = true;
+            return success;
         }
-
-        let background = new createjs.Shape();
-        background.graphics.beginFill(this._map.backgroundColor);
-        background.graphics.drawRect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-        // Add the background behind this screen's container so that
-        // screen effects don't need to worry about it moving
-        stage.addChildAt(background, stage.getChildIndex(this.container));
-        this._background = background;
-
-        this.container.addChild(this._player.getSprite());
-        this._player.showHitbox(this.gameInstance.renderHitboxes);
-
-        this.gotoSpawnPoint("default");
-        this._inputEnabled = true;
+        else {
+            console.log("Map '" + name + "' not found.");
+            return false;
+        }
     }
 
     gotoSpawnPoint(name: string): boolean {
         let spawn_point = this._map.getSpawnPoint(name);
         if (spawn_point) {
+            // Check if the player is going to be past the map's boundaries
+            let spawn_point_x = spawn_point.x;
+            let spawn_point_y = spawn_point.y;
+            let map_right_edge = this._map.width * this._map.tileWidth;
+            let map_bottom_edge = this._map.height * this._map.tileHeight;
+            let player_bounds = this._player.getSprite().getBounds();
+
+            if (spawn_point_x + player_bounds.width >= map_right_edge) {
+                spawn_point_x = map_right_edge - player_bounds.width;
+            }
+
+            if (spawn_point_y + player_bounds.height >= map_bottom_edge) {
+                spawn_point_y = map_bottom_edge - player_bounds.height;
+            }
+
             // Convert spawn point coordinates to tile coordinates
-            let sp_tile_x = Math.floor(spawn_point.x / this._map.tileWidth);
-            let sp_tile_y = Math.floor(spawn_point.y / this._map.tileHeight);
+            let sp_tile_x = Math.floor(spawn_point_x / this._map.tileWidth);
+            let sp_tile_y = Math.floor(spawn_point_y / this._map.tileHeight);
 
             // For checking if the spawn point spans multiple tiles
-            let sp_tile_x_right = Math.floor((spawn_point.x + spawn_point.width) / this._map.tileWidth);
-            let sp_tile_y_bottom = Math.floor((spawn_point.y + spawn_point.height) / this._map.tileHeight);
+            let sp_tile_x_right = Math.floor((spawn_point_x + spawn_point.width) / this._map.tileWidth);
+            let sp_tile_y_bottom = Math.floor((spawn_point_y + spawn_point.height) / this._map.tileHeight);
 
             // Stretch out to the top left corner of the screen
             let num_of_x_tiles = this._numOfXTiles - 2;
@@ -418,9 +492,8 @@ export class GameScreen extends BaseScreen {
             }
 
             // Center the player on the spawn point
-            let player_bounds = this._player.getSprite().getBounds();
-            this._player.x = spawn_point.x - Math.floor(player_bounds.width / 2) + Math.floor(spawn_point.width / 2);
-            this._player.y = spawn_point.y - Math.floor(player_bounds.height / 2) + Math.floor(spawn_point.height / 2);
+            this._player.x = spawn_point_x - Math.floor(player_bounds.width / 2) + Math.floor(spawn_point.width / 2);
+            this._player.y = spawn_point_y - Math.floor(player_bounds.height / 2) + Math.floor(spawn_point.height / 2);
 
             this._updateMapArea(this._scrollXPos, this._scrollYPos, this._numOfXTiles, this._numOfYTiles);
             this.redrawMapArea();

@@ -21,6 +21,7 @@ export interface IMap {
 }
 
 export class Map {
+    name: string;
     width: number;
     height: number;
     tileWidth: number;
@@ -36,7 +37,8 @@ export class Map {
 
     protected _spawnPoints: { [name: string]: tiled.IObject };
 
-    constructor(map: IMap) {
+    constructor(name: string, map: IMap) {
+        this.name = name;
         this.width = map.width;
         this.height = map.height;
         this.tileWidth = map.tilewidth;
