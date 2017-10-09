@@ -8,7 +8,7 @@ import { BaseScreen, PauseScreen } from ".";
 import * as tiled from "../tiled";
 import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
 import { Direction, Button, SpatialGrid, BaseMapObject, SpawnPointWithEndPoint } from "..";
-import { INPCSettings, NPC, Character } from "../entities";
+import { INPCSettings, NPC, Character, Enemy, IEnemySettings, Sign } from "../entities";
 import { DialogBox } from "../ui";
 import * as colors from "../Colors";
 import * as utils from "../Utils";
@@ -334,13 +334,18 @@ export class GameScreen extends BaseScreen {
         }
     }
 
+    getPlayer(): Character {
+        return this._player;
+    }
+
     getMap(): tiled.Map {
         return this._map;
     }
 
-    loadMap(name: string, spawn_point = "default"): boolean {
+    loadMap(name: string, spawn_point: string | createjs.Point = "default", player_dir?: Direction): boolean {
         let map: tiled.IMap;
         if (name.substr(0, 4) === "map_" && name in Game.Assets) {
+            this.gameInstance.gameState.map = name;
             map = Game.Assets[name];
 
             this._inputEnabled = false;
@@ -432,6 +437,10 @@ export class GameScreen extends BaseScreen {
             this.container.addChild(this._player.getSprite());
             this._player.showHitbox(this.gameInstance.renderHitboxes);
 
+            if (player_dir !== undefined) {
+                this._player.direction = player_dir;
+            }
+
             let success = this.gotoSpawnPoint(spawn_point);
             this._inputEnabled = true;
             return success;
@@ -442,15 +451,29 @@ export class GameScreen extends BaseScreen {
         }
     }
 
-    gotoSpawnPoint(name: string): boolean {
-        let spawn_point = this._map.getSpawnPoint(name);
+    gotoSpawnPoint(point: string | createjs.Point): boolean {
+        let player_bounds = this._player.getSprite().getBounds();
+        let spawn_point: { x: number, y: number, width: number, height: number };
+        if (typeof point === "string") {
+            spawn_point = this._map.getSpawnPoint(point);
+        }
+        else {
+            spawn_point = {
+                // Offset the coordinates since it centers the player on
+                // the spawn point later on.
+                x: point.x + Math.floor(player_bounds.width / 2),
+                y: point.y + Math.floor(player_bounds.height / 2),
+                width: 0,
+                height: 0
+            };
+        }
+
         if (spawn_point) {
             // Check if the player is going to be past the map's boundaries
             let spawn_point_x = spawn_point.x;
             let spawn_point_y = spawn_point.y;
             let map_right_edge = this._map.width * this._map.tileWidth;
             let map_bottom_edge = this._map.height * this._map.tileHeight;
-            let player_bounds = this._player.getSprite().getBounds();
 
             if (spawn_point_x + player_bounds.width >= map_right_edge) {
                 spawn_point_x = map_right_edge - player_bounds.width;
@@ -708,6 +731,10 @@ export class GameScreen extends BaseScreen {
         this._dialogBox.showNext();
     }
 
+    performCharacterAttack(character: Character): void {
+        /** @todo Implement */
+    }
+
     showHitboxes(show: boolean): void {
         this._player.showHitbox(show);
 
@@ -773,6 +800,7 @@ export class GameScreen extends BaseScreen {
         this.container.addChild(this._objectContainer);
 
         this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], PLAYER_HITBOX, PLAYER_PROJECTILES_HITBOX);
+        this._player.stats = this.gameInstance.gameState.stats;
 
         this._inputEnabled = false;
 
@@ -865,7 +893,7 @@ export class GameScreen extends BaseScreen {
      * @todo Implement all map object types
      */
     protected _createMapObject(obj: tiled.IObject): any {
-        if (obj.type === "npc") {
+        if (obj.type === "npc" || obj.type === "enemy") {
             let hitbox: createjs.Rectangle;
             let projectiles_hitbox: createjs.Rectangle;
             if ("hitbox" in obj.properties) {
@@ -902,7 +930,25 @@ export class GameScreen extends BaseScreen {
                 settings.dialog = obj.properties.dialog;
             }
 
-            return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, projectiles_hitbox, obj.properties.interactionID, settings);
+            if (obj.type === "npc") {
+                return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, projectiles_hitbox, obj.properties.interactionID, settings);
+            }
+            else {
+                let enemy_settings = <IEnemySettings>settings;
+                let max_health = obj.properties.maxHealth;
+                enemy_settings.stats = {
+                    maxHealth: max_health,
+                    health: max_health,
+                    strength: obj.properties.strength,
+                    defense: obj.properties.defense,
+                    speed: obj.properties.speed,
+                    critChance: obj.properties.critChance
+                };
+                return new Enemy(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], this._player, hitbox, projectiles_hitbox, obj.properties.interactionID, enemy_settings);
+            }
+        }
+        else if (obj.type === "sign") {
+            return new Sign(this, obj.properties.name, obj.x, obj.y, obj.name, obj.properties.signType, obj.properties.dialog, obj.properties.interactionID);
         }
     }
 

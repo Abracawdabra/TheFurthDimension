@@ -33,12 +33,10 @@ export class PauseScreen extends BaseScreen {
                     if (this._confirmQuitMenu.selectedItem === "yes") {
                         this.gameInstance.quitGame();
                     }
-                    else {
-                        this._cancelQuit();
-                    }
-                    break;
                 case Button.B:
-                    this._cancelQuit();
+                    this.container.removeChild(this._confirmQuitBox);
+                    this._confirmQuitBox = null;
+                    this._confirmQuitMenu = null;
                     break;
                 case Button.LEFT:
                     this._confirmQuitMenu.selectPrevColumn();
@@ -95,14 +93,17 @@ export class PauseScreen extends BaseScreen {
     }
 
     protected _init(): void {
-        let main_bg = new BorderBox(MENU_WIDTH, MENU_HEIGHT);
+        let main_bg = new BorderBox(MENU_WIDTH, MENU_HEIGHT - 8);
         main_bg.x = DISPLAY_WIDTH - MENU_WIDTH;
         this.container.addChild(main_bg);
         this._mainBackground = main_bg;
 
         let main_menu = new TextMenu(main_bg.x + 18, main_bg.y + 12, colors.DARKEST, 3);
         main_menu.addItem("stats", "Stats");
-        main_menu.addItem("inventory", "Inv.");
+        if (this.gameInstance.gameState.hasInventory) {
+            main_menu.addItem("inventory", "Inv.");
+            main_bg.height = MENU_HEIGHT;
+        }
         main_menu.addItem("save_game", "Save");
         main_menu.addItem("options", "Options");
         main_menu.addItem("quit", "Quit");
@@ -149,11 +150,5 @@ export class PauseScreen extends BaseScreen {
         this._confirmQuitMenu = confirm_menu;
 
         this.container.addChild(confirm_box);
-    }
-
-    protected _cancelQuit(): void {
-        this.container.removeChild(this._confirmQuitBox);
-        this._confirmQuitBox = null;
-        this._confirmQuitMenu = null;
     }
 }

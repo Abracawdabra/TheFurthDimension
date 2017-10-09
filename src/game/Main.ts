@@ -4,7 +4,9 @@
  * @license MIT
  */
 
-import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys, FontData, SpriteSheetData, GameState } from ".";
+import { ASSET_MANIFESTS, IEventDispatcher, KeyboardKeys, FontData, SpriteSheetData } from ".";
+import { MessageBox } from "./ui";
+import * as gamestate from "./GameState";
 import * as screens from "./screens";
 import * as buttons from "./Buttons";
 import * as utils from "./Utils";
@@ -70,7 +72,7 @@ export class Game {
     walkSpeed: number;
 
     // Object for the game session that can be saved to localStorage
-    gameState: GameState;
+    gameState: gamestate.IGameState;
 
     protected _stage: createjs.Stage;
     protected _canvasContext: CanvasRenderingContext2D;
@@ -167,7 +169,45 @@ export class Game {
     }
 
     saveGame(): void {
+        // Update properties only used and updated for saving
+        let player = this._getGameScreen().getPlayer();
+        this.gameState.playerCoords = { x: player.x, y: player.y };
+        this.gameState.playerDir = player.direction;
         localStorage.setItem("TFD_GAMESAVE", LZString.compress(JSON.stringify(this.gameState)));
+    }
+
+    startNewGame(): void {
+        this.removeAllScreens();
+        this.gameState = gamestate.createDefaultGameState();
+        /** @todo Show intro screen before game screen */
+        let game_screen = new screens.GameScreen(this);
+        this.pushScreen(game_screen);
+        game_screen.loadMap("map_dongola_temple");
+    }
+
+    continueGame(): void {
+        let game_state = <gamestate.IGameState>JSON.parse(LZString.decompress(localStorage.getItem("TFD_GAMESAVE")));
+        if (!game_state || game_state.version !== gamestate.VERSION) {
+            let msgbox = new MessageBox("Incompatible Game\n  Save Version!");
+            msgbox.y = Game.CENTER_Y - Math.floor(msgbox.getBounds().height / 2);
+            this._stage.addChild(msgbox);
+
+            let _this = this;
+            setTimeout(function(){
+                _this._stage.removeChild(msgbox);
+             }, 1500);
+        }
+        else {
+            this.gameState = game_state;
+            this.removeAllScreens();
+            let game_screen = new screens.GameScreen(this);
+            this.pushScreen(game_screen);
+            game_screen.loadMap(game_state.map, new createjs.Point(game_state.playerCoords.x, game_state.playerCoords.y), this.gameState.playerDir);
+        }
+    }
+
+    deleteGameSave(): void {
+        localStorage.removeItem("TFD_GAMESAVE");
     }
 
     pushScreen(screen: screens.BaseScreen): void {
@@ -183,11 +223,14 @@ export class Game {
         return screen;
     }
 
-    quitGame(): void {
-        for (let i=0; i<this._screens.length; ++i) {
+    removeAllScreens(): void {
+        while (this._screens.length > 0) {
             this.popScreen();
         }
+    }
 
+    quitGame(): void {
+        this.removeAllScreens();
         this.pushScreen(new screens.TitleScreen(this, null));
     }
 

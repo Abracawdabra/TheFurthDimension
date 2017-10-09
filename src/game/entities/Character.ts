@@ -5,15 +5,33 @@
  */
 
 import { BaseMapObject } from "../BaseMapObject";
-import { Direction, directionToString } from "../Direction";
+import { Direction, directionToString } from "..";
 import { GameScreen } from "../screens";
 
 // Pixels per second
 const DEFAULT_WALK_SPEED = 40;
 
+export interface IStats {
+    // Current health
+    health: number;
+    // Maximum possible health
+    maxHealth: number;
+    // Attack power
+    strength: number;
+    // Defensive power
+    defense: number;
+    // Increased speed
+    speed: number;
+    // Critical hit chance
+    critChance: number;
+}
+
 export class Character extends BaseMapObject {
     // Pixels per second
     walkSpeed: number;
+
+    // Calculated stats if any for this character
+    stats: IStats;
 
     // Characters should have a different hitbox for projectiles or it would
     // be harder to shoot them by trying to guess where their normal hitbox is (usually near the bottom).
@@ -68,5 +86,9 @@ export class Character extends BaseMapObject {
 
     getProjectilesHitbox(): createjs.Rectangle {
         return this._projectilesHitbox;
+    }
+
+    updateStats(): void {
+
     }
 }

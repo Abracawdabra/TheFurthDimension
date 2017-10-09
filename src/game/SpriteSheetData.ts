@@ -24,6 +24,7 @@ const CHARACTER_ANIMATIONS = {
 }
 
 const CHARACTER_ANIMATION_FRAMERATE = 20;
+const SWORD_ANIMATION_FRAMERATE = 35;
 
 interface ISpriteSheetData {
     frames: { width: number, height: number, regX: number, regY: number, count?: number };
@@ -47,5 +48,26 @@ export var SpriteSheetData: { [id: string]: ISpriteSheetData } = {
         frames: { width: 12, height: 18, regX: 0, regY: 0, count: 12 },
         animations: CHARACTER_ANIMATIONS,
         framerate: CHARACTER_ANIMATION_FRAMERATE
+    },
+    "ss_generic_npc": {
+        frames: { width: 12, height: 12, regX: 0, regY: 0, count: 12 },
+        animations: CHARACTER_ANIMATIONS,
+        framerate: CHARACTER_ANIMATION_FRAMERATE
+    },
+    "ss_swords": {
+        frames: { width: 60, height: 40, regX: 0, regY: 0, count: 25 },
+        animations: {
+            "dagger_unsheathed": 0,
+            "dagger_attack": [0, 4],
+            "sword_unsheathed": 5,
+            "sword_attack": [5, 9],
+            "greatsword_unsheathed": 10,
+            "greatsword_attack": [10, 14],
+            "great_greatsword_unsheathed": 15,
+            "great_greatsword_attack": [15, 19],
+            "soulshredder_unsheathed": 20,
+            "soulshredder_attack": [20, 24]
+        },
+        framerate: SWORD_ANIMATION_FRAMERATE
     }
 }

@@ -6,3 +6,5 @@
 
 export * from "./Character";
 export * from "./NPC";
+export * from "./Enemy";
+export * from "./Sign";
