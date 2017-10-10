@@ -169,7 +169,7 @@ export class Game {
         let player = this._getGameScreen().getPlayer();
         this.gameState.playerCoords = { x: player.x, y: player.y };
         this.gameState.playerDir = player.direction;
-        localStorage.setItem("TFD_GAMESAVE", LZString.compressToUTF16(JSON.stringify(this.gameState)));
+        localStorage.setItem("TFD_GAMESAVE", LZString.compressToUTF16(JSON.stringify(gamestate.compactGameState(this.gameState))) );
     }
 
     startNewGame(): void {
@@ -182,7 +182,7 @@ export class Game {
     }
 
     continueGame(): void {
-        let game_state = <gamestate.IGameState>JSON.parse(LZString.decompressFromUTF16(localStorage.getItem("TFD_GAMESAVE")));
+        let game_state = gamestate.decompactGameState(JSON.parse(LZString.decompressFromUTF16(localStorage.getItem("TFD_GAMESAVE"))) );
         if (!game_state || game_state.version !== gamestate.VERSION) {
             let msgbox = new MessageBox("Incompatible Game\n  Save Version!");
             msgbox.y = Game.CENTER_Y - Math.floor(msgbox.getBounds().height / 2);

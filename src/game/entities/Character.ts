@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { Direction, directionToString, BaseMapObject, IInventorySlot, IWeapon, IArmorPiece, IConsumable, InventoryItemType } from "..";
+import { Direction, directionToString, BaseMapObject, IInventorySlot, IWeapon, IArmorPiece, IConsumable, InventoryItemType, truncateFloat } from "..";
 import { GameScreen } from "../screens";
 
 // Pixels per second
@@ -26,6 +26,33 @@ export interface IStats {
     speed: number;
     // Critical hit chance percentage (0-1)
     critChance: number;
+}
+
+/**
+ * Compacts a stats object for local storage
+ */
+export function compactStats(stats: IStats): any[] {
+    return [
+        stats.maxHealth,
+        stats.power,
+        stats.defense,
+        stats.speed,
+        truncateFloat(stats.critChance, 3)
+    ];
+}
+
+export function decompactStats(compact_stats: any[]): IStats {
+    if (!compact_stats) {
+        return null;
+    }
+
+    return {
+        maxHealth: compact_stats[0],
+        power: compact_stats[1],
+        defense: compact_stats[2],
+        speed: compact_stats[3],
+        critChance: compact_stats[4]
+    }
 }
 
 export class Character extends BaseMapObject {

@@ -79,3 +79,32 @@ export function getOppositeDirection(dir: number): Direction {
 
     return Direction.LEFT;
 }
+
+/**
+ * Polyfill for Number.isInteger
+ */
+export function isInteger(n: number): boolean {
+    return isFinite(n) && Math.floor(n) === n;
+}
+
+/**
+ * Truncates a float to a specified precision
+ */
+export function truncateFloat(n: number, digits: number): number {
+    if (isInteger(n)) {
+        return n;
+    }
+
+    let fixed = n.toFixed(digits);
+
+    //  Remove trailing zeroes
+    let end_pos: number;
+    for (let i=fixed.length - 1; i>-1 && fixed[i] === "0"; ++i) {
+        end_pos = i;
+    }
+    if (end_pos) {
+        fixed = fixed.substring(0, end_pos);
+    }
+
+    return parseFloat(fixed);
+}
