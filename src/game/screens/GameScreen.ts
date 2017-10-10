@@ -218,7 +218,7 @@ export class GameScreen extends BaseScreen {
             if (this._scrollDir) {
                 let x_movement = 0;
                 let y_movement = 0;
-                let scroll_speed = delta / 1000 * this.gameInstance.walkSpeed;
+                let scroll_speed = delta / 1000 * this._player.stats.speed;
                 if (this._scrollDir & Direction.LEFT) {
                     x_movement = -scroll_speed;
                 }
@@ -300,10 +300,12 @@ export class GameScreen extends BaseScreen {
             for (let layer in this._activeNPCs) {
                 if (this._activeNPCs.hasOwnProperty(layer)) {
                     for (let npc of this._activeNPCs[layer]) {
-                        npc.update(delta, this._spatialGrids[layer]);
+                        npc.update(delta);
                     }
                 }
             }
+
+            this._player.update(delta);
         }
 
         if (this._dialogBox) {
@@ -419,7 +421,7 @@ export class GameScreen extends BaseScreen {
                                 continue;
                             }
 
-                            grid.addObject(this._createMapObject(obj));
+                            grid.addObject(this._createMapObject(obj, grid));
                         }
                         this._spatialGrids[layer.name] = grid;
                     }
@@ -800,7 +802,8 @@ export class GameScreen extends BaseScreen {
         this.container.addChild(this._objectContainer);
 
         this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], PLAYER_HITBOX, PLAYER_PROJECTILES_HITBOX);
-        this._player.stats = this.gameInstance.gameState.stats;
+        this._player.baseStats = this.gameInstance.gameState.baseStats;
+        this._player.updateStats();
 
         this._inputEnabled = false;
 
@@ -892,7 +895,7 @@ export class GameScreen extends BaseScreen {
      * Processes a map object and returns a new one created through type specific constructors
      * @todo Implement all map object types
      */
-    protected _createMapObject(obj: tiled.IObject): any {
+    protected _createMapObject(obj: tiled.IObject, spatial_grid: SpatialGrid): any {
         if (obj.type === "npc" || obj.type === "enemy") {
             let hitbox: createjs.Rectangle;
             let projectiles_hitbox: createjs.Rectangle;
@@ -931,24 +934,23 @@ export class GameScreen extends BaseScreen {
             }
 
             if (obj.type === "npc") {
-                return new NPC(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, projectiles_hitbox, obj.properties.interactionID, settings);
+                return new NPC(this, spatial_grid, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], hitbox, projectiles_hitbox, obj.properties.interactionID, settings);
             }
             else {
                 let enemy_settings = <IEnemySettings>settings;
                 let max_health = obj.properties.maxHealth;
                 enemy_settings.stats = {
                     maxHealth: max_health,
-                    health: max_health,
-                    strength: obj.properties.strength,
+                    power: obj.properties.strength,
                     defense: obj.properties.defense,
                     speed: obj.properties.speed,
                     critChance: obj.properties.critChance
                 };
-                return new Enemy(this, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], this._player, hitbox, projectiles_hitbox, obj.properties.interactionID, enemy_settings);
+                return new Enemy(this, spatial_grid, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], this._player, hitbox, projectiles_hitbox, obj.properties.interactionID, enemy_settings);
             }
         }
         else if (obj.type === "sign") {
-            return new Sign(this, obj.properties.name, obj.x, obj.y, obj.name, obj.properties.signType, obj.properties.dialog, obj.properties.interactionID);
+            return new Sign(this, spatial_grid, obj.properties.name, obj.x, obj.y, obj.name, obj.properties.signType, obj.properties.dialog, obj.properties.interactionID);
         }
     }
 

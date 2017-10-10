@@ -12,10 +12,17 @@ export enum WeaponType {
 
 export interface IWeapon {
     name: string;
+    type: WeaponType;
+
     power: number;
     // Range is every 2 pixels
     range: number;
-    type: WeaponType;
+
+    // Optional stat increase/decrease properties
+    maxHealth?: number;
+    defense?: number;
+    speed?: number;
+    critChance?: number;
 }
 
 export var Weapons: { [id: string]: IWeapon } = {
@@ -23,6 +30,7 @@ export var Weapons: { [id: string]: IWeapon } = {
         name: "Dagger",
         power: 6,
         range: 4,
+        speed: 2,
         type: WeaponType.DAGGER
     },
     "sword": {
@@ -35,24 +43,29 @@ export var Weapons: { [id: string]: IWeapon } = {
         name: "Greatsword",
         power: 30,
         range: 10,
+        speed: -1,
         type: WeaponType.SWORD
     },
     "great_greatsword": {
         name: "Great Greatsword",
         power: 50,
         range: 17,
+        speed: -2,
         type: WeaponType.SWORD
     },
     "soulshredder": {
         name: "Soulshredder",
-        power: 85,
+        power: 75,
         range: 14,
+        maxHealth: 5,
+        speed: 1,
         type: WeaponType.SWORD
     },
     "bow": {
         name: "Bow",
         power: 30,
         range: 50,
+        speed: 1,
         type: WeaponType.BOW
     }
 }

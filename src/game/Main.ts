@@ -22,8 +22,6 @@ const PRELOADER_DISPLAY_HEIGHT = 20;
 const MAX_KEY_DOWN_QUEUE_LENGTH = 5;
 const KEY_DOWN_QUEUE_TIMEOUT = 600;      // Milliseconds
 
-const DEFAULT_WALK_SPEED = 60;      // Pixels per second
-
 // Set to false for local testing in order to fix
 // preloading issues. Set to true for production.
 const PREFER_XHR = false;
@@ -69,7 +67,6 @@ export class Game {
     renderInvisibleLayers: boolean;
     renderHitboxes: boolean;
     enableNoClip: boolean;
-    walkSpeed: number;
 
     // Object for the game session that can be saved to localStorage
     gameState: gamestate.IGameState;
@@ -141,7 +138,6 @@ export class Game {
         this.renderInvisibleLayers = false;
         this.renderHitboxes = false;
         this.enableNoClip = false;
-        this.walkSpeed = DEFAULT_WALK_SPEED;
 
         createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
         createjs.Ticker.setFPS(Game.FPS);
@@ -516,11 +512,15 @@ export class Game {
             game_screen.redrawMapArea();
             success = true;
         }
-        else if (cmd === "wspeed" && parsed.length === 2) {
+        else if (cmd === "speedstat" && parsed.length === 2) {
             // Sets walking speed
             let value = parseInt(parsed[1], 10);
             if (!isNaN(value)) {
-                this.walkSpeed = value;
+                this.gameState.baseStats.speed = value;
+                let game_screen = this._getGameScreen();
+                if (game_screen) {
+                    game_screen.getPlayer().updateStats();
+                }
                 success = true;
             }
         }

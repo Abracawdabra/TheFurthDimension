@@ -33,6 +33,8 @@ export class NPC extends Character {
     // Indicates if NPC will face the direction of the player when talking
     faceWhenTalking: boolean;
 
+    protected _spatialGrid: SpatialGrid;
+
     // Bounds in local tile coordinates where the NPC will wander within
     protected _wanderBounds: createjs.Rectangle;
     get wanderBounds(): createjs.Rectangle {
@@ -118,11 +120,15 @@ export class NPC extends Character {
     // Pause between wander direction changes
     protected _wanderPause: boolean;
 
-    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string, settings?: INPCSettings) {
+    constructor(parent: GameScreen, spatial_grid: SpatialGrid, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string, settings?: INPCSettings) {
         super(parent, name, x, y, sprite_name, sprite_sheet, hitbox, projectiles_hitbox, interaction_id);
+        this._spatialGrid = spatial_grid;
 
         if (settings) {
-            this.walkSpeed = ("walkSpeed" in settings) ? settings.walkSpeed : this.walkSpeed;
+            if ("walkSpeed" in settings) {
+                this.stats.speed = settings.walkSpeed;
+            }
+
             this.wanderMinDirDuration = ("wanderMinDirDuration" in settings) ? settings.wanderMinDirDuration : 0.0;
             this.wanderMaxDirDuration = ("wanderMaxDirDuration" in settings) ? settings.wanderMaxDirDuration : 0.0;
 
@@ -139,8 +145,10 @@ export class NPC extends Character {
         }
     }
 
-    update(delta: number, spatial_grid: SpatialGrid): void {
-        if (this._wander) {
+    /** @override */
+    update(delta: number): void {
+        super.update(delta);
+        if (this._wander && this._isAlive) {
             if (createjs.Ticker.getTime() > this._wanderDirDurationEndTime) {
                 if (this._wanderPause) {
                     this._wanderPause = false;
@@ -156,7 +164,7 @@ export class NPC extends Character {
             }
 
             if (this._isWalking) {
-                let move_amount = delta / 1000 * this.walkSpeed;
+                let move_amount = delta / 1000 * this.stats.speed;
                 let x_movement = 0;
                 if (this._direction & Direction.LEFT) {
                     x_movement = -move_amount;
@@ -191,13 +199,13 @@ export class NPC extends Character {
                     }
                     else {
                         if (move_axes & Axes.X && move_axes & Axes.Y) {
-                            spatial_grid.updateObjectPos(this, new_x, new_y);
+                            this._spatialGrid.updateObjectPos(this, new_x, new_y);
                         }
                         else if (move_axes & Axes.X) {
-                            spatial_grid.updateObjectPos(this, new_x, this._y);
+                            this._spatialGrid.updateObjectPos(this, new_x, this._y);
                         }
                         else if (move_axes & Axes.Y) {
-                            spatial_grid.updateObjectPos(this, this._x, new_y);
+                            this._spatialGrid.updateObjectPos(this, this._x, new_y);
                         }
                     }
                 }

@@ -4,34 +4,62 @@
  * @license MIT
  */
 
-import { BaseMapObject } from "../BaseMapObject";
-import { Direction, directionToString } from "..";
+import { Direction, directionToString, BaseMapObject, IInventorySlot, IWeapon, IArmorPiece, IConsumable, InventoryItemType } from "..";
 import { GameScreen } from "../screens";
 
 // Pixels per second
 const DEFAULT_WALK_SPEED = 40;
 
+// Damage blinking frame duration (milliseconds)
+const BLINKING_EFFECT_FRAME_DURATION = 250;
+// Damage blinking duration (milliseconds)
+const BLINKING_EFFECT_DURATION = 2500;
+
 export interface IStats {
-    // Current health
-    health: number;
     // Maximum possible health
     maxHealth: number;
     // Attack power
-    strength: number;
+    power: number;
     // Defensive power
     defense: number;
-    // Increased speed
+    // Walking speed (x * 10 pixels per second)
     speed: number;
-    // Critical hit chance
+    // Critical hit chance percentage (0-1)
     critChance: number;
 }
 
 export class Character extends BaseMapObject {
-    // Pixels per second
-    walkSpeed: number;
+    protected _health: number;
+    get health(): number {
+        return this._health;
+    }
 
-    // Calculated stats if any for this character
-    stats: IStats;
+    protected _isAlive: boolean;
+    get isAlive(): boolean {
+        return this._isAlive;
+    }
+
+    // Base stats
+    protected _baseStats: IStats;
+    get baseStats(): IStats {
+        return this._baseStats;
+    }
+
+    set baseStats(value: IStats) {
+        this._baseStats = value;
+        this.updateStats();
+    }
+
+    // Cached calculated stats
+    protected _calculatedStats: IStats;
+    get stats(): IStats {
+        return this._calculatedStats;
+    }
+
+    // Blinking effect when damaged
+    protected _isBlinking: boolean;
+    protected _blinkingFrameTime: number;
+    protected _blinkingEndTime: number;
 
     // Characters should have a different hitbox for projectiles or it would
     // be harder to shoot them by trying to guess where their normal hitbox is (usually near the bottom).
@@ -67,10 +95,18 @@ export class Character extends BaseMapObject {
 
     constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string) {
         super(parent, name, x, y, sprite_name, sprite_sheet, "stand_south", true, hitbox, interaction_id);
-        this.walkSpeed = DEFAULT_WALK_SPEED;
         this._projectilesHitbox = projectiles_hitbox || this._hitbox;
         this._isWalking = false;
         this._direction = Direction.DOWN;
+        this._calculatedStats = {
+            maxHealth: 0,
+            power: 0,
+            defense: 0,
+            // If character has no base stats, they still need walk speed defined
+            speed: DEFAULT_WALK_SPEED,
+            critChance: 0
+        };
+        this._isAlive = true;
     }
 
     /** @override */
@@ -88,7 +124,110 @@ export class Character extends BaseMapObject {
         return this._projectilesHitbox;
     }
 
-    updateStats(): void {
+    /**
+     * Updates cached calculated stats
+     * @param {IInventoryType[]} [used_items] Only items that are equipped or consumed
+     */
+    updateStats(used_items?: IInventorySlot[]): void {
+        let stats = this._calculatedStats;
+        let base_stats = this._baseStats;
 
+        // Reset to base stats
+        stats.maxHealth = base_stats.maxHealth * 10;
+        stats.power = base_stats.power * 10;
+        stats.defense = base_stats.defense * 10;
+        stats.speed = base_stats.speed * 10;
+        stats.critChance = base_stats.critChance * 10;
+
+        if (used_items) {
+            // A hash to make sure only one of each item is accounted for
+            let accounted_items: { [id: string]: boolean } = {};
+            for (let slot of used_items) {
+                if (slot.item.name in accounted_items) {
+                    continue;
+                }
+
+                accounted_items[slot.item.name] = true;;
+                switch (slot.type) {
+                    case InventoryItemType.WEAPON:
+                        let weapon = <IWeapon>slot.item;
+                        stats.power += weapon.power * 10;
+                        if (weapon.defense) {
+                            stats.defense += weapon.defense * 10;
+                        }
+
+                        if (weapon.maxHealth) {
+                            stats.maxHealth += weapon.maxHealth * 10;
+                        }
+
+                        if (weapon.speed) {
+                            stats.speed += weapon.speed * 10;
+                        }
+                        break;
+                    case InventoryItemType.ARMOR_PIECE:
+                        let armor = <IArmorPiece>slot.item;
+                        stats.defense += armor.defense * 10;
+
+                        if (armor.speed) {
+                            stats.speed += armor.speed * 10;
+                        }
+                        break;
+                    case InventoryItemType.CONSUMABLE:
+                        let consumable = <IConsumable>slot.item;
+                        if (consumable.power) {
+                            stats.power += consumable.power * 10;
+                        }
+
+                        if (consumable.defense) {
+                            stats.defense += consumable.defense * 10;
+                        }
+
+                        if (consumable.speed) {
+                            stats.speed += consumable.speed * 10;
+                        }
+
+                        if (consumable.maxHealth) {
+                            stats.maxHealth += consumable.maxHealth * 10;
+                        }
+                }
+            }
+        }
+    }
+
+    update(delta: number): void {
+        if (this._isBlinking && this._isAlive && this._sprite) {
+            let time = createjs.Ticker.getTime();
+            if (time >= this._blinkingEndTime) {
+                this._sprite.alpha = 1.0;
+                this._isBlinking = false;
+            }
+            else if (time >= this._blinkingFrameTime) {
+                this._sprite.alpha = Number(!this._sprite.alpha);
+                this._blinkingFrameTime = createjs.Ticker.getTime() + BLINKING_EFFECT_FRAME_DURATION;
+            }
+        }
+    }
+
+    inflictDamage(amount: number): void {
+        if (this._baseStats && this._isAlive) {
+            // They are killable
+            let damage = Math.max(amount - this.stats.defense, 1);
+            this._health = Math.max(this._health - damage, 0);
+            if (this._health === 0) {
+                this.die();
+            }
+            else {
+                this._isBlinking = true;
+                this._blinkingFrameTime = createjs.Ticker.getTime() + BLINKING_EFFECT_FRAME_DURATION;
+                this._blinkingEndTime = createjs.Ticker.getTime() + BLINKING_EFFECT_DURATION;
+            }
+        }
+    }
+
+    die(): void {
+        this._isAlive = false;
+        if (this._sprite) {
+            this._sprite.alpha = 0.0;
+        }
     }
 }

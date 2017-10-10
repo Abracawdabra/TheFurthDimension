@@ -21,5 +21,5 @@ export * from "./SpawnPointWithEndPoint";
 export * from "./Weapons";
 export * from "./ArmorPieces";
 export * from "./Consumables";
-export * from "./IInventoryItem";
+export * from "./IInventorySlot";
 export * from "./Main";

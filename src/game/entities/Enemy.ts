@@ -20,7 +20,7 @@ export class Enemy extends NPC {
 
     set isAggrovated(value: boolean) {
         if (value) {
-
+            this.wander = false;
         }
         else {
             this.isWalking = false;
@@ -31,18 +31,24 @@ export class Enemy extends NPC {
     // A reference to the player for following and stuff
     protected _player: Character;
 
-    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, player: Character, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string, settings?: IEnemySettings) {
-        super(parent, name, x, y, sprite_name, sprite_sheet, hitbox, projectiles_hitbox, interaction_id, settings);
+    constructor(parent: GameScreen, spatial_grid: SpatialGrid, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, player: Character, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string, settings?: IEnemySettings) {
+        super(parent, spatial_grid, name, x, y, sprite_name, sprite_sheet, hitbox, projectiles_hitbox, interaction_id, settings);
         this.isAggrovated = false;
         this._player = player;
     }
 
-    update(delta: number, spatial_grid: SpatialGrid): void {
-        if (this._isAggrovated) {
-
+    /** @override */
+    update(delta: number): void {
+        super.update(delta);
+        if (this._isAggrovated && this._isAlive) {
         }
-        else {
-            super.update(delta, spatial_grid);
+    }
+
+    /** @override */
+    inflictDamage(amount: number): void {
+        if (this._isAggrovated) {
+            // Only take damage if aggrovated
+            super.inflictDamage(amount);
         }
     }
 

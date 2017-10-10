@@ -13,8 +13,12 @@ export enum ArmorPieceLocation {
 
 export interface IArmorPiece {
     name: string;
-    defense: number;
     location: ArmorPieceLocation;
+    defense: number;
+
+    // Optional stat increase/decrease properties
+    speed?: number;
+    critChance?: number;
 }
 
 export var ArmorPieces: { [id: string]: IArmorPiece } = {
@@ -26,6 +30,12 @@ export var ArmorPieces: { [id: string]: IArmorPiece } = {
     "breastplate": {
         name: "Breastplate",
         defense: 15,
+        location: ArmorPieceLocation.TORSO
+    },
+    "multibreastplate": {
+        name: "Multibreastplate",
+        defense: 18,
+        critChance: 0.15,
         location: ArmorPieceLocation.TORSO
     },
     "arm_bracers": {

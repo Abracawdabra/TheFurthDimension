@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { IInventoryItem, Direction } from ".";
+import { IInventorySlot, Direction } from ".";
 import { IStats } from "./entities";
 
 export const VERSION = 0.1;
@@ -15,9 +15,9 @@ export interface IGameState {
     // Player acquired the "fox hole" inventory
     hasInventory: boolean;
     // Player's inventory
-    inventory: IInventoryItem[];
-    // Player's stats
-    stats: IStats;
+    inventory: IInventorySlot[];
+    // Player's base stats
+    baseStats: IStats;
     // Map the player is on
     map: string;
     // Player's location (only updated on save)
@@ -34,14 +34,13 @@ export function createDefaultGameState(): IGameState {
         version: VERSION,
         hasInventory: false,
         inventory: [],
-        stats: {
+        baseStats: {
             // Default player attributes may be subject to change
-            health: 100,
-            maxHealth: 100,
-            strength: 4,
+            maxHealth: 10,
+            power: 4,
             defense: 2,
-            speed: 0,
-            critChance: 0
+            speed: 5,
+            critChance: 0.10
         },
         map: "map_dongola_temple",
         // Use default spawn point

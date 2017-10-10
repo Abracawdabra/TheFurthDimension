@@ -12,7 +12,7 @@ export enum InventoryItemType {
     CONSUMABLE
 }
 
-export interface IInventoryItem {
+export interface IInventorySlot {
     item: IWeapon | IArmorPiece | IConsumable;
     type: InventoryItemType;
     quantity: number;

@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { BaseMapObject } from "..";
+import { BaseMapObject, SpatialGrid } from "..";
 import { GameScreen } from "../screens";
 import { Game } from "../Main";
 
@@ -13,7 +13,7 @@ const SIGN_FRAMES: { [type: string]: number } = {
 };
 
 export class Sign extends BaseMapObject {
-    constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, type: string, dialog: string, interaction_id?: string) {
+    constructor(parent: GameScreen, spatial_grid: SpatialGrid, name: string, x: number, y: number, sprite_name: string, type: string, dialog: string, interaction_id?: string) {
         super(parent, name, x, y, sprite_name, Game.SpriteSheets["ss_signs"], SIGN_FRAMES[type], true, undefined, interaction_id);
         this.dialog = dialog;
     }
