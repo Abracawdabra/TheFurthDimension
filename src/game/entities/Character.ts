@@ -185,7 +185,7 @@ export class Character extends BaseMapObject {
                 }
 
                 if (weapon.maxHealth) {
-                    stats.defense += weapon.maxHealth;
+                    stats.maxHealth += weapon.maxHealth;
                 }
 
                 if (weapon.speed) {
