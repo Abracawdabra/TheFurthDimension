@@ -25,7 +25,7 @@ export interface IStats {
     // Walking speed (x * 10 pixels per second)
     speed: number;
     // Critical hit chance percentage (0-1)
-    critChance: number;
+    luck: number;
 }
 
 /**
@@ -37,7 +37,7 @@ export function compactStats(stats: IStats): any[] {
         stats.power,
         stats.defense,
         stats.speed,
-        truncateFloat(stats.critChance, 3)
+        truncateFloat(stats.luck, 3)
     ];
 }
 
@@ -51,7 +51,7 @@ export function decompactStats(compact_stats: any[]): IStats {
         power: compact_stats[1],
         defense: compact_stats[2],
         speed: compact_stats[3],
-        critChance: compact_stats[4]
+        luck: compact_stats[4]
     }
 }
 
@@ -131,7 +131,7 @@ export class Character extends BaseMapObject {
             defense: 0,
             // If character has no base stats, they still need walk speed defined
             speed: DEFAULT_WALK_SPEED,
-            critChance: 0
+            luck: 0.0
         };
         this._isAlive = true;
     }
@@ -160,11 +160,11 @@ export class Character extends BaseMapObject {
         let base_stats = this._baseStats;
 
         // Reset to base stats
-        stats.maxHealth = base_stats.maxHealth * 10;
+        stats.maxHealth = base_stats.maxHealth;
         stats.power = base_stats.power * 10;
         stats.defense = base_stats.defense * 10;
         stats.speed = base_stats.speed * 10;
-        stats.critChance = base_stats.critChance * 10;
+        stats.luck = base_stats.luck;
 
         if (used_items) {
             // A hash to make sure only one of each item is accounted for
@@ -184,7 +184,7 @@ export class Character extends BaseMapObject {
                         }
 
                         if (weapon.maxHealth) {
-                            stats.maxHealth += weapon.maxHealth * 10;
+                            stats.maxHealth += weapon.maxHealth;
                         }
 
                         if (weapon.speed) {
@@ -214,10 +214,19 @@ export class Character extends BaseMapObject {
                         }
 
                         if (consumable.maxHealth) {
-                            stats.maxHealth += consumable.maxHealth * 10;
+                            stats.maxHealth += consumable.maxHealth;
+                        }
+
+                        if (consumable.luck) {
+                            stats.luck = Math.min(stats.luck + consumable.luck, 1.0);
                         }
                 }
             }
+        }
+
+        if (!this._health && this._health !== 0) {
+            // Set health since it doesn't exist
+            this._health = stats.maxHealth;
         }
     }
 

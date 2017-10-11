@@ -13,13 +13,13 @@ interface IFontData {
 
 export var FontData: { [name: string]: IFontData } = {
     "font_8px_press_start": {
-        characters: "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.:,;'\"(!?)+-*/=",
+        characters: "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.:,;'\"(!?)+-*/=%",
         frames: { width: 8, height: 8, regX: 0, regY: 0 },
         size: 8
     },
     "font_7px_press_start": {
-        characters: "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.:,;'\"(!?)+-*/=",
-        frames: { width: 7, height: 7, regX: 0, regY: 0},
+        characters: "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.:,;'\"(!?)+-*/=%",
+        frames: { width: 7, height: 7, regX: 0, regY: 0 },
         size: 7
     }
 };
@@ -32,3 +32,4 @@ function generateFrameData(data: IFontData): void {
 }
 
 generateFrameData(FontData["font_8px_press_start"]);
+generateFrameData(FontData["font_7px_press_start"]);

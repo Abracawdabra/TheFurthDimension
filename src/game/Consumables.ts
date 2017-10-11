@@ -12,6 +12,7 @@ export interface IConsumable {
     defense?: number;
     speed?: number;
     maxHealth?: number;
+    luck?: number;
 }
 
 export var Consumables: { [id: string]: IConsumable } = {

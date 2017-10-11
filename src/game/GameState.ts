@@ -42,11 +42,11 @@ export function createDefaultGameState(): IGameState {
         xp: 0,
         baseStats: {
             // Default player attributes may be subject to change
-            maxHealth: 10,
+            maxHealth: 100,
             power: 4,
             defense: 2,
             speed: 5,
-            critChance: 0.10
+            luck: 0.10
         },
         map: "map_dongola_temple",
         // Use default spawn point

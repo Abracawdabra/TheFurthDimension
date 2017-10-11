@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { BaseScreen, OptionsScreen } from ".";
+import { BaseScreen, OptionsScreen, GameScreen } from ".";
 import { BorderBox, TextMenu, MessageBox, BitmapText } from "../ui";
 import { Game, DISPLAY_HEIGHT, DISPLAY_WIDTH } from "../Main";
 import { Button } from "../Buttons";
@@ -25,6 +25,8 @@ export class PauseScreen extends BaseScreen {
 
     protected _gameSavedMessageBox: MessageBox;
     protected _gameSavedMessageBoxEndTime: number;
+
+    protected _statsBox: BorderBox;
 
     handleKeyDown(key_code: number): void {
         if (this._confirmQuitMenu) {
@@ -48,6 +50,17 @@ export class PauseScreen extends BaseScreen {
                     this.gameInstance.popScreen();
             }
         }
+        else if (this._statsBox) {
+            switch (key_code) {
+                case Button.A:
+                case Button.B:
+                    this.container.removeChild(this._statsBox);
+                    this._statsBox = null;
+                    break;
+                case Button.START:
+                    this.gameInstance.popScreen();
+            }
+        }
         else {
             switch (key_code) {
                 case Button.UP:
@@ -59,7 +72,7 @@ export class PauseScreen extends BaseScreen {
                 case Button.A:
                     switch(this._mainMenu.selectedItem) {
                         case "stats":
-                            /** @todo Implement */
+                            this._showStats();
                             break;
                         case "inventory":
                             /** @todo Implement */
@@ -127,6 +140,78 @@ export class PauseScreen extends BaseScreen {
         this.container.addChild(message_box);
         this._gameSavedMessageBox = message_box;
         this._gameSavedMessageBoxEndTime = createjs.Ticker.getTime() + GAME_SAVE_MESSAGE_BOX_DURATION;
+    }
+
+    protected _showStats(): void {
+        if (this._statsBox) {
+            this.container.removeChild(this._statsBox);
+        }
+
+        let game_screen = <GameScreen>this.parent;
+        let player = game_screen.getPlayer();
+
+        let stats_box = new BorderBox(DISPLAY_WIDTH, 140, colors.LIGHTEST);
+        let level_txt = new BitmapText("LVL: " + this.gameInstance.gameState.level, "7px Press Start", colors.DARKEST);
+        level_txt.x = 12;
+        level_txt.y = 12;
+        stats_box.addChild(level_txt);
+
+        let xp_label_txt = new BitmapText("XP:", "7px Press Start", colors.DARKEST);
+        xp_label_txt.x = level_txt.x;
+        xp_label_txt.y = level_txt.y + 10;
+        let xp_txt = new BitmapText(this.gameInstance.gameState.xp + "/" + game_screen.getXPRequiredForLevel(this.gameInstance.gameState.level + 1), "7px Press Start", colors.DARKEST);
+        xp_txt.x = 20;
+        xp_txt.y = xp_label_txt.y + 9;
+        stats_box.addChild(xp_label_txt);
+        stats_box.addChild(xp_txt);
+
+        let health_label_txt = new BitmapText("HEALTH:", "7px Press Start", colors.DARKEST);
+        health_label_txt.x = level_txt.x;
+        health_label_txt.y = xp_txt.y + 10;
+        let health_txt = new BitmapText(player.health + "/" + player.stats.maxHealth, "7px Press Start", colors.DARKEST);
+        health_txt.x = 20;
+        health_txt.y = health_label_txt.y + 9;
+        stats_box.addChild(health_label_txt);
+        stats_box.addChild(health_txt);
+
+        let power_label_txt = new BitmapText("POWER:", "7px Press Start", colors.DARKEST);
+        power_label_txt.x = level_txt.x;
+        power_label_txt.y = health_txt.y + 10;
+        let power_txt = new BitmapText(Math.floor(player.stats.power / 10).toString(), "7px Press Start", colors.DARKEST);
+        power_txt.x = 20;
+        power_txt.y = power_label_txt.y + 9;
+        stats_box.addChild(power_label_txt);
+        stats_box.addChild(power_txt);
+
+        let defense_label_txt = new BitmapText("DEFENSE:", "7px Press Start", colors.DARKEST);
+        defense_label_txt.x = level_txt.x;
+        defense_label_txt.y = power_txt.y + 10;
+        let defense_txt = new BitmapText(Math.floor(player.stats.defense / 10).toString(), "7px Press Start", colors.DARKEST);
+        defense_txt.x = 20;
+        defense_txt.y = defense_label_txt.y + 9;
+        stats_box.addChild(defense_label_txt);
+        stats_box.addChild(defense_txt);
+
+        let speed_label_txt = new BitmapText("SPEED:", "7px Press Start", colors.DARKEST);
+        speed_label_txt.x = level_txt.x;
+        speed_label_txt.y = defense_txt.y + 10;
+        let speed_txt = new BitmapText(Math.floor(player.stats.speed / 10).toString(), "7px Press Start", colors.DARKEST);
+        speed_txt.x = 20;
+        speed_txt.y = speed_label_txt.y + 9;
+        stats_box.addChild(speed_label_txt);
+        stats_box.addChild(speed_txt);
+
+        let luck_label_txt = new BitmapText("LUCK:", "7px Press Start", colors.DARKEST);
+        luck_label_txt.x = level_txt.x;
+        luck_label_txt.y = speed_txt.y + 10;
+        let luck_txt = new BitmapText(Math.floor(player.stats.luck * 100) + "%", "7px Press Start", colors.DARKEST);
+        luck_txt.x = 20;
+        luck_txt.y = luck_label_txt.y + 9;
+        stats_box.addChild(luck_label_txt);
+        stats_box.addChild(luck_txt);
+
+        this.container.addChild(stats_box);
+        this._statsBox = stats_box;
     }
 
     protected _quit(): void {

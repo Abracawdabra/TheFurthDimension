@@ -20,6 +20,10 @@ const PLAYER_PROJECTILES_HITBOX = new createjs.Rectangle(1, 4, 10, 14);
 // Maximum distance in pixels of an object to be interacted with
 const MAX_INTERACTION_DISTANCE = 15;
 
+// Base XP for leveling
+const BASE_XP = 100;
+const LEVEL_XP_INCREASE_RATIO = 1.5;
+
 // For the screen spin effect
 const SCREEN_SPIN_FRAME_DURATION = 25;
 
@@ -737,6 +741,12 @@ export class GameScreen extends BaseScreen {
         /** @todo Implement */
     }
 
+    getXPRequiredForLevel(level: number): number {
+        // Since we're starting at level 1, offset it so that level 2 requires
+        // only the base amount of xp + increase ratio.
+        return (level - 1) * BASE_XP * LEVEL_XP_INCREASE_RATIO;
+    }
+
     showHitboxes(show: boolean): void {
         this._player.showHitbox(show);
 
@@ -944,7 +954,7 @@ export class GameScreen extends BaseScreen {
                     power: obj.properties.strength,
                     defense: obj.properties.defense,
                     speed: obj.properties.speed,
-                    critChance: obj.properties.critChance
+                    luck: obj.properties.luck
                 };
                 return new Enemy(this, spatial_grid, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], this._player, hitbox, projectiles_hitbox, obj.properties.interactionID, enemy_settings);
             }

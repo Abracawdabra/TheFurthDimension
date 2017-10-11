@@ -31,12 +31,14 @@ export var Weapons: { [id: string]: IWeapon } = {
         power: 6,
         range: 4,
         speed: 2,
+        critChance: 0.2,
         type: WeaponType.DAGGER
     },
     "sword": {
         name: "Sword",
         power: 15,
         range: 6,
+        critChance: 0.15,
         type: WeaponType.SWORD
     },
     "greatsword": {
@@ -44,6 +46,7 @@ export var Weapons: { [id: string]: IWeapon } = {
         power: 30,
         range: 10,
         speed: -1,
+        critChance: 0.10,
         type: WeaponType.SWORD
     },
     "great_greatsword": {
@@ -51,13 +54,14 @@ export var Weapons: { [id: string]: IWeapon } = {
         power: 50,
         range: 17,
         speed: -2,
+        critChance: 0.05,
         type: WeaponType.SWORD
     },
     "soulshredder": {
         name: "Soulshredder",
         power: 75,
         range: 14,
-        maxHealth: 5,
+        maxHealth: 50,
         speed: 1,
         type: WeaponType.SWORD
     },
@@ -66,6 +70,7 @@ export var Weapons: { [id: string]: IWeapon } = {
         power: 30,
         range: 50,
         speed: 1,
+        critChance: 0.15,
         type: WeaponType.BOW
     }
 }
