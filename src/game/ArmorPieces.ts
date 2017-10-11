@@ -18,7 +18,7 @@ export interface IArmorPiece {
 
     // Optional stat increase/decrease properties
     speed?: number;
-    critChance?: number;
+    luck?: number;
 }
 
 export var ArmorPieces: { [id: string]: IArmorPiece } = {
@@ -35,7 +35,7 @@ export var ArmorPieces: { [id: string]: IArmorPiece } = {
     "multibreastplate": {
         name: "Multibreastplate",
         defense: 18,
-        critChance: 0.15,
+        luck: 0.15,
         location: ArmorPieceLocation.TORSO
     },
     "arm_bracers": {

@@ -519,7 +519,7 @@ export class Game {
                 this.gameState.baseStats.speed = value;
                 let game_screen = this._getGameScreen();
                 if (game_screen) {
-                    game_screen.getPlayer().updateStats();
+                    game_screen.getPlayer().updateCalculatedStats();
                 }
                 success = true;
             }

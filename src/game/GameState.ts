@@ -4,10 +4,10 @@
  * @license MIT
  */
 
-import { IInventorySlot, Direction, truncateFloat } from ".";
+import { IInventorySlot, Direction, truncateFloat, compactInventorySlot, decompactInventorySlot } from ".";
 import { IStats, compactStats, decompactStats } from "./entities";
 
-export const VERSION = 0.2;
+export const VERSION = 0.3;
 
 export interface IGameState {
     // Version of the save format
@@ -16,6 +16,8 @@ export interface IGameState {
     hasInventory: boolean;
     // Player's inventory
     inventory: IInventorySlot[];
+    // Items that have been consumed. { id: end_time } unless storing, then { id: time_ms_left }
+    consumedItems: { [id: string]: number };
     // Player's level
     level: number;
     // Player's current XP progress to next level
@@ -38,6 +40,7 @@ export function createDefaultGameState(): IGameState {
         version: VERSION,
         hasInventory: false,
         inventory: [],
+        consumedItems: {},
         level: 1,
         xp: 0,
         baseStats: {
@@ -60,10 +63,23 @@ export function createDefaultGameState(): IGameState {
  * instead of an object
  */
 export function compactGameState(game_state: IGameState): any[] {
+    let compact_inventory = [];
+    for (let slot of game_state.inventory) {
+        compact_inventory.push(compactInventorySlot(slot));
+    }
+
+    let consumed_items: { [id: string]: number } = {};
+    for (let item in game_state.consumedItems) {
+        if (game_state.consumedItems.hasOwnProperty(item)) {
+            consumed_items[item] = Math.floor(game_state.consumedItems[item] - createjs.Ticker.getTime());
+        }
+    }
+
     return [
         game_state.version,
         game_state.hasInventory,
-        game_state.inventory,
+        compact_inventory,
+        consumed_items,
         game_state.level,
         game_state.xp,
         compactStats(game_state.baseStats),
@@ -78,15 +94,28 @@ export function compactGameState(game_state: IGameState): any[] {
  * compactGameState function.
  */
 export function decompactGameState(game_state: any[]): IGameState {
+    let inventory = [];
+    for (let slot of game_state[2]) {
+        inventory.push(decompactInventorySlot(slot));
+    }
+
+    let consumed_items: { [id: string]: number } = {};
+    for (let item in game_state[3]) {
+        if (game_state[3].hasOwnProperty(item)) {
+            consumed_items[item] = createjs.Ticker.getTime() + game_state[3][item];
+        }
+    }
+
     return {
         version: game_state[0],
         hasInventory: game_state[1],
-        inventory: game_state[2],
-        level: game_state[3],
-        xp: game_state[4],
-        baseStats: decompactStats(game_state[5]),
-        map: game_state[6],
-        playerCoords: game_state[7],
-        playerDir: game_state[8]
+        inventory: inventory,
+        consumedItems: consumed_items,
+        level: game_state[4],
+        xp: game_state[5],
+        baseStats: decompactStats(game_state[6]),
+        map: game_state[7],
+        playerCoords: game_state[8],
+        playerDir: game_state[9]
     };
 }

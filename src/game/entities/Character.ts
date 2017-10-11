@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { Direction, directionToString, BaseMapObject, IInventorySlot, IWeapon, IArmorPiece, IConsumable, InventoryItemType, truncateFloat } from "..";
+import { Direction, directionToString, BaseMapObject, IInventorySlot, Weapons, ArmorPieces, Consumables, InventoryItemType, truncateFloat } from "..";
 import { GameScreen } from "../screens";
 
 // Pixels per second
@@ -56,10 +56,9 @@ export function decompactStats(compact_stats: any[]): IStats {
 }
 
 export class Character extends BaseMapObject {
-    protected _health: number;
-    get health(): number {
-        return this._health;
-    }
+    inventory: IInventorySlot[];
+    consumedItems: { [id: string]: number };
+    health: number;
 
     protected _isAlive: boolean;
     get isAlive(): boolean {
@@ -68,14 +67,6 @@ export class Character extends BaseMapObject {
 
     // Base stats
     protected _baseStats: IStats;
-    get baseStats(): IStats {
-        return this._baseStats;
-    }
-
-    set baseStats(value: IStats) {
-        this._baseStats = value;
-        this.updateStats();
-    }
 
     // Cached calculated stats
     protected _calculatedStats: IStats;
@@ -151,95 +142,290 @@ export class Character extends BaseMapObject {
         return this._projectilesHitbox;
     }
 
+    setBaseStats(base_stats: IStats): void {
+        this._baseStats = base_stats;
+    }
+
     /**
-     * Updates cached calculated stats
-     * @param {IInventoryType[]} [used_items] Only items that are equipped or consumed
+     * Equips an inventory item
+     * @param {number|IInventorySlot} slot Inventory array index or slot object
      */
-    updateStats(used_items?: IInventorySlot[]): void {
+    equipItem(slot: number | IInventorySlot): boolean {
+        if (!this.inventory) {
+            return false;
+        }
+
         let stats = this._calculatedStats;
-        let base_stats = this._baseStats;
+        let slot_obj: IInventorySlot;
+        if (typeof slot === "number") {
+            if (slot < 0 || slot >= this.inventory.length) {
+                return false;
+            }
 
-        // Reset to base stats
-        stats.maxHealth = base_stats.maxHealth;
-        stats.power = base_stats.power * 10;
-        stats.defense = base_stats.defense * 10;
-        stats.speed = base_stats.speed * 10;
-        stats.luck = base_stats.luck;
+            slot_obj = this.inventory[slot];
+        }
+        else {
+            slot_obj = slot;
+        }
 
-        if (used_items) {
-            // A hash to make sure only one of each item is accounted for
-            let accounted_items: { [id: string]: boolean } = {};
-            for (let slot of used_items) {
-                if (slot.item.name in accounted_items) {
-                    continue;
+        switch (slot_obj.itemType) {
+            case InventoryItemType.WEAPON:
+                for (let inv_slot of this.inventory) {
+                    // Unequip any other weapons
+                    if (inv_slot.itemType === InventoryItemType.WEAPON && inv_slot.equipped) {
+                        this.unequipItem(inv_slot);
+                    }
                 }
 
-                accounted_items[slot.item.name] = true;;
-                switch (slot.type) {
-                    case InventoryItemType.WEAPON:
-                        let weapon = <IWeapon>slot.item;
-                        stats.power += weapon.power * 10;
-                        if (weapon.defense) {
-                            stats.defense += weapon.defense * 10;
-                        }
+                slot_obj.equipped = true;
+                let weapon = Weapons[slot_obj.itemID];
+                stats.power += weapon.power * 10;
+                if (weapon.defense) {
+                    stats.defense += weapon.defense * 10;
+                }
 
-                        if (weapon.maxHealth) {
-                            stats.maxHealth += weapon.maxHealth;
-                        }
+                if (weapon.maxHealth) {
+                    stats.defense += weapon.maxHealth;
+                }
 
-                        if (weapon.speed) {
-                            stats.speed += weapon.speed * 10;
-                        }
-                        break;
-                    case InventoryItemType.ARMOR_PIECE:
-                        let armor = <IArmorPiece>slot.item;
-                        stats.defense += armor.defense * 10;
+                if (weapon.speed) {
+                    stats.speed += weapon.speed * 10;
+                }
 
-                        if (armor.speed) {
-                            stats.speed += armor.speed * 10;
-                        }
-                        break;
-                    case InventoryItemType.CONSUMABLE:
-                        let consumable = <IConsumable>slot.item;
-                        if (consumable.power) {
-                            stats.power += consumable.power * 10;
-                        }
+                if (weapon.luck) {
+                    stats.luck = Math.min(stats.luck + weapon.luck, 1.0);
+                }
+                break;
+            case InventoryItemType.ARMOR_PIECE:
+                let armor_piece = ArmorPieces[slot_obj.itemID];
+                for (let inv_slot of this.inventory) {
+                    // Unequip any other armor pieces of this location type
+                    if (inv_slot.itemType === InventoryItemType.ARMOR_PIECE
+                    && ArmorPieces[inv_slot.itemID].location === armor_piece.location
+                    && inv_slot.equipped) {
+                        this.unequipItem(inv_slot);
+                    }
+                }
 
-                        if (consumable.defense) {
-                            stats.defense += consumable.defense * 10;
-                        }
+                slot_obj.equipped = true;
+                stats.defense += armor_piece.defense * 10;
 
-                        if (consumable.speed) {
-                            stats.speed += consumable.speed * 10;
-                        }
+                if (armor_piece.speed) {
+                    stats.speed += armor_piece.speed * 10;
+                }
 
-                        if (consumable.maxHealth) {
-                            stats.maxHealth += consumable.maxHealth;
-                        }
+                if (armor_piece.luck) {
+                    stats.luck = Math.min(stats.luck + armor_piece.luck, 1.0);
+                }
+        }
+        return true;
+    }
 
-                        if (consumable.luck) {
-                            stats.luck = Math.min(stats.luck + consumable.luck, 1.0);
-                        }
+    /**
+     * Unequips an inventory item
+     * @param {number|IInventorySlot} slot Inventory array index or slot object
+     */
+    unequipItem(slot: number | IInventorySlot): boolean {
+        if (this.inventory) {
+            let slot_obj: IInventorySlot;
+            if (typeof slot === "number") {
+                if (slot < 0 || slot >= this.inventory.length) {
+                    return false;
+                }
+                slot_obj = this.inventory[<number>slot];
+            }
+            else {
+                slot_obj = slot;
+            }
+
+            slot_obj.equipped = false;
+            let stats = this._calculatedStats;
+            if (slot_obj.itemType === InventoryItemType.WEAPON) {
+                let weapon = Weapons[slot_obj.itemID];
+                stats.power -= weapon.power * 10;
+
+                if (weapon.defense) {
+                    stats.defense -= weapon.defense * 10;
+                }
+
+                if (weapon.maxHealth) {
+                    stats.maxHealth -= weapon.maxHealth;
+                }
+
+                if (weapon.speed) {
+                    stats.speed -= weapon.speed * 10;
+                }
+
+                if (weapon.luck) {
+                    stats.luck = Math.max(stats.luck - weapon.luck, 0.0);
+                }
+            }
+            else if (slot_obj.itemType === InventoryItemType.ARMOR_PIECE) {
+                let armor_piece = ArmorPieces[slot_obj.itemID];
+                stats.defense -= armor_piece.defense * 10;
+
+                if (armor_piece.speed) {
+                    stats.speed -= armor_piece.speed * 10;
+                }
+
+                if (armor_piece.luck) {
+                    stats.luck = Math.max(stats.luck - armor_piece.luck, 0.0);
+                }
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Consumes an inventory item
+     * @param {number|IInventorySlot} slot Inventory array index or slot object
+     */
+    consumeItem(slot: number | IInventorySlot): boolean {
+        let slot_obj: IInventorySlot;
+        if (typeof slot === "number") {
+            if (slot < 0 || slot >= this.inventory.length) {
+                return false;
+            }
+
+            slot_obj = this.inventory[slot];
+        }
+        else {
+            slot_obj = slot;
+        }
+
+        if (!(slot_obj.itemID in Consumables)) {
+            return false;
+        }
+
+        if (slot_obj.itemID in this.consumedItems) {
+            // Stack duration
+            this.consumedItems[slot_obj.itemID] += Consumables[slot_obj.itemID].duration * 1000;
+        }
+        else {
+            let stats = this._calculatedStats;
+            let consumable = Consumables[slot_obj.itemID];
+            if (consumable.power) {
+                stats.power += consumable.power * 10;
+            }
+
+            if (consumable.defense) {
+                stats.defense += consumable.defense * 10;
+            }
+
+            if (consumable.speed) {
+                stats.speed += consumable.speed * 10;
+            }
+
+            if (consumable.maxHealth) {
+                stats.maxHealth += consumable.maxHealth;
+            }
+
+            if (consumable.luck) {
+                stats.luck = Math.min(stats.luck + consumable.luck, 1.0);
+            }
+
+            this.consumedItems[slot_obj.itemID] = createjs.Ticker.getTime() + (consumable.duration * 1000);
+        }
+    }
+
+    /**
+     * Updates cached calculated stats
+     */
+    updateCalculatedStats(): void {
+        let stats = this._calculatedStats;
+
+        // Reset to base stats
+        stats.maxHealth = this._baseStats.maxHealth;
+        stats.power = this._baseStats.power * 10;
+        stats.defense = this._baseStats.defense * 10;
+        stats.speed = this._baseStats.speed * 10;
+        stats.luck = this._baseStats.luck;
+
+        if (this.inventory) {
+            for (let slot of this.inventory) {
+                if (slot.equipped) {
+                    // A tiny hack to reuse code (albeit slower)
+                    slot.equipped = false;
+                    this.equipItem(slot);
+                }
+                else if (slot.itemType === InventoryItemType.CONSUMABLE && slot.itemID in this.consumedItems && slot.itemID in Consumables) {
+                    let consumable = Consumables[slot.itemID];
+                    if (consumable.power) {
+                        stats.power += consumable.power * 10;
+                    }
+
+                    if (consumable.defense) {
+                        stats.defense += consumable.defense * 10;
+                    }
+
+                    if (consumable.speed) {
+                        stats.speed += consumable.speed * 10;
+                    }
+
+                    if (consumable.maxHealth) {
+                        stats.maxHealth += consumable.maxHealth;
+                    }
+
+                    if (consumable.luck) {
+                        stats.luck = Math.min(stats.luck + consumable.luck, 1.0);
+                    }
                 }
             }
         }
 
-        if (!this._health && this._health !== 0) {
+        if (!this.health && this.health !== 0) {
             // Set health since it doesn't exist
-            this._health = stats.maxHealth;
+            this.health = stats.maxHealth;
         }
     }
 
     update(delta: number): void {
-        if (this._isBlinking && this._isAlive && this._sprite) {
-            let time = createjs.Ticker.getTime();
-            if (time >= this._blinkingEndTime) {
-                this._sprite.alpha = 1.0;
-                this._isBlinking = false;
+        if (this._isAlive) {
+            if (this.consumedItems) {
+                let time = createjs.Ticker.getTime();
+                let stats = this._calculatedStats;
+                for (let item_id in this.consumedItems) {
+                    if (this.consumedItems.hasOwnProperty(item_id) && this.consumedItems[item_id] <= time) {
+                        delete this.consumedItems[item_id];
+                        let item = Consumables[item_id];
+                        if (item.maxHealth) {
+                            stats.maxHealth -= item.maxHealth;
+                            if (this.health > stats.maxHealth) {
+                                this.health = stats.maxHealth;
+                            }
+                        }
+
+                        if (item.power) {
+                            stats.power -= item.power;
+                        }
+
+                        if (item.defense) {
+                            stats.defense -= item.defense;
+                        }
+
+                        if (item.speed) {
+                            stats.speed -= item.speed;
+                        }
+
+                        if (item.luck) {
+                            stats.luck -= item.luck;
+                        }
+                    }
+                }
             }
-            else if (time >= this._blinkingFrameTime) {
-                this._sprite.alpha = Number(!this._sprite.alpha);
-                this._blinkingFrameTime = createjs.Ticker.getTime() + BLINKING_EFFECT_FRAME_DURATION;
+
+            if (this._isBlinking && this._sprite) {
+                let time = createjs.Ticker.getTime();
+                if (time >= this._blinkingEndTime) {
+                    this._sprite.alpha = 1.0;
+                    this._isBlinking = false;
+                }
+                else if (time >= this._blinkingFrameTime) {
+                    this._sprite.alpha = Number(!this._sprite.alpha);
+                    this._blinkingFrameTime = createjs.Ticker.getTime() + BLINKING_EFFECT_FRAME_DURATION;
+                }
             }
         }
     }
@@ -248,8 +434,8 @@ export class Character extends BaseMapObject {
         if (this._baseStats && this._isAlive) {
             // They are killable
             let damage = Math.max(amount - this.stats.defense, 1);
-            this._health = Math.max(this._health - damage, 0);
-            if (this._health === 0) {
+            this.health = Math.max(this.health - damage, 0);
+            if (this.health === 0) {
                 this.die();
             }
             else {
