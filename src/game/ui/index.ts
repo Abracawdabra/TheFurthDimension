@@ -10,3 +10,4 @@ export * from "./BitmapText";
 export * from "./BorderBox";
 export * from "./DialogBox";
 export * from "./MessageBox";
+export * from "./ScreenFade";
