@@ -10,6 +10,7 @@ import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
 import { Direction, Button, SpatialGrid, BaseMapObject, SpawnPointWithEndPoint, Weapons, WeaponType } from "..";
 import { INPCSettings, NPC, Character, Enemy, IEnemySettings, Sign } from "../entities";
 import { DialogBox } from "../ui";
+import { DeathScreen } from "../screens";
 import * as colors from "../Colors";
 import * as utils from "../Utils";
 
@@ -799,6 +800,10 @@ export class GameScreen extends BaseScreen {
         // Since we're starting at level 1, offset it so that level 2 requires
         // only the base amount of xp + increase ratio.
         return (level - 1) * BASE_XP * LEVEL_XP_INCREASE_RATIO;
+    }
+
+    showDeathScreen(): void {
+        this.gameInstance.pushScreen(new DeathScreen(this.gameInstance, this));
     }
 
     showHitboxes(show: boolean): void {

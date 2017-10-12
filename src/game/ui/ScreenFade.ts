@@ -6,6 +6,7 @@
 
 import * as colors from "../Colors";
 import { DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
+import { IEventDispatcher } from "..";
 
 export class ScreenFade extends createjs.Shape {
     protected _frameDuration: number;
@@ -54,6 +55,7 @@ export class ScreenFade extends createjs.Shape {
 
         if (this._currentIndex >= this._colors.length) {
             this.removeEventListener("tick", this._onTick);
+            this.dispatchEvent("fadeend");
         }
     }
 }
