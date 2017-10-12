@@ -29,7 +29,8 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
         { id: "ss_npc_testy", src: BASE_IMAGES_URL + "spritesheets/npc_testy.png" },
         { id: "ss_victor", src: BASE_IMAGES_URL + "spritesheets/victor.png" },
         { id: "ss_generic_npc", src: BASE_IMAGES_URL + "spritesheets/generic_npc.png" },
-        { id: "ss_swords", src: BASE_IMAGES_URL + "spritesheets/swords.png" }
+        { id: "ss_swords", src: BASE_IMAGES_URL + "spritesheets/swords.png" },
+        { id: "ss_daggers", src: BASE_IMAGES_URL + "spritesheets/daggers.png" }
     ],
 
     sounds: [

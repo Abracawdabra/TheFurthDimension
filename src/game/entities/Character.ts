@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { Direction, directionToString, BaseMapObject, IInventorySlot, Weapons, ArmorPieces, Consumables, InventoryItemType, truncateFloat } from "..";
+import { Direction, directionToString, BaseMapObject, IInventorySlot, Weapons, IWeapon, ArmorPieces, Consumables, InventoryItemType, truncateFloat } from "..";
 import { GameScreen } from "../screens";
 
 // Pixels per second
@@ -111,6 +111,19 @@ export class Character extends BaseMapObject {
         }
     }
 
+    // ID of the currently equipped weapon
+    protected _currentWeaponID: string;
+    get currentWeaponID(): string {
+        return this._currentWeaponID;
+    }
+
+    // Reference to current weapon sprite when attacking
+    protected _weaponSprite: createjs.Sprite;
+    set weaponSprite(sprite: createjs.Sprite) {
+        this._weaponSprite = sprite;
+        sprite.on("animationend", this._onWeaponSpriteAnimEnd, this, true);
+    }
+
     constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string) {
         super(parent, name, x, y, sprite_name, sprite_sheet, "stand_south", true, hitbox, interaction_id);
         this._projectilesHitbox = projectiles_hitbox || this._hitbox;
@@ -179,6 +192,7 @@ export class Character extends BaseMapObject {
 
                 slot_obj.equipped = true;
                 let weapon = Weapons[slot_obj.itemID];
+                this._currentWeaponID = slot_obj.itemID;
                 stats.power += weapon.power * 10;
                 if (weapon.defense) {
                     stats.defense += weapon.defense * 10;
@@ -241,6 +255,7 @@ export class Character extends BaseMapObject {
             slot_obj.equipped = false;
             let stats = this._calculatedStats;
             if (slot_obj.itemType === InventoryItemType.WEAPON) {
+                this._currentWeaponID = null;
                 let weapon = Weapons[slot_obj.itemID];
                 stats.power -= weapon.power * 10;
 
@@ -451,5 +466,15 @@ export class Character extends BaseMapObject {
         if (this._sprite) {
             this._sprite.alpha = 0.0;
         }
+
+        if (this._weaponSprite) {
+            this._weaponSprite.removeAllEventListeners();
+            this._onWeaponSpriteAnimEnd();
+        }
+    }
+
+    protected _onWeaponSpriteAnimEnd(event?: createjs.Event): void {
+        this._weaponSprite.parent.removeChild(this._weaponSprite);
+        this._weaponSprite = null;
     }
 }

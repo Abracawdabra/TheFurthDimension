@@ -7,7 +7,7 @@
 import { BaseScreen, PauseScreen } from ".";
 import * as tiled from "../tiled";
 import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
-import { Direction, Button, SpatialGrid, BaseMapObject, SpawnPointWithEndPoint } from "..";
+import { Direction, Button, SpatialGrid, BaseMapObject, SpawnPointWithEndPoint, Weapons, WeaponType } from "..";
 import { INPCSettings, NPC, Character, Enemy, IEnemySettings, Sign } from "../entities";
 import { DialogBox } from "../ui";
 import * as colors from "../Colors";
@@ -739,6 +739,60 @@ export class GameScreen extends BaseScreen {
 
     performCharacterAttack(character: Character): void {
         /** @todo Implement */
+        if (character.currentWeaponID && character.currentWeaponID in Weapons) {
+            let doSpriteStuff = function(sprite_sheet_id: string): createjs.Sprite {
+                let sprite = new createjs.Sprite(Game.SpriteSheets[sprite_sheet_id]);
+                sprite.gotoAndStop(character.currentWeaponID + "_attack");
+                sprite.rotation = utils.directionToRotation(character.direction);
+
+                let sprite_bounds = sprite.getBounds();
+                let character_bounds = character.getSprite().getBounds();
+                if (character.direction & Direction.LEFT) {
+                    sprite.x = character.localX + Math.floor(character_bounds.width / 2);
+                    sprite.y = character.localY - Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.height / 2);
+                }
+                else if (character.direction & Direction.RIGHT) {
+                    sprite.x = character.localX + Math.floor(character_bounds.width / 2);
+                    sprite.y = character.localY + Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.height / 2);
+                }
+                else if (character.direction & Direction.UP) {
+                    sprite.x = character.localX + Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.width / 2);
+                    sprite.y = character.localY + Math.floor(character_bounds.height / 2);
+                }
+                else if (character.direction & Direction.DOWN) {
+                    sprite.x = character.localX - Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.width / 2);
+                    sprite.y = character.localY + Math.floor(character_bounds.height / 2);
+                }
+
+                character.weaponSprite = sprite;
+                if (character.direction & Direction.UP) {
+                    if (character === this._player) {
+                        this.container.addChildAt(sprite, this.container.getChildIndex(character.getSprite()));
+                    }
+                    else {
+                        this._objectContainer.addChildAt(sprite, this._objectContainer.getChildIndex(character.getSprite()));
+                    }
+                }
+                else {
+                    this._objectContainer.addChild(sprite);
+                }
+                sprite.play();
+                return sprite;
+            };
+
+            let weapon = Weapons[character.currentWeaponID];
+            let sprite: createjs.Sprite;
+            switch (weapon.weaponType) {
+                case WeaponType.DAGGER:
+                    sprite = doSpriteStuff.call(this, "ss_daggers");
+                    break;
+                case WeaponType.SWORD:
+                    sprite = doSpriteStuff.call(this, "ss_swords");
+                    break;
+                case WeaponType.BOW:
+                    sprite = doSpriteStuff.call(this, "ss_bows");
+            }
+        }
     }
 
     getXPRequiredForLevel(level: number): number {

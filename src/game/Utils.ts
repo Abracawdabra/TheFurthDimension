@@ -108,3 +108,23 @@ export function truncateFloat(n: number, digits: number): number {
 
     return parseFloat(fixed);
 }
+
+/**
+ * Returns a rotation given a direction (0 degrees is facing south unless offset is changed)
+ */
+export function directionToRotation(direction: number, offset = 0): number {
+    if (direction & Direction.LEFT) {
+        return offset + 90.0;
+    }
+    else if (direction & Direction.RIGHT) {
+        return offset + 270.0;
+    }
+    else if (direction & Direction.UP) {
+        return offset + 180.0;
+    }
+    else if (direction & Direction.DOWN) {
+        return offset;
+    }
+
+    return 0.0;
+}
