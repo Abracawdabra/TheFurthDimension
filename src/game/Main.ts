@@ -93,7 +93,8 @@ export class Game {
         if (settings !== null) {
             this.settings = JSON.parse(LZString.decompressFromUTF16(settings));
         }
-        else {
+
+        if (!this.settings) {
             this.settings = {
                 textSpeed: TextSpeed.MEDIUM,
                 displayScale: Game.DEFAULT_DISPLAY_SCALE
@@ -111,6 +112,10 @@ export class Game {
         canvas.width = DISPLAY_WIDTH;
         canvas.height = DISPLAY_HEIGHT;
         canvas.className = "pixelate";
+        canvas.addEventListener("click", function(): void {
+            // Grab frame focus when clicking on canvas
+            window.focus();
+        })
 
         this._canvasContext = canvas.getContext("2d");
         let context = this._canvasContext;
@@ -374,26 +379,37 @@ export class Game {
         }
 
         if (key_code) {
-            if (event.type === "keydown" && this.keysDown.indexOf(key_code) === -1) {
-                // Only handle this key if it wasn't already down
-                clearTimeout(this._keyDownQueueTimeoutHandle);
-                if (this.keyDownQueue.length >= MAX_KEY_DOWN_QUEUE_LENGTH) {
-                    this.keyDownQueue.shift();
-                }
-                this.keyDownQueue.push(key_code);
-                if (utils.arraysAreEqual(this.keyDownQueue, buttons.CheatTextboxCode)) {
-                    this._showCheatTextbox();
-                    this.keyDownQueue = [];
-                    return;
+            if (event.type === "keydown") {
+                if (this.keysDown.indexOf(key_code) === -1) {
+                    // Only handle this key if it wasn't already down
+                    clearTimeout(this._keyDownQueueTimeoutHandle);
+                    if (this.keyDownQueue.length >= MAX_KEY_DOWN_QUEUE_LENGTH) {
+                        this.keyDownQueue.shift();
+                    }
+                    this.keyDownQueue.push(key_code);
+                    if (utils.arraysAreEqual(this.keyDownQueue, buttons.CheatTextboxCode)) {
+                        this._showCheatTextbox();
+                        this.keyDownQueue = [];
+                        return;
+                    }
+
+                    this.keysDown.push(key_code);
+
+                    if (this._currentScreen) {
+                        this._currentScreen.handleKeyDown(key_code);
+                    }
+
+                    this._keyDownQueueTimeoutHandle = setTimeout(this._onKeyDownQueueTimeout, KEY_DOWN_QUEUE_TIMEOUT);
                 }
 
-                this.keysDown.push(key_code);
-
-                if (this._currentScreen) {
-                    this._currentScreen.handleKeyDown(key_code);
+                // Prevent scrolling with arrow keys
+                switch (key_code) {
+                    case KeyboardKeys.ARROWLEFT:
+                    case KeyboardKeys.ARROWRIGHT:
+                    case KeyboardKeys.ARROWUP:
+                    case KeyboardKeys.ARROWDOWN:
+                        event.preventDefault();
                 }
-
-                this._keyDownQueueTimeoutHandle = setTimeout(this._onKeyDownQueueTimeout, KEY_DOWN_QUEUE_TIMEOUT);
             }
             else if (event.type === "keyup") {
                 let index = this.keysDown.indexOf(key_code)

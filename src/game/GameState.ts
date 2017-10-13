@@ -9,6 +9,9 @@ import { IStats, compactStats, decompactStats } from "./entities";
 
 export const VERSION = 0.3;
 
+// The total number of keys in a game state object (UPDATE WHEN ADDING/DELETING KEYS!!)
+const NUMBER_OF_KEYS = 10;
+
 export interface IGameState {
     // Version of the save format
     version: number;
@@ -94,6 +97,11 @@ export function compactGameState(game_state: IGameState): any[] {
  * compactGameState function.
  */
 export function decompactGameState(game_state: any[]): IGameState {
+    if (game_state === null || game_state.length !== NUMBER_OF_KEYS) {
+        // Invalid
+        return null;
+    }
+
     let inventory = [];
     for (let slot of game_state[2]) {
         inventory.push(decompactInventorySlot(slot));
