@@ -10,6 +10,9 @@ import { GameScreen } from "../screens";
 // Pixels per second
 const DEFAULT_WALK_SPEED = 40;
 
+// Default delay between attacks (milliseconds)
+const DEFAULT_ATTACK_DELAY = 500;
+
 // Damage blinking frame duration (milliseconds)
 const BLINKING_EFFECT_FRAME_DURATION = 250;
 // Damage blinking duration (milliseconds)
@@ -59,6 +62,11 @@ export class Character extends BaseMapObject {
     inventory: IInventorySlot[];
     consumedItems: { [id: string]: number };
     health: number;
+
+    // Delay between attacks (milliseconds)
+    attackDelay: number;
+    // For attack delay handling
+    availableAttackTime: number;
 
     protected _isAlive: boolean;
     get isAlive(): boolean {
@@ -126,6 +134,8 @@ export class Character extends BaseMapObject {
 
     constructor(parent: GameScreen, name: string, x: number, y: number, sprite_name: string, sprite_sheet: createjs.SpriteSheet, hitbox?: createjs.Rectangle, projectiles_hitbox?: createjs.Rectangle, interaction_id?: string) {
         super(parent, name, x, y, sprite_name, sprite_sheet, "stand_south", true, hitbox, interaction_id);
+        this.attackDelay = DEFAULT_ATTACK_DELAY;
+        this.availableAttackTime = 0;
         this._projectilesHitbox = projectiles_hitbox || this._hitbox;
         this._isWalking = false;
         this._direction = Direction.DOWN;

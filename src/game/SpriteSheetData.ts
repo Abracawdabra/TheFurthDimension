@@ -56,7 +56,7 @@ export var SpriteSheetData: { [id: string]: ISpriteSheetData } = {
         framerate: CHARACTER_ANIMATION_FRAMERATE
     },
     "ss_daggers": {
-        frames: { width: 12, height: 18, regX: 0, regY: 0 },
+        frames: { width: 12, height: 22, regX: 0, regY: 0 },
         animations: {
             "dagger_unsheathed": 0,
             "dagger_attack": [0, 4]

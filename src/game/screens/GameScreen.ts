@@ -151,7 +151,7 @@ export class GameScreen extends BaseScreen {
                     this.dispatchEvent(new createjs.Event("finished_dialog", false, true));
                 }
             }
-            else if (!this._dialogBox) {
+            else if (!this._dialogBox && this._player.isAlive) {
                 switch (key_code) {
                     case Button.LEFT:
                         this._scrollDir |= Direction.LEFT;
@@ -186,7 +186,7 @@ export class GameScreen extends BaseScreen {
                         }
                         break;
                     case Button.A:
-                        /** @todo Implement attack */
+                            this.performCharacterAttack(this._player);
                 }
             }
         }
@@ -740,59 +740,47 @@ export class GameScreen extends BaseScreen {
 
     performCharacterAttack(character: Character): void {
         /** @todo Implement */
-        if (character.currentWeaponID && character.currentWeaponID in Weapons) {
-            let doSpriteStuff = function(sprite_sheet_id: string): createjs.Sprite {
-                let sprite = new createjs.Sprite(Game.SpriteSheets[sprite_sheet_id]);
-                sprite.gotoAndStop(character.currentWeaponID + "_attack");
-                sprite.rotation = utils.directionToRotation(character.direction);
-
-                let sprite_bounds = sprite.getBounds();
-                let character_bounds = character.getSprite().getBounds();
-                if (character.direction & Direction.LEFT) {
-                    sprite.x = character.localX + Math.floor(character_bounds.width / 2);
-                    sprite.y = character.localY - Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.height / 2);
-                }
-                else if (character.direction & Direction.RIGHT) {
-                    sprite.x = character.localX + Math.floor(character_bounds.width / 2);
-                    sprite.y = character.localY + Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.height / 2);
-                }
-                else if (character.direction & Direction.UP) {
-                    sprite.x = character.localX + Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.width / 2);
-                    sprite.y = character.localY + Math.floor(character_bounds.height / 2);
-                }
-                else if (character.direction & Direction.DOWN) {
-                    sprite.x = character.localX - Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.width / 2);
-                    sprite.y = character.localY + Math.floor(character_bounds.height / 2);
-                }
-
-                character.weaponSprite = sprite;
-                if (character.direction & Direction.UP) {
-                    if (character === this._player) {
-                        this.container.addChildAt(sprite, this.container.getChildIndex(character.getSprite()));
-                    }
-                    else {
-                        this._objectContainer.addChildAt(sprite, this._objectContainer.getChildIndex(character.getSprite()));
-                    }
-                }
-                else {
-                    this._objectContainer.addChild(sprite);
-                }
-                sprite.play();
-                return sprite;
-            };
-
+        if (createjs.Ticker.getTime() >= character.availableAttackTime && character.currentWeaponID && character.currentWeaponID in Weapons) {
+            let character_bounds = character.getSprite().getBounds();
             let weapon = Weapons[character.currentWeaponID];
             let sprite: createjs.Sprite;
+            let hit_area: createjs.Rectangle;
             switch (weapon.weaponType) {
                 case WeaponType.DAGGER:
-                    sprite = doSpriteStuff.call(this, "ss_daggers");
+                    sprite = this._getWeaponSprite(character, "ss_daggers");
+                    hit_area = this._getWeaponHitArea(character, 4, weapon.range);
                     break;
                 case WeaponType.SWORD:
-                    sprite = doSpriteStuff.call(this, "ss_swords");
+                    sprite = this._getWeaponSprite(character, "ss_swords");
+                    hit_area = this._getWeaponHitArea(character, weapon.range * 2, weapon.range);
                     break;
                 case WeaponType.BOW:
-                    sprite = doSpriteStuff.call(this, "ss_bows");
+                    sprite = this._getWeaponSprite(character, "ss_bows");
+                    /** @todo Implement arrow */
             }
+
+            if ("Enemies" in this._activeNPCs) {
+                for (let enemy of this._activeNPCs["Enemies"]) {
+                    if (enemy === character) {
+                        // Can't hit self
+                        continue;
+                    }
+
+                    if (enemy.getHitbox().intersects(hit_area)) {
+                        let is_crit = (Math.random() <= character.stats.luck);
+                        let damage = is_crit ? character.stats.power * Math.floor(utils.randBetween(1.5, 2.0)) : character.stats.power;
+                        enemy.inflictDamage(damage);
+                    }
+                }
+            }
+
+            if (character !== this._player && this._player.getHitbox().intersects(hit_area)) {
+                let is_crit = (Math.random() <= character.stats.luck);
+                let damage = is_crit ? character.stats.power * Math.floor(utils.randBetween(1.5, 2.0)) : character.stats.power;
+                this._player.inflictDamage(damage);
+            }
+
+            character.availableAttackTime = createjs.Ticker.getTime() + character.attackDelay;
         }
     }
 
@@ -1054,5 +1042,60 @@ export class GameScreen extends BaseScreen {
         }
 
         return null;
+    }
+
+    protected _getWeaponSprite(character: Character, sprite_sheet_id: string): createjs.Sprite {
+        let character_bounds = character.getSprite().getBounds();
+        let sprite = new createjs.Sprite(Game.SpriteSheets[sprite_sheet_id]);
+        sprite.gotoAndStop(character.currentWeaponID + "_attack");
+        sprite.rotation = utils.directionToRotation(character.direction);
+
+        let sprite_bounds = sprite.getBounds();
+        if (character.direction & Direction.LEFT) {
+            sprite.x = character.localX + Math.floor(character_bounds.width / 2) + 4;
+            sprite.y = character.localY - Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.height / 2);
+        }
+        else if (character.direction & Direction.RIGHT) {
+            sprite.x = character.localX + Math.floor(character_bounds.width / 2) - 4;
+            sprite.y = character.localY + Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.height / 2);
+        }
+        else if (character.direction & Direction.UP) {
+            sprite.x = character.localX + Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.width / 2);
+            sprite.y = character.localY + Math.floor(character_bounds.height / 2) + 4;
+        }
+        else if (character.direction & Direction.DOWN) {
+            sprite.x = character.localX - Math.floor(sprite_bounds.width / 2) + Math.floor(character_bounds.width / 2);
+            sprite.y = character.localY + Math.floor(character_bounds.height / 2) - 4;
+        }
+
+        character.weaponSprite = sprite;
+        if (character.direction & Direction.UP) {
+            if (character === this._player) {
+                this.container.addChildAt(sprite, this.container.getChildIndex(character.getSprite()));
+            }
+            else {
+                this._objectContainer.addChildAt(sprite, this._objectContainer.getChildIndex(character.getSprite()));
+            }
+        }
+        else {
+            this._objectContainer.addChild(sprite);
+        }
+        sprite.play();
+        return sprite;
+    }
+
+    protected _getWeaponHitArea(character: Character, width: number, height: number): createjs.Rectangle {
+        if (character.direction & Direction.LEFT) {
+            return new createjs.Rectangle(character.x - height, character.y - Math.floor(width / 2) + Math.floor(character.height / 2), height, width);
+        }
+        else if (character.direction & Direction.RIGHT) {
+            return new createjs.Rectangle(character.x + character.width, character.y - Math.floor(width / 2) + Math.floor(character.height / 2), height, width);
+        }
+        else if (character.direction & Direction.UP) {
+            return new createjs.Rectangle(character.x - Math.floor(width / 2) + Math.floor(character.width / 2), character.y - height, width, height);
+        }
+        else {
+            return new createjs.Rectangle(character.x - Math.floor(width / 2) + Math.floor(character.width / 2), character.y + character.height, width, height);
+        }
     }
 }
