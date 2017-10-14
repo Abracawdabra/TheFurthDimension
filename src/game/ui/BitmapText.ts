@@ -33,13 +33,16 @@ export class BitmapText extends createjs.BitmapText {
         }
     }
 
-    constructor(text: string, font: string, color: string) {
+    constructor(text: string, font: string, color: string, line_height?: number) {
         let font_id = "font_" + font.replace(/\s/g, "_").replace(/'/g, "").toLowerCase();
         if (!(font_id in Game.FontSpriteSheets)) {
             throw new Error("Sprite sheet not found for fond ID: " + font_id);
         }
 
-        super(text, Game.FontSpriteSheets[font_id]);
+        super(" ", Game.FontSpriteSheets[font_id]);
+        this.lineHeight = line_height;
+        // Force line height
+        this.text = text;
         let bounds = this.getBounds();
         if (bounds) {
             this.cache(0, 0, bounds.width, bounds.height);

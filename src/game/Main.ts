@@ -180,9 +180,9 @@ export class Game {
     startNewGame(): void {
         this.removeAllScreens();
         this.gameState = gamestate.createDefaultGameState();
-        /** @todo Show intro screen before game screen */
         let game_screen = new screens.GameScreen(this);
         this.pushScreen(game_screen);
+        this.pushScreen(new screens.IntroScreen(this));
         game_screen.loadMap("map_dongola_temple");
     }
 
