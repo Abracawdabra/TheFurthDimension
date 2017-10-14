@@ -589,6 +589,12 @@ export class Game {
            this.setDisplayScale(this.settings.displayScale);
            success = true;
         }
+        else if (cmd === "togglespecies") {
+            if (game_screen) {
+                game_screen.toggleSpecies();
+                success = true;
+            }
+        }
 
         if (success) {
             console.log("Cheat '" + command + "' accepted.");

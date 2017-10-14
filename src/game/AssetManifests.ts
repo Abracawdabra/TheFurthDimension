@@ -27,6 +27,7 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
 
         // Sprite sheets
         { id: "ss_npc_testy", src: BASE_IMAGES_URL + "spritesheets/npc_testy.png" },
+        { id: "ss_human_victor", src: BASE_IMAGES_URL + "spritesheets/human_victor.png" },
         { id: "ss_victor", src: BASE_IMAGES_URL + "spritesheets/victor.png" },
         { id: "ss_generic_npc", src: BASE_IMAGES_URL + "spritesheets/generic_npc.png" },
         { id: "ss_swords", src: BASE_IMAGES_URL + "spritesheets/swords.png" },

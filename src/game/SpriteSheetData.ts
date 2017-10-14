@@ -45,6 +45,23 @@ export var SpriteSheetData: { [id: string]: ISpriteSheetData } = {
         animations: CHARACTER_ANIMATIONS,
         framerate: CHARACTER_ANIMATION_FRAMERATE
     },
+    "ss_human_victor": {
+        frames: { width: 12, height: 18, regX: 0, regY: 0, count: 14 },
+        animations: {
+            "stand_south": CHARACTER_ANIMATIONS["stand_south"],
+            "walk_south": CHARACTER_ANIMATIONS["walk_south"],
+            "stand_west": CHARACTER_ANIMATIONS["stand_west"],
+            "walk_west": CHARACTER_ANIMATIONS["walk_west"],
+            "stand_east": CHARACTER_ANIMATIONS["stand_east"],
+            "walk_east": CHARACTER_ANIMATIONS["walk_east"],
+            "stand_north": CHARACTER_ANIMATIONS["stand_north"],
+            "walk_north": CHARACTER_ANIMATIONS["walk_north"],
+            "transform": {
+                frames: [12, 13, 12, 13, 12, 13, 12, 13]
+            }
+        },
+        framerate: CHARACTER_ANIMATION_FRAMERATE
+    },
     "ss_victor": {
         frames: { width: 12, height: 18, regX: 0, regY: 0, count: 12 },
         animations: CHARACTER_ANIMATIONS,

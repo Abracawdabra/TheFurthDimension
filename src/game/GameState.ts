@@ -7,10 +7,10 @@
 import { IInventorySlot, Direction, truncateFloat, compactInventorySlot, decompactInventorySlot } from ".";
 import { IStats, compactStats, decompactStats } from "./entities";
 
-export const VERSION = 0.3;
+export const VERSION = 0.31;
 
 // The total number of keys in a game state object (UPDATE WHEN ADDING/DELETING KEYS!!)
-const NUMBER_OF_KEYS = 10;
+const NUMBER_OF_KEYS = 11;
 
 export interface IGameState {
     // Version of the save format
@@ -33,6 +33,8 @@ export interface IGameState {
     playerCoords: { x: number, y: number };
     // Player's direction (only updated on save)
     playerDir: Direction;
+    // Character is human
+    isHuman: boolean;
 }
 
 /**
@@ -57,7 +59,8 @@ export function createDefaultGameState(): IGameState {
         map: "map_dongola_temple",
         // Use default spawn point
         playerCoords: null,
-        playerDir: Direction.DOWN
+        playerDir: Direction.DOWN,
+        isHuman: true
     };
 }
 
@@ -88,7 +91,8 @@ export function compactGameState(game_state: IGameState): any[] {
         compactStats(game_state.baseStats),
         game_state.map,
         { x: truncateFloat(game_state.playerCoords.x, 3), y: truncateFloat(game_state.playerCoords.y, 3) },
-        game_state.playerDir
+        game_state.playerDir,
+        Number(game_state.isHuman)
     ];
 }
 
@@ -124,6 +128,7 @@ export function decompactGameState(game_state: any[]): IGameState {
         baseStats: decompactStats(game_state[6]),
         map: game_state[7],
         playerCoords: game_state[8],
-        playerDir: game_state[9]
+        playerDir: game_state[9],
+        isHuman: Boolean(game_state[10])
     };
 }

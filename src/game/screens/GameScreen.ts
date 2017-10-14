@@ -180,9 +180,17 @@ export class GameScreen extends BaseScreen {
                                 if (interactive_obj.faceWhenTalking) {
                                     interactive_obj.direction = utils.getOppositeDirection(this._player.direction);
                                 }
-                            }
 
-                            interactive_obj.interact(this._player);
+                                if (this.gameInstance.gameState.isHuman) {
+                                    this.showDialog(interactive_obj, "AWOOOOOOOO!");
+                                }
+                                else {
+                                    interactive_obj.interact(this._player);
+                                }
+                            }
+                            else {
+                                interactive_obj.interact(this._player);
+                            }
                         }
                         break;
                     case Button.A:
@@ -794,6 +802,39 @@ export class GameScreen extends BaseScreen {
         this.gameInstance.pushScreen(new DeathScreen(this.gameInstance, this));
     }
 
+    toggleSpecies(): void {
+        if (this._inputEnabled) {
+            this._inputEnabled = false;
+        }
+
+        if (this._player.isWalking) {
+            this._player.isWalking = false;
+            this._scrollDir = 0;
+        }
+
+        let sprite = this._player.getSprite();
+        if (this.gameInstance.gameState.isHuman) {
+            sprite.gotoAndPlay("transform");
+            sprite.on("animationend", function(event: createjs.Event): void {
+                this._player.spriteSheet = Game.SpriteSheets["ss_victor"];
+                // Force sprite to goto standing animation
+                this._player.direction = this._player.direction;
+                this.gameInstance.gameState.isHuman = false;
+                this._inputEnabled = true;
+            }, this, true);
+        }
+        else {
+            this._player.spriteSheet = Game.SpriteSheets["ss_human_victor"];
+            sprite.gotoAndPlay("transform");
+            sprite.on("animationend", function(event: createjs.Event): void {
+                // Force sprite to goto standing animation
+                this._player.direction = this._player.direction;
+                this.gameInstance.gameState.isHuman = true;
+                this._inputEnabled = true;
+            }, this, true);
+        }
+    }
+
     showHitboxes(show: boolean): void {
         this._player.showHitbox(show);
 
@@ -858,7 +899,8 @@ export class GameScreen extends BaseScreen {
         this._objectContainer = new createjs.Container();
         this.container.addChild(this._objectContainer);
 
-        this._player = new Character(this, "Victor", 0, 0, "player", Game.SpriteSheets["ss_victor"], PLAYER_HITBOX, PLAYER_PROJECTILES_HITBOX);
+        let player_sprite_sheet = this.gameInstance.gameState.isHuman ? "ss_human_victor" : "ss_victor";
+        this._player = new Character(this, "Victor", 0, 0, "player",  Game.SpriteSheets[player_sprite_sheet], PLAYER_HITBOX, PLAYER_PROJECTILES_HITBOX);
         // Connect the player to the game state
         this._player.setBaseStats(this.gameInstance.gameState.baseStats);
         this._player.inventory = this.gameInstance.gameState.inventory;

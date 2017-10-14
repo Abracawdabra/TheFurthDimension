@@ -66,6 +66,12 @@ export abstract class BaseMapObject {
     protected _sprite: createjs.Sprite;
 
     protected _spriteSheet: createjs.SpriteSheet;
+    set spriteSheet(value: createjs.SpriteSheet) {
+        this._spriteSheet = value;
+        if (this._sprite) {
+            this._sprite.spriteSheet = value;
+        }
+    }
 
     protected _hitbox: createjs.Rectangle;
 
