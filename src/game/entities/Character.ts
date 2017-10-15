@@ -331,6 +331,10 @@ export class Character extends BaseMapObject {
         else {
             let stats = this._calculatedStats;
             let consumable = Consumables[slot_obj.itemID];
+            if (consumable.health) {
+                this.health = Math.min(this.health + consumable.health, this.stats.maxHealth);
+            }
+
             if (consumable.power) {
                 stats.power += consumable.power * 10;
             }
@@ -351,7 +355,9 @@ export class Character extends BaseMapObject {
                 stats.luck = Math.min(stats.luck + consumable.luck, 1.0);
             }
 
-            this.consumedItems[slot_obj.itemID] = createjs.Ticker.getTime() + (consumable.duration * 1000);
+            if (consumable.duration) {
+                this.consumedItems[slot_obj.itemID] = createjs.Ticker.getTime() + (consumable.duration * 1000);
+            }
         }
     }
 
