@@ -23,7 +23,14 @@ const MAX_INTERACTION_DISTANCE = 15;
 
 // Base XP for leveling
 const BASE_XP = 100;
+// How much required levelling xp increases per level
 const LEVEL_XP_INCREASE_RATIO = 1.5;
+
+const BATTLE_REWARDS_BONES_BASE_MULTIPLIER = 30;
+const BATTLE_REWARDS_BONES_LEVEL_MULTIPLIER = 0.3;
+
+const BATTLE_REWARDS_XP_BASE_MULTIPLIER = 100;
+const BATTLE_REWARDS_XP_LEVEL_MULTIPLIER = 0.3;
 
 // For the screen spin effect
 const SCREEN_SPIN_FRAME_DURATION = 25;
@@ -768,7 +775,7 @@ export class GameScreen extends BaseScreen {
             }
 
             if ("Enemies" in this._activeNPCs) {
-                for (let enemy of this._activeNPCs["Enemies"]) {
+                for (let enemy of <Enemy[]>this._activeNPCs["Enemies"]) {
                     if (enemy === character) {
                         // Can't hit self
                         continue;
@@ -778,6 +785,39 @@ export class GameScreen extends BaseScreen {
                         let is_crit = (Math.random() <= character.stats.luck);
                         let damage = is_crit ? character.stats.power * Math.floor(utils.randBetween(1.5, 2.0)) : character.stats.power;
                         enemy.inflictDamage(damage);
+                        if (!enemy.isAlive) {
+                            if (character === this._player) {
+                                // Rewards
+                                let game_state = this.gameInstance.gameState;
+                                game_state.bones += this._getBoneRewardsAmount(character, enemy);
+                                game_state.xp = this._getXPRewardsAmount(character, enemy);
+                                let xp_difference: number;
+                                let times_levelled = 0;
+                                do {
+                                    // Level up player as many times as needed
+                                    xp_difference = game_state.xp - this.getXPRequiredForLevel(game_state.level + times_levelled);
+                                    if (xp_difference >= 0) {
+                                        ++times_levelled;
+                                        // The xp difference doesn't go away from levelling
+                                        game_state.xp = xp_difference;
+                                    }
+                                } while (xp_difference > 0);
+
+                                if (times_levelled) {
+                                    game_state.level += times_levelled;
+                                    this.showDialog(character, "You've reached level " + game_state.level + "!");
+                                }
+
+                                /** @todo Display bones and xp gained in bottom left corner */
+                            }
+
+                            this._objectContainer.removeChild(enemy.getSprite());
+                            let index = this._activeNPCs["Enemies"].indexOf(enemy);
+                            if (index > -1) {
+                                this._activeNPCs["Enemies"].splice(index, 1);
+                            }
+                            enemy.destroy();
+                        }
                     }
                 }
             }
@@ -1040,9 +1080,8 @@ export class GameScreen extends BaseScreen {
             }
             else {
                 let enemy_settings = <IEnemySettings>settings;
-                let max_health = obj.properties.maxHealth;
                 enemy_settings.stats = {
-                    maxHealth: max_health,
+                    maxHealth: obj.properties.maxHealth,
                     power: obj.properties.strength,
                     defense: obj.properties.defense,
                     speed: obj.properties.speed,
@@ -1139,5 +1178,31 @@ export class GameScreen extends BaseScreen {
         else {
             return new createjs.Rectangle(character.x - Math.floor(width / 2) + Math.floor(character.width / 2), character.y + character.height, width, height);
         }
+    }
+
+    protected _getBoneRewardsAmount(character: Character, enemy: Enemy): number {
+        let game_state = this.gameInstance.gameState;
+        return Math.max(Math.ceil(
+                // The higher the level difference between the enemy, the more bones
+                Math.max(enemy.level - game_state.level, 1)
+                * BATTLE_REWARDS_BONES_BASE_MULTIPLIER
+                // The higher the player's level, the higher the rewards
+                * game_state.level * BATTLE_REWARDS_BONES_LEVEL_MULTIPLIER
+                // Random chance, but the higher the luck, the higher the percentage of bones
+                * Math.min(Math.random() + character.stats.luck, 1.0)
+                ), 1);
+    }
+
+    protected _getXPRewardsAmount(character: Character, enemy: Enemy): number {
+        let game_state = this.gameInstance.gameState;
+        return Math.ceil(
+                // The higher the level difference between the enemy, the more XP
+                Math.max(enemy.level - game_state.level, 1)
+                * BATTLE_REWARDS_XP_BASE_MULTIPLIER
+                // The higher the player's level, the higher the rewards
+                * game_state.level * BATTLE_REWARDS_XP_LEVEL_MULTIPLIER
+                // Random percentage no lower than 80%
+                * utils.randBetween(0.8, 1)
+                );
     }
 }

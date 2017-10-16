@@ -7,10 +7,10 @@
 import { IInventorySlot, Direction, truncateFloat, compactInventorySlot, decompactInventorySlot } from ".";
 import { IStats, compactStats, decompactStats } from "./entities";
 
-export const VERSION = 0.31;
+export const VERSION = 0.32;
 
 // The total number of keys in a game state object (UPDATE WHEN ADDING/DELETING KEYS!!)
-const NUMBER_OF_KEYS = 11;
+const NUMBER_OF_KEYS = 12;
 
 export interface IGameState {
     // Version of the save format
@@ -35,6 +35,8 @@ export interface IGameState {
     playerDir: Direction;
     // Character is human
     isHuman: boolean;
+    // Amount of currency
+    bones: number;
 }
 
 /**
@@ -60,7 +62,8 @@ export function createDefaultGameState(): IGameState {
         // Use default spawn point
         playerCoords: null,
         playerDir: Direction.DOWN,
-        isHuman: true
+        isHuman: true,
+        bones: 0
     };
 }
 
@@ -92,7 +95,8 @@ export function compactGameState(game_state: IGameState): any[] {
         game_state.map,
         { x: truncateFloat(game_state.playerCoords.x, 3), y: truncateFloat(game_state.playerCoords.y, 3) },
         game_state.playerDir,
-        Number(game_state.isHuman)
+        Number(game_state.isHuman),
+        game_state.bones
     ];
 }
 
@@ -129,6 +133,7 @@ export function decompactGameState(game_state: any[]): IGameState {
         map: game_state[7],
         playerCoords: game_state[8],
         playerDir: game_state[9],
-        isHuman: Boolean(game_state[10])
+        isHuman: Boolean(game_state[10]),
+        bones: game_state[11]
     };
 }

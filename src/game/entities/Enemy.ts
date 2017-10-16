@@ -13,6 +13,8 @@ export interface IEnemySettings extends INPCSettings {
 }
 
 export class Enemy extends NPC {
+    level: number;
+
     protected _isAggrovated: boolean;
     get isAggrovated(): boolean {
         return this._isAggrovated;
@@ -50,6 +52,14 @@ export class Enemy extends NPC {
             // Only take damage if aggrovated
             super.inflictDamage(amount);
         }
+    }
+
+    /**
+     * Destroys the sprite and removes itself from the spatial grid
+     */
+    destroy() {
+        this.destroySprite();
+        this._spatialGrid.removeObject(this);
     }
 
     protected _attack(): void {
