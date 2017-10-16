@@ -528,18 +528,6 @@ export class Game {
             game_screen.redrawMapArea();
             success = true;
         }
-        else if (cmd === "speedstat" && parsed.length === 2) {
-            // Sets walking speed
-            let value = parseInt(parsed[1], 10);
-            if (!isNaN(value)) {
-                this.gameState.baseStats.speed = value;
-                let game_screen = this._getGameScreen();
-                if (game_screen) {
-                    game_screen.getPlayer().updateCalculatedStats();
-                }
-                success = true;
-            }
-        }
         else if (cmd === "loadmap" && parsed.length > 1 && game_screen) {
             // Loads a map
             let map = parsed[1];

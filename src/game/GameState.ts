@@ -5,12 +5,12 @@
  */
 
 import { IInventorySlot, Direction, truncateFloat, compactInventorySlot, decompactInventorySlot } from ".";
-import { IStats, compactStats, decompactStats } from "./entities";
+import { IStats } from "./entities";
 
-export const VERSION = 0.32;
+export const VERSION = 0.33;
 
 // The total number of keys in a game state object (UPDATE WHEN ADDING/DELETING KEYS!!)
-const NUMBER_OF_KEYS = 12;
+const NUMBER_OF_KEYS = 11;
 
 export interface IGameState {
     // Version of the save format
@@ -25,8 +25,6 @@ export interface IGameState {
     level: number;
     // Player's current XP progress to next level
     xp: number;
-    // Player's base stats
-    baseStats: IStats;
     // Map the player is on
     map: string;
     // Player's location (only updated on save)
@@ -50,14 +48,6 @@ export function createDefaultGameState(): IGameState {
         consumedItems: {},
         level: 1,
         xp: 0,
-        baseStats: {
-            // Default player attributes may be subject to change
-            maxHealth: 100,
-            power: 4,
-            defense: 2,
-            speed: 5,
-            luck: 0.10
-        },
         map: "map_dongola_temple",
         // Use default spawn point
         playerCoords: null,
@@ -91,7 +81,6 @@ export function compactGameState(game_state: IGameState): any[] {
         consumed_items,
         game_state.level,
         game_state.xp,
-        compactStats(game_state.baseStats),
         game_state.map,
         { x: truncateFloat(game_state.playerCoords.x, 3), y: truncateFloat(game_state.playerCoords.y, 3) },
         game_state.playerDir,
@@ -129,11 +118,10 @@ export function decompactGameState(game_state: any[]): IGameState {
         consumedItems: consumed_items,
         level: game_state[4],
         xp: game_state[5],
-        baseStats: decompactStats(game_state[6]),
-        map: game_state[7],
-        playerCoords: game_state[8],
-        playerDir: game_state[9],
-        isHuman: Boolean(game_state[10]),
-        bones: game_state[11]
+        map: game_state[6],
+        playerCoords: game_state[7],
+        playerDir: game_state[8],
+        isHuman: Boolean(game_state[9]),
+        bones: game_state[10]
     };
 }

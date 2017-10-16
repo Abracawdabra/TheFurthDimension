@@ -941,8 +941,14 @@ export class GameScreen extends BaseScreen {
 
         let player_sprite_sheet = this.gameInstance.gameState.isHuman ? "ss_human_victor" : "ss_victor";
         this._player = new Character(this, "Victor", 0, 0, "player",  Game.SpriteSheets[player_sprite_sheet], PLAYER_HITBOX, PLAYER_PROJECTILES_HITBOX);
+        this._player.setBaseStats({
+            maxHealth: 150,
+            power: 4,
+            defense: 2,
+            speed: 4,
+            luck: 0.1
+        });
         // Connect the player to the game state
-        this._player.setBaseStats(this.gameInstance.gameState.baseStats);
         this._player.inventory = this.gameInstance.gameState.inventory;
         this._player.consumedItems = this.gameInstance.gameState.consumedItems;
         this._player.updateCalculatedStats();

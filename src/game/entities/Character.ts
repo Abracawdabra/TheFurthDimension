@@ -13,6 +13,12 @@ const DEFAULT_WALK_SPEED = 40;
 // Default delay between attacks (milliseconds)
 const DEFAULT_ATTACK_DELAY = 500;
 
+const LEVEL_MAX_HEALTH_MULTIPLIER = 50;
+const LEVEL_POWER_MULTIPLIER = 2;
+const LEVEL_DEFENSE_MULTIPLIER = 2;
+const LEVEL_LUCK_MULTIPLIER = 0.01;
+
+
 // Damage blinking frame duration (milliseconds)
 const BLINKING_EFFECT_FRAME_DURATION = 250;
 // Damage blinking duration (milliseconds)
@@ -29,33 +35,6 @@ export interface IStats {
     speed: number;
     // Critical hit chance percentage (0-1)
     luck: number;
-}
-
-/**
- * Compacts a stats object for local storage
- */
-export function compactStats(stats: IStats): any[] {
-    return [
-        stats.maxHealth,
-        stats.power,
-        stats.defense,
-        stats.speed,
-        truncateFloat(stats.luck, 3)
-    ];
-}
-
-export function decompactStats(compact_stats: any[]): IStats {
-    if (!compact_stats) {
-        return null;
-    }
-
-    return {
-        maxHealth: compact_stats[0],
-        power: compact_stats[1],
-        defense: compact_stats[2],
-        speed: compact_stats[3],
-        luck: compact_stats[4]
-    }
 }
 
 export class Character extends BaseMapObject {
@@ -368,11 +347,13 @@ export class Character extends BaseMapObject {
         let stats = this._calculatedStats;
 
         // Reset to base stats
-        stats.maxHealth = this._baseStats.maxHealth;
-        stats.power = this._baseStats.power * 10;
-        stats.defense = this._baseStats.defense * 10;
+        // Offset level by 1 because level 1 should not have a multiplier applied
+        let level = this.parent.gameInstance.gameState.level - 1;
+        stats.maxHealth = (level * LEVEL_MAX_HEALTH_MULTIPLIER) + this._baseStats.maxHealth;
+        stats.power = ((level * LEVEL_POWER_MULTIPLIER) + this._baseStats.power) * 10;
+        stats.defense = ((level * LEVEL_DEFENSE_MULTIPLIER) + this._baseStats.defense) * 10;
         stats.speed = this._baseStats.speed * 10;
-        stats.luck = this._baseStats.luck;
+        stats.luck = (level * LEVEL_LUCK_MULTIPLIER) + this._baseStats.luck;
 
         if (this.inventory) {
             for (let slot of this.inventory) {

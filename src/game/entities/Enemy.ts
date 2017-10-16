@@ -13,6 +13,7 @@ export interface IEnemySettings extends INPCSettings {
 }
 
 export class Enemy extends NPC {
+    // Only used in calculating rewards for player
     level: number;
 
     protected _isAggrovated: boolean;
@@ -52,6 +53,17 @@ export class Enemy extends NPC {
             // Only take damage if aggrovated
             super.inflictDamage(amount);
         }
+    }
+
+    /** @override */
+    updateCalculatedStats(): void {
+        let stats = this._calculatedStats;
+        let base_stats = this._baseStats;
+        stats.maxHealth = base_stats.maxHealth;
+        stats.power = base_stats.power * 10;
+        stats.defense = base_stats.defense * 10;
+        stats.speed = base_stats.speed * 10;
+        stats.luck = base_stats.luck;
     }
 
     /**
