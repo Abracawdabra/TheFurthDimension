@@ -177,8 +177,65 @@
          "visible":false,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "name":"Enemies",
+         "objects":[
+                {
+                 "height":0,
+                 "id":16,
+                 "name":"enemy_fightman",
+                 "properties":
+                    {
+                     "critChance":0.6,
+                     "defense":2,
+                     "dialog":"You smell. I'm going to kill  you.",
+                     "faceWhenTalking":true,
+                     "interactionID":"activate_aggro",
+                     "level":2,
+                     "maxHealth":100,
+                     "name":"Fightman",
+                     "power":4,
+                     "speed":1,
+                     "spriteSheet":"ss_generic_npc",
+                     "wander":true,
+                     "wanderBounds":"-1 0 2 2",
+                     "wanderMaxDirDuration":0.2,
+                     "wanderMinDirDuration":0.1
+                    },
+                 "propertytypes":
+                    {
+                     "critChance":"float",
+                     "defense":"int",
+                     "dialog":"string",
+                     "faceWhenTalking":"bool",
+                     "interactionID":"string",
+                     "level":"int",
+                     "maxHealth":"int",
+                     "name":"string",
+                     "power":"int",
+                     "speed":"int",
+                     "spriteSheet":"string",
+                     "wander":"bool",
+                     "wanderBounds":"string",
+                     "wanderMaxDirDuration":"float",
+                     "wanderMinDirDuration":"float"
+                    },
+                 "rotation":0,
+                 "type":"enemy",
+                 "visible":true,
+                 "width":0,
+                 "x":152,
+                 "y":301.5
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextobjectid":16,
+ "nextobjectid":17,
  "orientation":"orthogonal",
  "properties":
     {

@@ -68,7 +68,7 @@ export var SpriteSheetData: { [id: string]: ISpriteSheetData } = {
         framerate: CHARACTER_ANIMATION_FRAMERATE
     },
     "ss_generic_npc": {
-        frames: { width: 12, height: 12, regX: 0, regY: 0, count: 12 },
+        frames: { width: 12, height: 18, regX: 0, regY: 0, count: 12 },
         animations: CHARACTER_ANIMATIONS,
         framerate: CHARACTER_ANIMATION_FRAMERATE
     },

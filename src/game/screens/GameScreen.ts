@@ -9,7 +9,7 @@ import * as tiled from "../tiled";
 import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
 import { Direction, Button, SpatialGrid, BaseMapObject, SpawnPointWithEndPoint, Weapons, WeaponType } from "..";
 import { INPCSettings, NPC, Character, Enemy, IEnemySettings, Sign } from "../entities";
-import { DialogBox } from "../ui";
+import { DialogBox, BitmapText } from "../ui";
 import { DeathScreen } from "../screens";
 import * as colors from "../Colors";
 import * as utils from "../Utils";
@@ -22,7 +22,7 @@ const PLAYER_PROJECTILES_HITBOX = new createjs.Rectangle(1, 4, 10, 14);
 const MAX_INTERACTION_DISTANCE = 15;
 
 // Base XP for leveling
-const BASE_XP = 100;
+const BASE_XP = 33;
 // How much required levelling xp increases per level
 const LEVEL_XP_INCREASE_RATIO = 1.5;
 
@@ -31,6 +31,9 @@ const BATTLE_REWARDS_BONES_LEVEL_MULTIPLIER = 0.3;
 
 const BATTLE_REWARDS_XP_BASE_MULTIPLIER = 100;
 const BATTLE_REWARDS_XP_LEVEL_MULTIPLIER = 0.3;
+
+// Amount of time the rewards text should be visible for (seconds)
+const REWARDS_TEXT_VISIBILITY_DURATION = 3.5;
 
 // For the screen spin effect
 const SCREEN_SPIN_FRAME_DURATION = 25;
@@ -90,6 +93,9 @@ export class GameScreen extends BaseScreen {
 
     // Dialog box for uh, dialog
     protected _dialogBox: DialogBox;
+
+    protected _rewardsText: BitmapText;
+    protected _rewardsTextVisibilityEndTime: number;
 
     // Shake screen effect
     protected _screenIsShaking: boolean;
@@ -155,6 +161,14 @@ export class GameScreen extends BaseScreen {
                         }
                     }
                     this._dialogBox = null;
+
+                    for (let enemy of <Enemy[]>this._activeNPCs["Enemies"]) {
+                        // Unpause attacking enemies
+                        if (enemy.isAggrovated) {
+                            enemy.pauseAggro = false;
+                        }
+                    }
+
                     this.dispatchEvent(new createjs.Event("finished_dialog", false, true));
                 }
             }
@@ -179,6 +193,13 @@ export class GameScreen extends BaseScreen {
                     case Button.B:
                         let interactive_obj = this._getInteractiveObject();
                         if (interactive_obj) {
+                            for (let enemy of <Enemy[]>this._activeNPCs["Enemies"]) {
+                                // Pause attacking enemies so that the player isn't killed while in dialog
+                                if (enemy.isAggrovated) {
+                                    enemy.pauseAggro = true;
+                                }
+                            }
+
                             if (interactive_obj instanceof NPC) {
                                 if (interactive_obj.wander) {
                                     interactive_obj.wander = false;
@@ -330,6 +351,11 @@ export class GameScreen extends BaseScreen {
 
         if (this._dialogBox) {
             this._dialogBox.update(delta);
+
+            if (this._rewardsText.visible) {
+                // "Pause" the rewards text if a dialog box is present
+                this._rewardsTextVisibilityEndTime += delta;
+            }
         }
         else if (this._screenIsShaking && createjs.Ticker.getTime() >= this._screenShakeFrameTime) {
             // Screen shake effect
@@ -347,6 +373,10 @@ export class GameScreen extends BaseScreen {
                 }
                 this._screenShakeFrameTime = createjs.Ticker.getTime() + this._screenShakeFrameDuration;
             }
+        }
+
+        if (this._rewardsText.visible && createjs.Ticker.getTime() >= this._rewardsTextVisibilityEndTime) {
+            this._rewardsText.visible = false;
         }
 
         if (this._screenIsSpinning && createjs.Ticker.getTime() >= this._screenSpinFrameTime) {
@@ -551,6 +581,8 @@ export class GameScreen extends BaseScreen {
     }
 
     redrawMapArea(): void {
+        let objects_to_remove = this._objectContainer.children.slice();
+
         // For negative scroll positions (which should only occur here with spawn points)
         let offset_col = (this._scrollXPos < 0) ? Math.abs(this._scrollXPos) : 0;
         let offset_row = (this._scrollYPos < 0) ? Math.abs(this._scrollYPos) : 0;
@@ -585,7 +617,6 @@ export class GameScreen extends BaseScreen {
                 }
             }
             else if (area_layer.layer.type === "objectgroup" && area_layer.layer.name !== "Spawn Points") {
-                let objects_to_remove = this._objectContainer.children.slice();
                 for (let obj of this._activeObjects[area_layer.layer.name]) {
                     // Render objects that haven't been rendered yet
                     let sprite = this._objectContainer.getChildByName(obj.spriteName);
@@ -604,11 +635,13 @@ export class GameScreen extends BaseScreen {
 
                     objects_to_remove.splice(objects_to_remove.indexOf(sprite), 1);
                 }
+            }
+        }
 
-                for (let sprite of objects_to_remove) {
-                    // Remove objects that are no longer in draw distance
-                    (<any>sprite).mapObject.destroySprite();
-                }
+        for (let sprite of <any[]>objects_to_remove) {
+            if (sprite.mapObject) {
+                // Remove objects that are no longer in draw distance
+                sprite.mapObject.destroySprite();
             }
         }
     }
@@ -754,7 +787,6 @@ export class GameScreen extends BaseScreen {
     }
 
     performCharacterAttack(character: Character): void {
-        /** @todo Implement */
         if (createjs.Ticker.getTime() >= character.availableAttackTime && character.currentWeaponID && character.currentWeaponID in Weapons) {
             let character_bounds = character.getSprite().getBounds();
             let weapon = Weapons[character.currentWeaponID];
@@ -789,13 +821,15 @@ export class GameScreen extends BaseScreen {
                             if (character === this._player) {
                                 // Rewards
                                 let game_state = this.gameInstance.gameState;
-                                game_state.bones += this._getBoneRewardsAmount(character, enemy);
-                                game_state.xp = this._getXPRewardsAmount(character, enemy);
+                                let bones = this._getBoneRewardsAmount(character, enemy);
+                                let xp = this._getXPRewardsAmount(character, enemy);
+                                game_state.bones += bones;
+                                game_state.xp += xp;
                                 let xp_difference: number;
                                 let times_levelled = 0;
                                 do {
                                     // Level up player as many times as needed
-                                    xp_difference = game_state.xp - this.getXPRequiredForLevel(game_state.level + times_levelled);
+                                    xp_difference = game_state.xp - this.getXPRequiredForLevel(game_state.level + times_levelled + 1);
                                     if (xp_difference >= 0) {
                                         ++times_levelled;
                                         // The xp difference doesn't go away from levelling
@@ -805,17 +839,17 @@ export class GameScreen extends BaseScreen {
 
                                 if (times_levelled) {
                                     game_state.level += times_levelled;
+                                    this._player.updateCalculatedStats();
                                     this.showDialog(character, "You've reached level " + game_state.level + "!");
                                 }
 
-                                /** @todo Display bones and xp gained in bottom left corner */
+                                this._rewardsText.setText(xp + " XP\n" + bones + " BONES");
+                                this._rewardsText.visible = true;
+                                this._rewardsTextVisibilityEndTime = createjs.Ticker.getTime() + (REWARDS_TEXT_VISIBILITY_DURATION * 1000);
                             }
 
-                            this._objectContainer.removeChild(enemy.getSprite());
-                            let index = this._activeNPCs["Enemies"].indexOf(enemy);
-                            if (index > -1) {
-                                this._activeNPCs["Enemies"].splice(index, 1);
-                            }
+                            this._activeNPCs["Enemies"].splice(this._activeNPCs["Enemies"].indexOf(enemy), 1);
+                            this._activeObjects["Enemies"].splice(this._activeObjects["Enemies"].indexOf(enemy), 1);
                             enemy.destroy();
                         }
                     }
@@ -835,7 +869,7 @@ export class GameScreen extends BaseScreen {
     getXPRequiredForLevel(level: number): number {
         // Since we're starting at level 1, offset it so that level 2 requires
         // only the base amount of xp + increase ratio.
-        return (level - 1) * BASE_XP * LEVEL_XP_INCREASE_RATIO;
+        return Math.ceil((level - 1) * BASE_XP * LEVEL_XP_INCREASE_RATIO);
     }
 
     showDeathScreen(): void {
@@ -952,6 +986,15 @@ export class GameScreen extends BaseScreen {
         this._player.inventory = this.gameInstance.gameState.inventory;
         this._player.consumedItems = this.gameInstance.gameState.consumedItems;
         this._player.updateCalculatedStats();
+
+        let rewards_text = new BitmapText(" ", "7px Rewards", undefined, 8);
+        rewards_text.x = 2;
+        rewards_text.y = DISPLAY_HEIGHT - 17;
+        rewards_text.visible = false;
+        this.container.addChild(rewards_text);
+        this._rewardsText = rewards_text;
+        this._rewardsText.visible = false;
+        this._rewardsTextVisibilityEndTime = 0;
 
         this._inputEnabled = false;
 
@@ -1088,11 +1131,14 @@ export class GameScreen extends BaseScreen {
                 let enemy_settings = <IEnemySettings>settings;
                 enemy_settings.stats = {
                     maxHealth: obj.properties.maxHealth,
-                    power: obj.properties.strength,
+                    power: obj.properties.power,
                     defense: obj.properties.defense,
                     speed: obj.properties.speed,
                     luck: obj.properties.luck
                 };
+
+                enemy_settings.level = obj.properties.level;
+
                 return new Enemy(this, spatial_grid, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], this._player, hitbox, projectiles_hitbox, obj.properties.interactionID, enemy_settings);
             }
         }

@@ -30,5 +30,10 @@ export var InteractionHandlers: { [id: string]: IInteractionHandler | IEventHand
         data.interactor.parent.showDialog(this, "Now I'm using an interaction handler to talk to you!", function() {
             console.log("Callback inside of test_map_npc_testy2 executed. this=", this);
         });
+    },
+    "activate_aggro": function(e: createjs.Event, data?: any): void {
+        if (!this.isAggrovated) {
+            this.isAggrovated = true;
+        }
     }
 }

@@ -21,6 +21,11 @@ export var FontData: { [name: string]: IFontData } = {
         characters: "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.:,;'\"(!?)+-*/=%",
         frames: { width: 7, height: 7, regX: 0, regY: 0 },
         size: 7
+    },
+    "font_7px_rewards": {
+        characters: "XPBONES1234567890 ",
+        frames: { width: 7, height: 7, regX: 0, regY: 0 },
+        size: 7
     }
 };
 
@@ -33,3 +38,4 @@ function generateFrameData(data: IFontData): void {
 
 generateFrameData(FontData["font_8px_press_start"]);
 generateFrameData(FontData["font_7px_press_start"]);
+generateFrameData(FontData["font_7px_rewards"]);

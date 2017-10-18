@@ -33,7 +33,7 @@ export class BitmapText extends createjs.BitmapText {
         }
     }
 
-    constructor(text: string, font: string, color: string, line_height?: number) {
+    constructor(text: string, font: string, color?: string, line_height?: number) {
         let font_id = "font_" + font.replace(/\s/g, "_").replace(/'/g, "").toLowerCase();
         if (!(font_id in Game.FontSpriteSheets)) {
             throw new Error("Sprite sheet not found for fond ID: " + font_id);
