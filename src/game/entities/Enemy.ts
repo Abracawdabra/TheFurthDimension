@@ -11,6 +11,7 @@ import { SpatialGrid } from "..";
 export interface IEnemySettings extends INPCSettings {
     stats: IStats;
     level: number;
+    weaponID: string;
 }
 
 export class Enemy extends NPC {
@@ -46,6 +47,7 @@ export class Enemy extends NPC {
         this.level = settings.level;
         this.isAggrovated = false;
         this.pauseAggro = false;
+        this._currentWeaponID = settings.weaponID;
         this._player = player;
         this._baseStats = settings.stats;
         this.updateCalculatedStats();

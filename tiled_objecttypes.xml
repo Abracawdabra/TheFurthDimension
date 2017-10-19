@@ -25,15 +25,15 @@
   <property name="faceWhenTalking" type="bool" default="false"/>
   <property name="hitbox" type="string"/>
   <property name="interactionID" type="string"/>
+  <property name="level" type="int" default="0"/>
   <property name="maxHealth" type="int" default="0"/>
   <property name="name" type="string"/>
+  <property name="power" type="int" default="0"/>
   <property name="projectilesHitbox" type="string"/>
   <property name="speed" type="int" default="0"/>
   <property name="spriteSheet" type="string"/>
-  <property name="strength" type="int" default="0"/>
   <property name="wander" type="bool" default="false"/>
   <property name="wanderBounds" type="string"/>
   <property name="wanderMaxDirDuration" type="float" default="0"/>
   <property name="wanderMinDirDuration" type="float" default="0"/>
- </objecttype>
-</objecttypes>
+  <property name="weaponID" type="string"/>

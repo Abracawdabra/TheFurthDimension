@@ -1138,6 +1138,7 @@ export class GameScreen extends BaseScreen {
                 };
 
                 enemy_settings.level = obj.properties.level;
+                enemy_settings.weaponID = obj.properties.weaponID;
 
                 return new Enemy(this, spatial_grid, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], this._player, hitbox, projectiles_hitbox, obj.properties.interactionID, enemy_settings);
             }
