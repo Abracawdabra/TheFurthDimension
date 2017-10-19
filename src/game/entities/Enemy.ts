@@ -6,12 +6,13 @@
 
 import { NPC, INPCSettings, Character, IStats } from ".";
 import { GameScreen } from "../screens";
-import { SpatialGrid } from "..";
+import { SpatialGrid, DeathHandlers } from "..";
 
 export interface IEnemySettings extends INPCSettings {
     stats: IStats;
     level: number;
     weaponID: string;
+    deathHandlerID: string;
 }
 
 export class Enemy extends NPC {
@@ -20,6 +21,9 @@ export class Enemy extends NPC {
 
     // Used to pause aggrovated enemies from attacking while the player is busy
     pauseAggro: boolean;
+
+    // ID for handler method when the enemy dies
+    deathHandlerID: string;
 
     protected _isAggrovated: boolean;
     get isAggrovated(): boolean {
@@ -47,6 +51,7 @@ export class Enemy extends NPC {
         this.level = settings.level;
         this.isAggrovated = false;
         this.pauseAggro = false;
+        this.deathHandlerID = settings.deathHandlerID;
         this._currentWeaponID = settings.weaponID;
         this._player = player;
         this._baseStats = settings.stats;
@@ -82,6 +87,21 @@ export class Enemy extends NPC {
         stats.defense = base_stats.defense * 10;
         stats.speed = base_stats.speed * 10;
         stats.luck = base_stats.luck;
+    }
+
+    /** @override */
+    die(override_handler?: boolean): void {
+        if (!override_handler && this.deathHandlerID && this.deathHandlerID in DeathHandlers) {
+            // Ensure player gets rewarded by this enemy indicating it died
+            this._isAlive = false;
+
+            if (DeathHandlers[this.deathHandlerID].call(this)) {
+                super.die();
+            }
+        }
+        else {
+            super.die();
+        }
     }
 
     /**

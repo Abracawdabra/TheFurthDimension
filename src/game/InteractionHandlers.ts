@@ -27,7 +27,7 @@ export var InteractionHandlers: { [id: string]: IInteractionHandler | IEventHand
         // This demonstrates that NPCs with the "dialog" and "interactionID"
         // properties set will have their interaction handlers executed after a
         //  dialog box finishes.
-        data.interactor.parent.showDialog(this, "Now I'm using an interaction handler to talk to you!", function() {
+        data.interactor.parent.showDialog(this, "Now I'm using an interaction handler to talk to you!", function(): void {
             console.log("Callback inside of test_map_npc_testy2 executed. this=", this);
         });
     },

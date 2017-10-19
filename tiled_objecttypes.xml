@@ -20,6 +20,7 @@
  </objecttype>
  <objecttype name="enemy" color="#a0a0a4">
   <property name="critChance" type="float" default="0"/>
+  <property name="deathHandlerID" type="string"/>
   <property name="defense" type="int" default="0"/>
   <property name="dialog" type="string"/>
   <property name="faceWhenTalking" type="bool" default="false"/>
@@ -37,3 +38,5 @@
   <property name="wanderMaxDirDuration" type="float" default="0"/>
   <property name="wanderMinDirDuration" type="float" default="0"/>
   <property name="weaponID" type="string"/>
+ </objecttype>
+</objecttypes>

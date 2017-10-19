@@ -189,6 +189,7 @@
                  "properties":
                     {
                      "critChance":0.6,
+                     "deathHandlerID":"test_map_fightman",
                      "defense":2,
                      "dialog":"You smell. I'm going to kill  you.",
                      "faceWhenTalking":true,
@@ -202,11 +203,13 @@
                      "wander":true,
                      "wanderBounds":"-1 0 2 2",
                      "wanderMaxDirDuration":0.2,
-                     "wanderMinDirDuration":0.1
+                     "wanderMinDirDuration":0.1,
+                     "weaponID":"sword"
                     },
                  "propertytypes":
                     {
                      "critChance":"float",
+                     "deathHandlerID":"string",
                      "defense":"int",
                      "dialog":"string",
                      "faceWhenTalking":"bool",
@@ -220,7 +223,8 @@
                      "wander":"bool",
                      "wanderBounds":"string",
                      "wanderMaxDirDuration":"float",
-                     "wanderMinDirDuration":"float"
+                     "wanderMinDirDuration":"float",
+                     "weaponID":"string"
                     },
                  "rotation":0,
                  "type":"enemy",

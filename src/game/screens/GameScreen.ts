@@ -848,9 +848,9 @@ export class GameScreen extends BaseScreen {
                                 this._rewardsTextVisibilityEndTime = createjs.Ticker.getTime() + (REWARDS_TEXT_VISIBILITY_DURATION * 1000);
                             }
 
-                            this._activeNPCs["Enemies"].splice(this._activeNPCs["Enemies"].indexOf(enemy), 1);
-                            this._activeObjects["Enemies"].splice(this._activeObjects["Enemies"].indexOf(enemy), 1);
-                            enemy.destroy();
+                            if (!enemy.deathHandlerID) {
+                                this.removeEnemy(enemy);
+                            }
                         }
                     }
                 }
@@ -864,6 +864,20 @@ export class GameScreen extends BaseScreen {
 
             character.availableAttackTime = createjs.Ticker.getTime() + character.attackDelay;
         }
+    }
+
+    removeEnemy(enemy: Enemy): void {
+        let index = this._activeNPCs["Enemies"].indexOf(enemy);
+        if (index > -1) {
+            this._activeNPCs["Enemies"].splice(index, 1);
+        }
+
+        index = this._activeObjects["Enemies"].indexOf(enemy);
+        if (index > -1) {
+            this._activeObjects["Enemies"].splice(index, 1);
+        }
+
+        enemy.destroy();
     }
 
     getXPRequiredForLevel(level: number): number {
@@ -1139,6 +1153,7 @@ export class GameScreen extends BaseScreen {
 
                 enemy_settings.level = obj.properties.level;
                 enemy_settings.weaponID = obj.properties.weaponID;
+                enemy_settings.deathHandlerID = obj.properties.deathHandlerID;
 
                 return new Enemy(this, spatial_grid, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], this._player, hitbox, projectiles_hitbox, obj.properties.interactionID, enemy_settings);
             }

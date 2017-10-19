@@ -22,4 +22,5 @@ export * from "./Weapons";
 export * from "./ArmorPieces";
 export * from "./Consumables";
 export * from "./IInventorySlot";
+export * from "./DeathHandlers";
 export * from "./Main";
