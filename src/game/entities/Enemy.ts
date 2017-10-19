@@ -95,6 +95,10 @@ export class Enemy extends NPC {
             // Ensure player gets rewarded by this enemy indicating it died
             this._isAlive = false;
 
+            // Blinking effect will stop updating when "dead", so make the sprite visible
+            this._isBlinking = false;
+            this._sprite.alpha = 1.0;
+
             if (DeathHandlers[this.deathHandlerID].call(this)) {
                 super.die();
             }
