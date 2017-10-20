@@ -261,7 +261,7 @@ export class GameScreen extends BaseScreen {
                 this._player.direction = this._scrollDir;
                 break;
             case Button.A:
-                let dialog = (this._dialogBoxStack.length > 0) ? this._dialogBoxStack[this._dialogBoxStack.length - 1] : null;
+                let dialog = this.topDialogBox;
                 if (dialog && dialog.isTransitioning()) {
                     dialog.textSpeed = this.gameInstance.settings.textSpeed;
                 }
@@ -364,7 +364,7 @@ export class GameScreen extends BaseScreen {
             this._player.update(delta);
         }
 
-        let dialog = (this._dialogBoxStack.length > 0) ? this._dialogBoxStack[this._dialogBoxStack.length - 1] : null;
+        let dialog = this.topDialogBox;
         if (dialog) {
             dialog.update(delta);
 
