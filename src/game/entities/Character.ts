@@ -20,7 +20,7 @@ const LEVEL_LUCK_MULTIPLIER = 0.01;
 
 
 // Damage blinking frame duration (milliseconds)
-const BLINKING_EFFECT_FRAME_DURATION = 250;
+const BLINKING_EFFECT_FRAME_DURATION = 150;
 // Damage blinking duration (milliseconds)
 const BLINKING_EFFECT_DURATION = 2500;
 

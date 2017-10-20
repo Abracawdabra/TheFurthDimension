@@ -128,3 +128,29 @@ export function directionToRotation(direction: number, offset = 0): number {
 
     return 0.0;
 }
+
+const SPECIES = [
+    "Dog",
+    "Cat",
+    "Bird",
+    "Fox",
+    "Wolf",
+    "Hyena",
+    "Mouse",
+    "Rat",
+    "Horse",
+    "Otter",
+    "Fish",
+    "Lion",
+    "Tiger",
+    "Deer",
+    "Moose",
+    "Bunny"
+];
+
+/**
+ * Returns a random species
+ */
+export function getRandomSpecies(): string {
+    return SPECIES[Math.floor(Math.random() * SPECIES.length)];
+}

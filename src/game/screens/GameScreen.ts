@@ -9,7 +9,7 @@ import * as tiled from "../tiled";
 import { Game, DISPLAY_WIDTH, DISPLAY_HEIGHT } from "../Main";
 import { Direction, Button, SpatialGrid, BaseMapObject, SpawnPointWithEndPoint, Weapons, WeaponType } from "..";
 import { INPCSettings, NPC, Character, Enemy, IEnemySettings, Sign } from "../entities";
-import { DialogBox, BitmapText } from "../ui";
+import { DialogBox, BitmapText, HealthBar } from "../ui";
 import { DeathScreen } from "../screens";
 import * as colors from "../Colors";
 import * as utils from "../Utils";
@@ -23,8 +23,10 @@ const MAX_INTERACTION_DISTANCE = 15;
 
 // Base XP for leveling
 const BASE_XP = 33;
-// How much required levelling xp increases per level
-const LEVEL_XP_INCREASE_RATIO = 1.5;
+// The base ratio for how much XP is needed for levelling
+const LEVEL_XP_BASE_INCREASE_RATIO = 1.0;
+// How much the base ratio increases for every level
+const LEVEL_XP_LEVEL_INCREASE_RATIO = 0.5;
 
 const BATTLE_REWARDS_BONES_BASE_MULTIPLIER = 30;
 const BATTLE_REWARDS_BONES_LEVEL_MULTIPLIER = 0.3;
@@ -91,11 +93,20 @@ export class GameScreen extends BaseScreen {
     // Enables/disables player input
     protected _inputEnabled: boolean;
 
-    // Dialog box for uh, dialog
-    protected _dialogBox: DialogBox;
+    // Dialog boxes for uh, dialog
+    protected _dialogBoxStack: DialogBox[];
+    get topDialogBox(): DialogBox {
+        return (this._dialogBoxStack.length > 0) ? this._dialogBoxStack[this._dialogBoxStack.length - 1] : null;
+    }
 
     protected _rewardsText: BitmapText;
     protected _rewardsTextVisibilityEndTime: number;
+
+    // The player's health bar
+    protected _playerHealthBar: HealthBar;
+
+    // The current enenmy's health bar
+    protected _currentEnemyHealthBar: HealthBar;
 
     // Shake screen effect
     protected _screenIsShaking: boolean;
@@ -146,21 +157,22 @@ export class GameScreen extends BaseScreen {
             }
         }
         else if (this._inputEnabled) {
-            if (this._dialogBox && key_code === Button.B) {
-                if (this._dialogBox.isTransitioning()) {
+            let dialog = this.topDialogBox;
+            if (dialog && key_code === Button.B) {
+                if (dialog.isTransitioning()) {
                     // Double the speeeeed
-                    this._dialogBox.textSpeed = this.gameInstance.settings.textSpeed * 2;
+                    dialog.textSpeed = this.gameInstance.settings.textSpeed * 2;
                 }
-                else if (!this._dialogBox.showNext()) {
+                else if (!dialog.showNext()) {
                     // Dialog is finished
-                    this.container.removeChild(this._dialogBox);
-                    let owner = this._dialogBox.owner;
+                    this.container.removeChild(dialog);
+                    let owner = dialog.owner;
                     if (owner instanceof NPC) {
                         if (owner.canWander()) {
                             owner.wander = true;
                         }
                     }
-                    this._dialogBox = null;
+                    this._dialogBoxStack.pop();
 
                     for (let enemy of <Enemy[]>this._activeNPCs["Enemies"]) {
                         // Unpause attacking enemies
@@ -169,10 +181,12 @@ export class GameScreen extends BaseScreen {
                         }
                     }
 
-                    this.dispatchEvent(new createjs.Event("finished_dialog", false, true));
+                    let evt = new createjs.Event("finished_dialog", false, true);
+                    evt.data = { owner: dialog.owner };
+                    this.dispatchEvent(evt);
                 }
             }
-            else if (!this._dialogBox && this._player.isAlive) {
+            else if (this._dialogBoxStack.length === 0 && this._player.isAlive) {
                 switch (key_code) {
                     case Button.LEFT:
                         this._scrollDir |= Direction.LEFT;
@@ -222,7 +236,7 @@ export class GameScreen extends BaseScreen {
                         }
                         break;
                     case Button.A:
-                            this.performCharacterAttack(this._player);
+                        this.performCharacterAttack(this._player);
                 }
             }
         }
@@ -247,8 +261,9 @@ export class GameScreen extends BaseScreen {
                 this._player.direction = this._scrollDir;
                 break;
             case Button.A:
-                if (this._dialogBox && this._dialogBox.isTransitioning()) {
-                    this._dialogBox.textSpeed = this.gameInstance.settings.textSpeed;
+                let dialog = (this._dialogBoxStack.length > 0) ? this._dialogBoxStack[this._dialogBoxStack.length - 1] : null;
+                if (dialog && dialog.isTransitioning()) {
+                    dialog.textSpeed = this.gameInstance.settings.textSpeed;
                 }
                 break;
         }
@@ -349,8 +364,9 @@ export class GameScreen extends BaseScreen {
             this._player.update(delta);
         }
 
-        if (this._dialogBox) {
-            this._dialogBox.update(delta);
+        let dialog = (this._dialogBoxStack.length > 0) ? this._dialogBoxStack[this._dialogBoxStack.length - 1] : null;
+        if (dialog) {
+            dialog.update(delta);
 
             if (this._rewardsText.visible) {
                 // "Pause" the rewards text if a dialog box is present
@@ -773,17 +789,14 @@ export class GameScreen extends BaseScreen {
     }
 
     showDialog(owner: BaseMapObject, message: string, finished_callback?: any, data?: any): void {
-        if (this._dialogBox) {
-            this.container.removeChild(this._dialogBox);
-        }
-
-        this._dialogBox = new DialogBox(message, this.gameInstance.settings.textSpeed, owner, colors.DARKEST, colors.LIGHTEST, 0, 0);
-        this._dialogBox.y = DISPLAY_HEIGHT - this._dialogBox.getBounds().height;
+        let dialog = new DialogBox(message, this.gameInstance.settings.textSpeed, owner, colors.DARKEST, colors.LIGHTEST, 0, 0);
+        this._dialogBoxStack.push(dialog);
+        dialog.y = DISPLAY_HEIGHT - dialog.getBounds().height;
         if (finished_callback) {
-            this.on("finished_dialog", finished_callback, owner, true, data);
+            this.on("finished_dialog", finished_callback, owner, false, data);
         }
-        this.container.addChild(this._dialogBox);
-        this._dialogBox.showNext();
+        this.container.addChild(dialog);
+        dialog.showNext();
     }
 
     performCharacterAttack(character: Character): void {
@@ -817,8 +830,17 @@ export class GameScreen extends BaseScreen {
                         let is_crit = (Math.random() <= character.stats.luck);
                         let damage = is_crit ? character.stats.power * Math.floor(utils.randBetween(1.5, 2.0)) : character.stats.power;
                         enemy.inflictDamage(damage);
-                        if (!enemy.isAlive) {
-                            if (character === this._player) {
+
+                        if (character === this._player) {
+                            if (!this._currentEnemyHealthBar || this._currentEnemyHealthBar.owner !== enemy) {
+                                this.container.removeChild(this._currentEnemyHealthBar);
+                                this._currentEnemyHealthBar = enemy.healthBar;
+                                this.container.addChild(this._currentEnemyHealthBar);
+                            }
+
+                            if (!enemy.isAlive) {
+                                this.container.removeChild(enemy.healthBar);
+
                                 // Rewards
                                 let game_state = this.gameInstance.gameState;
                                 let bones = this._getBoneRewardsAmount(character, enemy);
@@ -840,6 +862,10 @@ export class GameScreen extends BaseScreen {
                                 if (times_levelled) {
                                     game_state.level += times_levelled;
                                     this._player.updateCalculatedStats();
+                                    let death_handler: any;
+                                    if (enemy.deathHandlerID) {
+
+                                    }
                                     this.showDialog(character, "You've reached level " + game_state.level + "!");
                                 }
 
@@ -883,7 +909,8 @@ export class GameScreen extends BaseScreen {
     getXPRequiredForLevel(level: number): number {
         // Since we're starting at level 1, offset it so that level 2 requires
         // only the base amount of xp + increase ratio.
-        return Math.ceil((level - 1) * BASE_XP * LEVEL_XP_INCREASE_RATIO);
+        let level_offset = level - 1;
+        return Math.ceil(level_offset * BASE_XP * (LEVEL_XP_BASE_INCREASE_RATIO + (level_offset * LEVEL_XP_LEVEL_INCREASE_RATIO)));
     }
 
     showDeathScreen(): void {
@@ -990,7 +1017,7 @@ export class GameScreen extends BaseScreen {
         let player_sprite_sheet = this.gameInstance.gameState.isHuman ? "ss_human_victor" : "ss_victor";
         this._player = new Character(this, "Victor", 0, 0, "player",  Game.SpriteSheets[player_sprite_sheet], PLAYER_HITBOX, PLAYER_PROJECTILES_HITBOX);
         this._player.setBaseStats({
-            maxHealth: 150,
+            maxHealth: 100,
             power: 4,
             defense: 2,
             speed: 4,
@@ -999,9 +1026,10 @@ export class GameScreen extends BaseScreen {
         // Connect the player to the game state
         this._player.inventory = this.gameInstance.gameState.inventory;
         this._player.consumedItems = this.gameInstance.gameState.consumedItems;
+        this._player.health = this.gameInstance.gameState.health;
         this._player.updateCalculatedStats();
 
-        let rewards_text = new BitmapText(" ", "7px Rewards", undefined, 8);
+        let rewards_text = new BitmapText(" ", "7px Sucky Outline", undefined, 8);
         rewards_text.x = 2;
         rewards_text.y = DISPLAY_HEIGHT - 17;
         rewards_text.visible = false;
@@ -1010,7 +1038,16 @@ export class GameScreen extends BaseScreen {
         this._rewardsText.visible = false;
         this._rewardsTextVisibilityEndTime = 0;
 
+        this._dialogBoxStack = [];
+
         this._inputEnabled = false;
+
+        let health_bar = new HealthBar();
+        health_bar.x = 4;
+        health_bar.y = 4;
+        health_bar.value = this._player.health;
+        this.container.addChild(health_bar);
+        this._playerHealthBar = health_bar;
 
         this._screenIsShaking = false;
         this._screenIsSpinning = false;
@@ -1154,6 +1191,7 @@ export class GameScreen extends BaseScreen {
                 enemy_settings.level = obj.properties.level;
                 enemy_settings.weaponID = obj.properties.weaponID;
                 enemy_settings.deathHandlerID = obj.properties.deathHandlerID;
+                enemy_settings.species = obj.properties.species;
 
                 return new Enemy(this, spatial_grid, obj.properties.name, obj.x, obj.y, obj.name, Game.SpriteSheets[obj.properties.spriteSheet], this._player, hitbox, projectiles_hitbox, obj.properties.interactionID, enemy_settings);
             }

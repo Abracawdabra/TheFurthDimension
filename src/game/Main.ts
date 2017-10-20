@@ -174,6 +174,7 @@ export class Game {
         let player = this._getGameScreen().getPlayer();
         this.gameState.playerCoords = { x: player.x, y: player.y };
         this.gameState.playerDir = player.direction;
+        this.gameState.health = player.health;
         localStorage.setItem("TFD_GAMESAVE", LZString.compressToUTF16(JSON.stringify(gamestate.compactGameState(this.gameState))) );
     }
 

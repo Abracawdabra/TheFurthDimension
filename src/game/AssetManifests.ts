@@ -16,6 +16,7 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
         // UI
         { id: "ui_border_boxes", src: BASE_IMAGES_URL + "ui/border_boxes.png" },
         { id: "ui_marker", src: BASE_IMAGES_URL + "ui/marker.png" },
+        { id: "ui_health_bar", src: BASE_IMAGES_URL + "ui/health_bar.png" },
 
         // Tilesets
         { id: "tileset_dongola_temple", src: BASE_IMAGES_URL + "tilesets/dongola_temple.png" },
@@ -24,7 +25,7 @@ export const ASSET_MANIFESTS: { [type: string]: any } = {
         // Font Bitmaps
         { id: "font_8px_press_start", src: BASE_IMAGES_URL + "fonts/PressStart_8px.png" },
         { id: "font_7px_press_start", src: BASE_IMAGES_URL + "fonts/PressStart_7px.png" },
-        { id: "font_7px_rewards", src: BASE_IMAGES_URL + "fonts/Rewards_7px.png" },
+        { id: "font_7px_sucky_outline", src: BASE_IMAGES_URL + "fonts/SuckyOutline_7px.png" },
 
         // Sprite sheets
         { id: "ss_npc_testy", src: BASE_IMAGES_URL + "spritesheets/npc_testy.png" },

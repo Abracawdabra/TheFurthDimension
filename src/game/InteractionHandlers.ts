@@ -26,14 +26,26 @@ export var InteractionHandlers: { [id: string]: IInteractionHandler | IEventHand
     "test_map_npc_testy2": function(e: createjs.Event, data?: any): void {
         // This demonstrates that NPCs with the "dialog" and "interactionID"
         // properties set will have their interaction handlers executed after a
-        //  dialog box finishes.
-        data.interactor.parent.showDialog(this, "Now I'm using an interaction handler to talk to you!", function(): void {
-            console.log("Callback inside of test_map_npc_testy2 executed. this=", this);
-        });
+        // dialog box finishes. Notice the method signature is different, much
+        // like a normal event handler.
+
+        // data.interactor is the object interacting with this character
+
+        // Make sure the dialog owner is this
+        if (e.data.owner === this) {
+            this.parent.showDialog(this, "Now I'm using an interaction handler to talk to you!", function(e: createjs.Event, data: any): void {
+                console.log("Callback inside of test_map_npc_testy2 executed. this=", this);
+                e.remove();
+            });
+
+            // Remember to call remove() on the event or the listener will still exist!
+            e.remove();
+        }
     },
     "activate_aggro": function(e: createjs.Event, data?: any): void {
         if (!this.isAggrovated) {
             this.isAggrovated = true;
         }
+        e.remove();
     }
 }

@@ -11,3 +11,4 @@ export * from "./BorderBox";
 export * from "./DialogBox";
 export * from "./MessageBox";
 export * from "./ScreenFade";
+export * from "./HealthBar";
